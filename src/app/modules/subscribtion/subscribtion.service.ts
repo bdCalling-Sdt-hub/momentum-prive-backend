@@ -103,6 +103,10 @@ const createCustomerAndSubscription = async (
     expand: ['latest_invoice.payment_intent'],
   });
 
+  const priceAmount = subscription.items.data[0]?.price?.unit_amount ?? 0;
+
+  const price = priceAmount / 100;
+
   // Check if latest_invoice exists and is of type Invoice
   const latestInvoice = subscription.latest_invoice;
 
@@ -129,6 +133,7 @@ const createCustomerAndSubscription = async (
     currentPeriodEnd: formatDate(
       new Date(subscription.current_period_end * 1000)
     ),
+    priceAmount: price,
     brand,
   });
 
@@ -368,9 +373,111 @@ const cancelSubscription = async (subscriptionId: string) => {
   };
 };
 
+// const renewExpiredSubscriptions = async (
+//   subscriptionId: string,
+//   newPriceId?: string // Make newPriceId optional
+// ) => {
+//   // Find subscription record in the database
+//   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
+
+//   if (!subscriptionRecord) {
+//     throw new ApiError(
+//       StatusCodes.NOT_FOUND,
+//       'Subscription not found in the database.'
+//     );
+//   }
+
+//   // Check if the status is "expired"
+//   if (subscriptionRecord.status !== 'expired') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Subscription is not expired and cannot be renewed.'
+//     );
+//   }
+
+//   // Retrieve the existing subscription from Stripe
+//   const stripeSubscription = await stripe.subscriptions.retrieve(
+//     subscriptionId
+//   );
+
+//   // Check if the subscription is valid
+//   if (!stripeSubscription || stripeSubscription.status !== 'active') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Invalid or inactive subscription.'
+//     );
+//   }
+
+//   // Determine the price to use
+//   const priceIdToUse = newPriceId || stripeSubscription.items.data[0].price.id;
+
+//   // Retrieve the customer payment methods
+//   const customerId =
+//     typeof stripeSubscription.customer === 'string'
+//       ? stripeSubscription.customer
+//       : stripeSubscription.customer.id;
+
+//   const paymentMethods = await stripe.paymentMethods.list({
+//     customer: customerId,
+//     type: 'card', // Adjust if you're using a different type of payment method
+//   });
+
+//   if (paymentMethods.data.length === 0) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'This customer has no attached payment source or default payment method.'
+//     );
+//   }
+
+//   // Use the first payment method or set a default
+//   const paymentMethodId = paymentMethods.data[0].id; // Get the first payment method
+
+//   // Create a new subscription in Stripe
+//   const newSubscription = await stripe.subscriptions.create({
+//     customer: customerId, // Customer ID as a string
+//     items: [{ price: priceIdToUse }],
+//     default_payment_method: paymentMethodId, // Attach the payment method
+//     expand: ['latest_invoice.payment_intent'], // Get the latest invoice details
+//   });
+
+//   // Update the subscription details in the database
+//   const priceAmount = newSubscription.items.data[0]?.price?.unit_amount ?? 0;
+//   const price = priceAmount / 100;
+
+//   console.log(price);
+
+//   // Save the new subscription record in the database
+//   const newSubscriptionRecord = await Subscribation.create({
+//     subscriptionId: newSubscription.id,
+//     status: newSubscription.status,
+//     priceAmount: price,
+//     // Add other relevant fields from your subscription model
+//   });
+
+//   if (!newSubscriptionRecord) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Failed to create new subscription record in the database.'
+//     );
+//   }
+
+//   // Optionally, you might want to update the previous subscription record status to "canceled" or "renewed"
+//   await Subscribation.findOneAndUpdate(
+//     { subscriptionId },
+//     { status: 'canceled' }, // Or however you want to handle the old subscription
+//     { new: true }
+//   );
+
+//   return {
+//     subscriptionId: newSubscription.id,
+//     status: newSubscription.status,
+//     newSubscriptionRecord,
+//   };
+// };
+
 const renewExpiredSubscriptions = async (
   subscriptionId: string,
-  newPriceId: string
+  newPriceId?: string // Make newPriceId optional
 ) => {
   // Find subscription record in the database
   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
@@ -395,7 +502,7 @@ const renewExpiredSubscriptions = async (
     subscriptionId
   );
 
-  // Check if the subscription is valid and can be renewed
+  // Check if the subscription is valid
   if (!stripeSubscription || stripeSubscription.status !== 'active') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -403,25 +510,63 @@ const renewExpiredSubscriptions = async (
     );
   }
 
-  // Renew the subscription in Stripe
-  const renewedSubscription = await stripe.subscriptions.update(
+  // Determine the price to use
+  const priceIdToUse = newPriceId || stripeSubscription.items.data[0].price.id;
+
+  // Retrieve the customer payment methods
+  const customerId =
+    typeof stripeSubscription.customer === 'string'
+      ? stripeSubscription.customer
+      : stripeSubscription.customer.id;
+
+  const paymentMethods = await stripe.paymentMethods.list({
+    customer: customerId,
+    type: 'card', // Adjust if you're using a different type of payment method
+  });
+
+  if (paymentMethods.data.length === 0) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'This customer has no attached payment source or default payment method.'
+    );
+  }
+
+  // Use the first payment method
+  const paymentMethodId = paymentMethods.data[0].id; // Get the first payment method
+
+  // Update the existing subscription in Stripe
+  const updatedSubscription = await stripe.subscriptions.update(
     subscriptionId,
     {
       items: [
         {
           id: stripeSubscription.items.data[0].id, // Existing subscription item ID
-          price: newPriceId, // Use the new price ID if applicable
+          price: priceIdToUse, // Use the new price ID or the existing one
         },
       ],
+      default_payment_method: paymentMethodId, // Attach the payment method
       expand: ['latest_invoice.payment_intent'], // Get the latest invoice details
     }
   );
 
   // Update the subscription details in the database
+  const priceAmount =
+    updatedSubscription.items.data[0]?.price?.unit_amount ?? 0;
+  const price = priceAmount / 100;
+
   const updatedSub = await Subscribation.findOneAndUpdate(
     { subscriptionId },
     {
-      status: renewedSubscription.status, // Update only the status
+      status: updatedSubscription.status,
+      priceAmount: price,
+
+      currentPeriodStart: formatDate(
+        new Date(updatedSubscription.current_period_start * 1000)
+      ),
+      currentPeriodEnd: formatDate(
+        new Date(updatedSubscription.current_period_end * 1000)
+      ),
+      // Add any other fields you want to update
     },
     { new: true }
   );
@@ -434,8 +579,8 @@ const renewExpiredSubscriptions = async (
   }
 
   return {
-    subscriptionId: renewedSubscription.id,
-    status: renewedSubscription.status,
+    subscriptionId: updatedSubscription.id,
+    status: updatedSubscription.status,
     updatedSub,
   };
 };

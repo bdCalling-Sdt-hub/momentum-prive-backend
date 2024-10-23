@@ -31,10 +31,6 @@ const createPaymentStripeService = async (
 ): Promise<Stripe.Response<Stripe.Checkout.Session>> => {
   const { products } = payload;
 
-  // Log the incoming payload for debugging
-  console.log('Received Payload:', payload);
-  console.log('Querying for priceId:', products[0].priceId); // Log the priceId being queried
-
   // Query the subscription by priceId
   const orderDetails = await Subscriptation.findOne({
     priceId: products[0].priceId, // Ensure you're using the correct index
@@ -52,7 +48,6 @@ const createPaymentStripeService = async (
 
   // Get the price from the database
   const databasePrice = parseInt(orderDetails.price, 10); // Assuming price is stored as a string in the database
-  console.log('Database Price:', databasePrice);
 
   // Fetch all prices from Stripe to find a matching price ID
   const prices = await stripe.prices.list({
@@ -76,7 +71,6 @@ const createPaymentStripeService = async (
   }
 
   // Log the matching Stripe price ID
-  console.log('Matching Stripe Price Found:', matchingPrice.id);
 
   // Prepare metadata to store with the Stripe session
   const currentDate = new Date();
