@@ -7,6 +7,7 @@ import handleSubscriptionUpdated from '../../../util/subscribationHelpar/handleS
 import { Subscribation } from './subscribtion.model';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
+import { formatDate } from './timeFormat';
 
 export const stripe = new Stripe(config.stripe_secret_key as string, {
   apiVersion: '2024-09-30.acacia',
@@ -86,7 +87,8 @@ const handleWebhook = async (event: any) => {
 
 const createCustomerAndSubscription = async (
   email: string,
-  priceId: string
+  priceId: string,
+  brand: string
 ) => {
   // Create customer
   const customer = await stripe.customers.create({
@@ -100,7 +102,7 @@ const createCustomerAndSubscription = async (
     payment_behavior: 'default_incomplete',
     expand: ['latest_invoice.payment_intent'],
   });
-  console.log(subscription);
+
   // Check if latest_invoice exists and is of type Invoice
   const latestInvoice = subscription.latest_invoice;
 
@@ -118,11 +120,16 @@ const createCustomerAndSubscription = async (
   }
 
   const createSub = await Subscribation.create({
-    email,
-    priceId,
-    transactionId: paymentIntent.id,
+    // transactionId: paymentIntent.id,
     subscriptionId: subscription.id,
-    clientSecret: paymentIntent.client_secret,
+    // clientSecret: paymentIntent.client_secret,
+    currentPeriodStart: formatDate(
+      new Date(subscription.current_period_start * 1000)
+    ),
+    currentPeriodEnd: formatDate(
+      new Date(subscription.current_period_end * 1000)
+    ),
+    brand,
   });
 
   if (!createSub) {
@@ -210,11 +217,8 @@ const updateustomerAndSubscription = async (
   newPriceId: string,
   subscriptionId: string
 ) => {
-  console.log(subscriptionId);
   // Check if the subscription exists in the database
   const isExistSubId = await Subscribation.findOne({ subscriptionId });
-
-  console.log(isExistSubId);
 
   if (!isExistSubId) {
     throw new ApiError(
@@ -232,7 +236,7 @@ const updateustomerAndSubscription = async (
       'Subscription not found in Stripe.'
     );
   }
-  console.log(subscription.status);
+
   if (subscription.status === 'incomplete') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -253,7 +257,7 @@ const updateustomerAndSubscription = async (
       expand: ['latest_invoice.payment_intent'],
     }
   );
-  console.log(updatedSubscription);
+
   // Check if the latest_invoice and payment_intent exist in the updated subscription
   const latestInvoice = updatedSubscription.latest_invoice;
   if (!latestInvoice || typeof latestInvoice === 'string') {
@@ -272,11 +276,17 @@ const updateustomerAndSubscription = async (
     { subscriptionId },
     {
       priceId: newPriceId, // Update to the new price ID
-      transactionId: paymentIntent.id,
-      clientSecret: paymentIntent.client_secret,
+      // transactionId: paymentIntent.id,
+      // clientSecret: paymentIntent.client_secret,
       status: updatedSubscription.status,
-      currentPeriodEnd: updatedSubscription.current_period_end,
-      currentPeriodStart: updatedSubscription.current_period_start,
+      // currentPeriodEnd: updatedSubscription.current_period_end,
+      // currentPeriodStart: updatedSubscription.current_period_start,
+      currentPeriodEnd: formatDate(
+        new Date(updatedSubscription.current_period_end * 1000)
+      ),
+      currentPeriodStart: formatDate(
+        new Date(updatedSubscription.current_period_start * 1000)
+      ),
     },
     { new: true } // Return the updated document
   );
@@ -320,9 +330,16 @@ const cancelSubscription = async (subscriptionId: string) => {
   const updatedSub = await Subscribation.findOneAndUpdate(
     { subscriptionId },
     {
-      status: updatedSubscription.status, // Update status accordingly
-      currentPeriodEnd: updatedSubscription.current_period_end,
-      currentPeriodStart: updatedSubscription.current_period_start,
+      status: updatedSubscription.cancellation_details?.reason,
+      // currentPeriodEnd: updatedSubscription.current_period_end,
+      // currentPeriodStart: updatedSubscription.current_period_start,
+
+      currentPeriodStart: formatDate(
+        new Date(updatedSubscription.current_period_start * 1000)
+      ),
+      currentPeriodEnd: formatDate(
+        new Date(updatedSubscription.current_period_end * 1000)
+      ),
     },
     { new: true } // Return the updated document
   );
@@ -341,7 +358,10 @@ const cancelSubscription = async (subscriptionId: string) => {
   };
 };
 
-const renewExpiredSubscriptions = async (subscriptionId: string) => {
+const renewExpiredSubscriptions = async (
+  subscriptionId: string,
+  newPriceId: string
+) => {
   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
 
   if (!subscriptionRecord) {
@@ -353,8 +373,6 @@ const renewExpiredSubscriptions = async (subscriptionId: string) => {
 
   const currentPeriodEnd = subscriptionRecord.currentPeriodEnd;
 
-  console.log('currentPeriodEnd:', currentPeriodEnd); // Log the value to see what it is
-
   if (!currentPeriodEnd) {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
@@ -363,6 +381,7 @@ const renewExpiredSubscriptions = async (subscriptionId: string) => {
   }
 
   // Convert Unix timestamp (seconds) to Date (milliseconds)
+  // const currentPeriodEndDate = new Date(Number(currentPeriodEnd) * 1000);
   const currentPeriodEndDate = new Date(Number(currentPeriodEnd) * 1000);
 
   // Check if currentPeriodEndDate is valid
@@ -401,7 +420,7 @@ const renewExpiredSubscriptions = async (subscriptionId: string) => {
       items: [
         {
           id: stripeSubscription.items.data[0].id, // Existing subscription item ID
-          price: subscriptionRecord.priceId, // Use the same price ID or a new one if applicable
+          price: newPriceId, // Use the same price ID or a new one if applicable
         },
       ],
       expand: ['latest_invoice.payment_intent'], // To get the latest invoice details
@@ -412,8 +431,16 @@ const renewExpiredSubscriptions = async (subscriptionId: string) => {
   const updatedSub = await Subscribation.findOneAndUpdate(
     { subscriptionId: subscriptionId },
     {
-      currentPeriodStart: renewedSubscription.current_period_start,
-      currentPeriodEnd: renewedSubscription.current_period_end,
+      // currentPeriodStart: renewedSubscription.current_period_start,
+      // currentPeriodEnd: renewedSubscription.current_period_end,
+
+      currentPeriodStart: formatDate(
+        new Date(renewedSubscription.current_period_start * 1000)
+      ),
+      currentPeriodEnd: formatDate(
+        new Date(renewedSubscription.current_period_end * 1000)
+      ),
+
       status: renewedSubscription.status,
     },
     { new: true }

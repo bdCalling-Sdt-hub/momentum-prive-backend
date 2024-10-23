@@ -65,7 +65,7 @@ const webhookHandler = catchAsync(async (req: Request, res: Response) => {
 // subscribtion.controller.ts
 
 const createSubscription = catchAsync(async (req: Request, res: Response) => {
-  const { email, priceId } = req.body;
+  const { email, priceId, brand } = req.body;
 
   if (!email || !priceId) {
     return res.status(400).send('Email and Price ID are required');
@@ -74,7 +74,8 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
   try {
     const result = await subscriptionService.createCustomerAndSubscription(
       email,
-      priceId
+      priceId,
+      brand
     );
 
     sendResponse(res, {
@@ -118,10 +119,11 @@ const CancelSubscription = catchAsync(async (req, res) => {
 });
 
 const renewExpiredSubscription = catchAsync(async (req, res) => {
-  const { subscriptionId } = req.body;
+  const { subscriptionId, newPriceId } = req.body;
 
   const result = await subscriptionService.renewExpiredSubscriptions(
-    subscriptionId
+    subscriptionId,
+    newPriceId
   );
 
   sendResponse(res, {

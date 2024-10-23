@@ -4,7 +4,6 @@ import { Subscribation } from '../../app/modules/subscribtion/subscribtion.model
 const handleCheckoutSessionCompleted = async (
   session: Stripe.Checkout.Session
 ) => {
-  console.log(session, 'session');
   try {
     const customerId = session.customer;
     const subscriptionId = session.subscription as string;
@@ -18,22 +17,9 @@ const handleCheckoutSessionCompleted = async (
     const name = session.customer_details?.name || 'Unknown';
 
     await Subscribation.create({
-      customerId,
-      plan,
       subscriptionId,
       status,
       priceAmount,
-      email,
-      name,
-    });
-
-    console.log('Subscription created and saved to DB:', {
-      customerId,
-      plan,
-      subscriptionId,
-      email,
-      name,
-      priceAmount, // Log priceAmount for verification
     });
   } catch (error) {
     console.error('Error handling checkout session completed:', error);

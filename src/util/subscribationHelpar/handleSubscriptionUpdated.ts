@@ -10,11 +10,9 @@ const handleSubscriptionUpdated = async (subscription: any) => {
     // Find and update the subscription in the database
     const subscriptionInDB = await Subscribation.findOneAndUpdate(
       { subscriptionId },
-      { plan: planId, status },
+      { plan: planId, status: subscription.cancellation_details?.reason },
       { new: true, upsert: true } // If not found, create a new record
     );
-
-    console.log('Subscription updated in DB:', subscriptionInDB);
   } catch (error) {
     console.error('Error handling subscription update:', error);
   }
