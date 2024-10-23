@@ -2,7 +2,7 @@ import { Types } from 'mongoose';
 export type ISubscribtion = {
   customerId: string;
   plan: string;
-  status: string;
+  status: 'expired' | 'active' | 'incomplete' | 'cancellation_requested';
   priceAmount: number;
   brand: Types.ObjectId;
 

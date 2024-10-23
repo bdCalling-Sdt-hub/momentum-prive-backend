@@ -146,6 +146,18 @@ const createCustomerAndSubscription = async (
   };
 };
 
+const getAllSubscriptation = async () => {
+  const result = await Subscribation.find().populate({
+    path: 'brand',
+    populate: {
+      path: 'brand',
+    },
+  });
+  return result;
+};
+
+// cron.schedule('25 12 23 4 *', checkExpiredSubscriptions);
+
 // const updateustomerAndSubscription = async (
 //   subscriptionId: string,
 //   newPriceId: string
@@ -276,11 +288,9 @@ const updateustomerAndSubscription = async (
     { subscriptionId },
     {
       priceId: newPriceId, // Update to the new price ID
-      // transactionId: paymentIntent.id,
-      // clientSecret: paymentIntent.client_secret,
+
       status: updatedSubscription.status,
-      // currentPeriodEnd: updatedSubscription.current_period_end,
-      // currentPeriodStart: updatedSubscription.current_period_start,
+
       currentPeriodEnd: formatDate(
         new Date(updatedSubscription.current_period_end * 1000)
       ),
@@ -362,6 +372,7 @@ const renewExpiredSubscriptions = async (
   subscriptionId: string,
   newPriceId: string
 ) => {
+  // Find subscription record in the database
   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
 
   if (!subscriptionRecord) {
@@ -371,32 +382,11 @@ const renewExpiredSubscriptions = async (
     );
   }
 
-  const currentPeriodEnd = subscriptionRecord.currentPeriodEnd;
-
-  if (!currentPeriodEnd) {
+  // Check if the status is "expired"
+  if (subscriptionRecord.status !== 'expired') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Current period end is missing.'
-    );
-  }
-
-  // Convert Unix timestamp (seconds) to Date (milliseconds)
-  // const currentPeriodEndDate = new Date(Number(currentPeriodEnd) * 1000);
-  const currentPeriodEndDate = new Date(Number(currentPeriodEnd) * 1000);
-
-  // Check if currentPeriodEndDate is valid
-  if (isNaN(currentPeriodEndDate.getTime())) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Current period end is not a valid date.'
-    );
-  }
-
-  const now = new Date();
-  if (currentPeriodEndDate >= now) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Subscription is still active and does not need renewal.'
+      'Subscription is not expired and cannot be renewed.'
     );
   }
 
@@ -420,28 +410,18 @@ const renewExpiredSubscriptions = async (
       items: [
         {
           id: stripeSubscription.items.data[0].id, // Existing subscription item ID
-          price: newPriceId, // Use the same price ID or a new one if applicable
+          price: newPriceId, // Use the new price ID if applicable
         },
       ],
-      expand: ['latest_invoice.payment_intent'], // To get the latest invoice details
+      expand: ['latest_invoice.payment_intent'], // Get the latest invoice details
     }
   );
 
   // Update the subscription details in the database
   const updatedSub = await Subscribation.findOneAndUpdate(
-    { subscriptionId: subscriptionId },
+    { subscriptionId },
     {
-      // currentPeriodStart: renewedSubscription.current_period_start,
-      // currentPeriodEnd: renewedSubscription.current_period_end,
-
-      currentPeriodStart: formatDate(
-        new Date(renewedSubscription.current_period_start * 1000)
-      ),
-      currentPeriodEnd: formatDate(
-        new Date(renewedSubscription.current_period_end * 1000)
-      ),
-
-      status: renewedSubscription.status,
+      status: renewedSubscription.status, // Update only the status
     },
     { new: true }
   );
@@ -469,4 +449,5 @@ export const subscriptionService = {
   updateustomerAndSubscription,
   cancelSubscription,
   renewExpiredSubscriptions,
+  getAllSubscriptation,
 };

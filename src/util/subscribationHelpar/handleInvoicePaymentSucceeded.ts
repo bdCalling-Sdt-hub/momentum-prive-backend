@@ -19,15 +19,10 @@ const handleInvoicePaymentSucceeded = async (invoice: any) => {
     const name = customer_name;
 
     // Update the subscription in the database or create if it doesn't exist
-    const subscriptionInDB = await Subscribation.findOneAndUpdate(
+    await Subscribation.findOneAndUpdate(
       { subscriptionId },
       { priceAmount, email, name },
       { new: true, upsert: true } // If not found, create a new record
-    );
-
-    console.log(
-      'Invoice payment succeeded, subscription updated in DB:',
-      subscriptionInDB
     );
   } catch (error) {
     console.error('Error handling invoice payment succeeded:', error);

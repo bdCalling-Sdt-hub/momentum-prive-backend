@@ -9,6 +9,7 @@ router.post('/subscribe', SubscriptionController.createSubscription);
 router.post('/renew', SubscriptionController.renewExpiredSubscription);
 router.patch('/update', SubscriptionController.updateSubscription);
 router.delete('/cancel', SubscriptionController.CancelSubscription);
+router.get('/get', SubscriptionController.getAllSubscriptation);
 
 router.post(
   '/allHooks',

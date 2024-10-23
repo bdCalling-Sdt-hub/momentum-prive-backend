@@ -1,5 +1,7 @@
 import Stripe from 'stripe';
 import { Subscribation } from '../../app/modules/subscribtion/subscribtion.model';
+import { stripe } from '../../app/modules/subscribtion/subscribtion.service';
+import { formatDate } from '../../app/modules/subscribtion/timeFormat';
 
 const handleCheckoutSessionCompleted = async (
   session: Stripe.Checkout.Session
@@ -9,6 +11,12 @@ const handleCheckoutSessionCompleted = async (
     const subscriptionId = session.subscription as string;
     const plan = session.subscription || 'unknown';
     const status = 'active';
+
+    const stripeSubscription = await stripe.subscriptions.retrieve(
+      subscriptionId
+    );
+
+    const { current_period_end, current_period_start } = stripeSubscription;
 
     // Divide amount_total by 100 to convert from cents to dollars
     const priceAmount = (session.amount_total || 0) / 100;
@@ -20,6 +28,8 @@ const handleCheckoutSessionCompleted = async (
       subscriptionId,
       status,
       priceAmount,
+      currentPeriodEnd: formatDate(new Date(current_period_end * 1000)),
+      currentPeriodStart: formatDate(new Date(current_period_start * 1000)),
     });
   } catch (error) {
     console.error('Error handling checkout session completed:', error);

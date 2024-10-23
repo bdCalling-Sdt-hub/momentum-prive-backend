@@ -129,7 +129,18 @@ const renewExpiredSubscription = catchAsync(async (req, res) => {
   sendResponse(res, {
     statusCode: StatusCodes.OK,
     success: true,
-    message: 'Subscription renewExpiredSubscriptions successfully',
+    message: 'Expired subscriptions renewed successfully',
+    data: result,
+  });
+});
+
+const getAllSubscriptation = catchAsync(async (req, res) => {
+  const result = await subscriptionService.getAllSubscriptation();
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'subscriptions retrived successfully',
     data: result,
   });
 });
@@ -143,4 +154,5 @@ export const SubscriptionController = {
   updateSubscription,
   CancelSubscription,
   renewExpiredSubscription,
+  getAllSubscriptation,
 };
