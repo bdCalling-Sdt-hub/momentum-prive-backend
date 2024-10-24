@@ -42,7 +42,7 @@ app.use('/api/v1', router);
 
 //     for (const subscription of subscriptions) {
 //       const currentPeriodEnd = subscription.currentPeriodEnd;
-
+//       console.log(currentPeriodEnd);
 //       if (currentPeriodEnd) {
 //         try {
 //           const expirationDate = parseCustomDateFormat(currentPeriodEnd);
@@ -52,6 +52,7 @@ app.use('/api/v1', router);
 //               expirationDate.toDateString() === currentDate.toDateString()) &&
 //             subscription.status === 'active'
 //           ) {
+//             console.log(subscription, 'dfdfdf');
 //             await Subscribation.updateOne(
 //               { _id: subscription._id },
 //               { status: 'expired' }
@@ -77,7 +78,7 @@ export const checkExpiredSubscriptions = async () => {
   try {
     const currentDate = new Date();
 
-    const subscriptions = await Subscribation.find({}).exec();
+    const subscriptions = await Subscribation.find({ status: 'active' }).exec();
 
     for (const subscription of subscriptions) {
       const currentPeriodEnd = subscription.currentPeriodEnd;
@@ -86,25 +87,21 @@ export const checkExpiredSubscriptions = async () => {
         try {
           const expirationDate = parseCustomDateFormat(currentPeriodEnd);
 
-          if (
-            (expirationDate < currentDate ||
-              expirationDate.toDateString() === currentDate.toDateString()) &&
-            subscription.status === 'active'
-          ) {
-            // Update subscription status to expired
+          // Check if the subscription's current period has expired
+          if (expirationDate <= currentDate) {
+            // Expire the subscription
             await Subscribation.updateOne(
               { _id: subscription._id },
               { status: 'expired' }
             );
-            console.log(`Subscription ${subscription._id} updated to expired.`);
 
-            // Find and update the related user's subscription field to false
             const user = await User.findOneAndUpdate(
-              { _id: subscription.user }, // Assuming the subscription contains a reference to the user
-              { $set: { subscription: false } }, // Update subscription field to false
+              { _id: subscription.user },
+              { $set: { subscription: false } },
               { new: true }
             );
 
+            // Check if the user update was successful
             if (user) {
               console.log(`User ${user._id} subscription set to false.`);
             } else {
@@ -112,11 +109,12 @@ export const checkExpiredSubscriptions = async () => {
                 `Failed to update user subscription for subscription ${subscription._id}.`
               );
             }
+
+            console.log(`Subscription ${subscription._id} updated to expired.`);
           }
         } catch (error) {
           console.error(
-            `Error parsing date for subscription ${subscription._id}:`,
-            error
+            `Error parsing date for subscription ${subscription._id}: ${error}`
           );
         }
       }
