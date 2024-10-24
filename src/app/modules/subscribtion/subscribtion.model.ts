@@ -22,10 +22,16 @@ const subscribationSchema = new Schema<ISubscribtion>(
     priceAmount: {
       type: Number,
     },
-    brand: {
+    user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+
+    packages: {
+      type: Schema.Types.ObjectId,
+      ref: 'Package',
+    },
+
     clientSecret: {
       type: String,
     },

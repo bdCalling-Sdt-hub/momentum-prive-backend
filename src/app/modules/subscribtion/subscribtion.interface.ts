@@ -4,7 +4,8 @@ export type ISubscribtion = {
   plan: string;
   status: 'expired' | 'active' | 'incomplete' | 'cancellation_requested';
   priceAmount: number;
-  brand: Types.ObjectId;
+  user: Types.ObjectId;
+  packages: Types.ObjectId;
 
   priceId: string | null;
   transactionId: string | null;

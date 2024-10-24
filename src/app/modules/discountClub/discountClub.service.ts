@@ -14,32 +14,6 @@ const createDiscountToDB = async (payload: Partial<IDiscountClub>) => {
   return campaign;
 };
 
-// create payment for stripe
-
-const createPaymentIntent = async (id: string, email: string) => {
-  const discountClub = await DiscountClub.findById(id);
-
-  if (!discountClub) {
-    throw new Error('DiscountClub not found');
-  }
-
-  const amount = parseFloat(discountClub.price) * 100; // Stripe requires the amount in cents
-
-  const paymentIntent = await stripe.paymentIntents.create({
-    amount,
-    currency: 'usd',
-    metadata: {
-      discountClubId: discountClub._id.toString(),
-      discountClubName: discountClub.name,
-      email, // Add email to metadata
-    },
-    receipt_email: email, // Stripe will send a payment receipt email to this address
-  });
-
-  console.log(paymentIntent);
-  return paymentIntent;
-};
-
 const getAllDiscount = async (query: Record<string, unknown>) => {
   const discountBuilder = new QueryBuilder(
     DiscountClub.find().populate('brand'),
@@ -86,5 +60,4 @@ export const DiscountClubService = {
   getSingleDiscount,
   updateDiscountToDB,
   deletedDiscountToDB,
-  createPaymentIntent,
 };

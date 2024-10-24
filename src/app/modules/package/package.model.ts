@@ -32,4 +32,4 @@ const packageSchema = new Schema<IPackage>(
   }
 );
 
-export const Package = model<IPackage>('package', packageSchema);
+export const Package = model<IPackage>('Package', packageSchema);

@@ -1,6 +1,5 @@
 import { Request, Response } from 'express';
 import catchAsync from '../../../shared/catchAsync';
-
 import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 import getFilePath from '../../../shared/getFilePath';
@@ -23,23 +22,6 @@ const createDiscountClubToDB = catchAsync(
     });
   }
 );
-
-// create payment for stripe
-const createPaymentIntent = catchAsync(async (req: Request, res: Response) => {
-  const { id } = req.params; // DiscountClub ID
-  const { email } = req.body; // User's email from the request body
-
-  const paymentIntent = await DiscountClubService.createPaymentIntent(
-    id,
-    email
-  );
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Payment intent created successfully',
-    data: { clientSecret: paymentIntent.client_secret },
-  });
-});
 
 const getAllDiscount = catchAsync(async (req: Request, res: Response) => {
   const result = await DiscountClubService.getAllDiscount(req.query);
@@ -90,5 +72,4 @@ export const DiscountClubController = {
   getSingleDiscount,
   updateCampaignToDB,
   deletedCampaignToDB,
-  createPaymentIntent,
 };

@@ -52,16 +52,16 @@ const discountClubSchema = new Schema<IDiscountClub>(
   }
 );
 
-discountClubSchema.pre('save', async function (next) {
-  //check user
+// discountClubSchema.pre('save', async function (next) {
+//   //check user
 
-  const existingCampaign = await DiscountClub.findOne({ name: this.name });
-  if (existingCampaign) {
-    throw new ApiError(StatusCodes.CONFLICT, 'Discount Club already exists');
-  }
+//   const existingCampaign = await DiscountClub.findOne({ name: this.name });
+//   if (existingCampaign) {
+//     throw new ApiError(StatusCodes.CONFLICT, 'Discount Club already exists');
+//   }
 
-  next();
-});
+//   next();
+// });
 
 export const DiscountClub = model<IDiscountClub>(
   'discountClub',

@@ -8,6 +8,7 @@ import { Subscribation } from './subscribtion.model';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { formatDate } from './timeFormat';
+import { User } from '../user/user.model';
 
 export const stripe = new Stripe(config.stripe_secret_key as string, {
   apiVersion: '2024-09-30.acacia',
@@ -88,7 +89,8 @@ const handleWebhook = async (event: any) => {
 const createCustomerAndSubscription = async (
   email: string,
   priceId: string,
-  brand: string
+  user: string,
+  packages: string
 ) => {
   // Create customer
   const customer = await stripe.customers.create({
@@ -126,6 +128,7 @@ const createCustomerAndSubscription = async (
   const createSub = await Subscribation.create({
     // transactionId: paymentIntent.id,
     subscriptionId: subscription.id,
+    status: subscription.status,
     // clientSecret: paymentIntent.client_secret,
     currentPeriodStart: formatDate(
       new Date(subscription.current_period_start * 1000)
@@ -134,30 +137,50 @@ const createCustomerAndSubscription = async (
       new Date(subscription.current_period_end * 1000)
     ),
     priceAmount: price,
-    brand,
+    user,
+    packages,
   });
 
-  if (!createSub) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Failed to create subscription.'
+  if (createSub) {
+    // Find and update the user based on the email
+    const updateUserSubs = await User.findOneAndUpdate(
+      { email },
+      { $set: { subscription: true } },
+      { new: true }
     );
+
+    if (!updateUserSubs) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Failed to update user subscription.'
+      );
+    }
+
+    if (!createSub) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Failed to create subscription.'
+      );
+    }
   }
 
   return {
     transactionId: paymentIntent.id,
     subscriptionId: subscription.id,
     clientSecret: paymentIntent.client_secret,
+    createSub,
   };
 };
 
 const getAllSubscriptation = async () => {
-  const result = await Subscribation.find().populate({
-    path: 'brand',
-    populate: {
-      path: 'brand',
-    },
-  });
+  const result = await Subscribation.find()
+    .populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    })
+    .populate('packages');
   return result;
 };
 
