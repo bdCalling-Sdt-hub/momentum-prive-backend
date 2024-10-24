@@ -1,7 +1,7 @@
 export type IPackage = {
-  category: 'Gold' | 'Silver' | 'Discount';
+  category: 'Monthly' | 'Yearly' | 'HalfYearly';
+  title: 'Gold' | 'Silver' | 'Discount';
   price: string;
   features: string[];
-  duration: 'Monthly' | 'Yearly' | 'HaflYearly';
-  status: 'active' | 'delete';
+  // duration: 'Monthly' | 'Yearly' | 'HalfYearly';
 };

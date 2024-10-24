@@ -31,7 +31,7 @@ const getAllCollaborations = catchAsync(async (req: Request, res: Response) => {
     req.query,
     filter
   );
-  console.log(result);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

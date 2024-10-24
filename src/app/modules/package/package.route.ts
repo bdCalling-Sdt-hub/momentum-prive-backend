@@ -6,4 +6,6 @@ const router = express.Router();
 
 router.post('/create-package', PackageController.createPackage);
 
+router.get('/', PackageController.getAllPackage);
+
 export const PackageRoutes = router;

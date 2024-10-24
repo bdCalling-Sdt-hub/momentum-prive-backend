@@ -161,8 +161,6 @@ const getAllSubscriptation = async () => {
   return result;
 };
 
-// cron.schedule('25 12 23 4 *', checkExpiredSubscriptions);
-
 // const updateustomerAndSubscription = async (
 //   subscriptionId: string,
 //   newPriceId: string
@@ -267,7 +265,7 @@ const updateustomerAndSubscription = async (
     {
       items: [
         {
-          id: subscription.items.data[0].id, // Existing subscription item ID
+          id: subscription.items.data[0].id,
           price: newPriceId,
         },
       ],
@@ -292,7 +290,7 @@ const updateustomerAndSubscription = async (
   const updatedSub = await Subscribation.findOneAndUpdate(
     { subscriptionId },
     {
-      priceId: newPriceId, // Update to the new price ID
+      // priceId: newPriceId, // Update to the new price ID
 
       status: updatedSubscription.status,
 
@@ -346,8 +344,6 @@ const cancelSubscription = async (subscriptionId: string) => {
     { subscriptionId },
     {
       status: updatedSubscription.cancellation_details?.reason,
-      // currentPeriodEnd: updatedSubscription.current_period_end,
-      // currentPeriodStart: updatedSubscription.current_period_start,
 
       currentPeriodStart: formatDate(
         new Date(updatedSubscription.current_period_start * 1000)
@@ -356,7 +352,7 @@ const cancelSubscription = async (subscriptionId: string) => {
         new Date(updatedSubscription.current_period_end * 1000)
       ),
     },
-    { new: true } // Return the updated document
+    { new: true }
   );
 
   if (!updatedSub) {
@@ -539,8 +535,8 @@ const renewExpiredSubscriptions = async (
       );
     }
 
-    amountToCharge = newPrice.unit_amount; // Amount in cents
-    currency = newPrice.currency; // Currency for the payment
+    amountToCharge = newPrice.unit_amount;
+    currency = newPrice.currency;
   } else {
     // If no new price ID, use the existing invoice
     const latestInvoice = stripeSubscription.latest_invoice;
@@ -558,15 +554,15 @@ const renewExpiredSubscriptions = async (
       );
     }
 
-    amountToCharge = latestInvoice.amount_due; // Amount from the invoice
-    currency = latestInvoice.currency; // Currency for the payment
+    amountToCharge = latestInvoice.amount_due;
+    currency = latestInvoice.currency;
   }
 
   // Retrieve the default payment method
   const paymentMethodId =
     typeof stripeSubscription.default_payment_method === 'string'
       ? stripeSubscription.default_payment_method
-      : undefined; // Assuming payment method can be undefined or null
+      : undefined;
 
   // Ensure paymentMethodId is valid
   if (!paymentMethodId) {
@@ -578,15 +574,14 @@ const renewExpiredSubscriptions = async (
 
   // Create the payment intent
   const paymentIntent = await stripe.paymentIntents.create({
-    amount: amountToCharge, // Amount to be charged
-    currency: currency, // Currency for the payment
-    customer: customerId, // Use the existing customer ID
-    payment_method: paymentMethodId, // Ensure a payment method is attached
-    off_session: true, // Indicate that this payment is not initiated by the user
-    confirm: true, // Automatically confirm the payment
+    amount: amountToCharge,
+    currency: currency,
+    customer: customerId,
+    // payment_method: 'Subscription creation',
+    payment_method: paymentMethodId,
+    off_session: true,
+    confirm: true,
   });
-
-  console.log(paymentIntent, 'dddddd');
 
   // Check if the payment was successful
   if (paymentIntent.status !== 'succeeded') {
@@ -599,14 +594,14 @@ const renewExpiredSubscriptions = async (
   const updatedSub = await Subscribation.findOneAndUpdate(
     { subscriptionId },
     {
-      status: 'active', // Update to active status or any relevant status
-      priceAmount: amountToCharge / 100, // Store the price in dollars
-      currentPeriodStart: formatDate(new Date()), // Format current date
+      status: 'active',
+      priceAmount: amountToCharge / 100,
+      currentPeriodStart: formatDate(new Date()),
       currentPeriodEnd: formatDate(
         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
       ),
     },
-    { new: true } // Return the updated document
+    { new: true }
   );
 
   if (!updatedSub) {

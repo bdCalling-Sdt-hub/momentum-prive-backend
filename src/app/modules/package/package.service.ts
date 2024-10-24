@@ -7,6 +7,12 @@ const createPackage = async (payload: Partial<IPackage>) => {
   return result;
 };
 
+const getAllPackage = async (filter: Record<string, any>) => {
+  const result = await Package.find(filter);
+  return result;
+};
+
 export const PackageService = {
   createPackage,
+  getAllPackage,
 };
