@@ -8,11 +8,17 @@ import { Campaign } from '../campaign/campaign.model';
 import { Interest } from '../interest_influencer/interest.model';
 import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
+import { User } from '../user/user.model';
+import { sendNotifications } from '../../../helpers/notificationHelper';
 
 const createCollaborationToDB = async (payload: ICollaboration) => {
   const isCampaign = await Campaign.findById(payload.campaign);
 
-  const isBrand = await Brand.findById(isCampaign?.brand);
+  const isInfluencer = await User.findById(payload.influencer);
+
+  const isUser = await User.findById(isCampaign?.user);
+
+  const isBrand = await Brand.findById(isUser?.brand);
 
   const isCateory = await Category.findById(isBrand?.category);
 
@@ -41,6 +47,26 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   if (!createInterestInfluencer) {
     return `Failed to create interest with collaboration details`;
   }
+
+  //send notification
+  if (result) {
+    const data = {
+      text: `${isInfluencer?.fullName} Accept your invitation`,
+      receiver: isCampaign?.user,
+    };
+
+    await sendNotifications(data);
+  }
+  if (result) {
+    const data = {
+      text: `${isInfluencer?.fullName} Booking a new Collaboration`,
+      receiver: isCampaign?.user,
+      type: 'ADMIN',
+    };
+
+    await sendNotifications(data);
+  }
+  //end notification
 
   return result;
 };

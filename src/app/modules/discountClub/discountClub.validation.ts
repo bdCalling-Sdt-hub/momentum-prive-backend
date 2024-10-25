@@ -16,7 +16,7 @@ const createDiscountClubValidation = z
   .object({
     name: z.string({ required_error: 'Name is Required' }),
     buyGuide: z.string({ required_error: 'BuyGuide is Required' }),
-    brand: z.string().optional(),
+    user: z.string().optional(),
     startTime: dateStringSchema,
     endTime: dateStringSchema,
     price: z.string({ required_error: 'Price is required' }),
@@ -38,7 +38,7 @@ const createDiscountClubValidation = z
 const updatedDiscountClubValidation = z
   .object({
     name: z.string().optional(),
-    brand: z.string().optional(),
+    user: z.string().optional(),
     buyGuide: z.string().optional(),
     startTime: dateStringSchema,
     endTime: dateStringSchema,

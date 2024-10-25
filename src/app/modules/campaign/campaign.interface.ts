@@ -5,7 +5,7 @@ export type IGender = 'male' | 'female' | 'other';
 type ITypeStatus = 'Accepted' | 'Rejected' | 'Pending';
 
 export type ICampaign = {
-  brand: Types.ObjectId;
+  user: Types.ObjectId;
   influencer?: Types.ObjectId;
   typeStatus?: ITypeStatus;
   image: string;

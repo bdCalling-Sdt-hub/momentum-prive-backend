@@ -3,11 +3,26 @@ import ApiError from '../../../errors/ApiError';
 import { Collaborate } from '../collaboration/collaboration.model';
 import { IInterest } from './interest.interface';
 import { Interest } from './interest.model';
+import { User } from '../user/user.model';
+import { sendNotifications } from '../../../helpers/notificationHelper';
 
 const getAllInterest = async () => {
   const result = await Interest.find()
-    .populate('campaign')
-    .populate('influencer');
+    .populate({
+      path: 'campaign',
+      populate: {
+        path: 'user',
+        populate: {
+          path: 'brand',
+        },
+      },
+    })
+    .populate({
+      path: 'influencer',
+      populate: {
+        path: 'influencer',
+      },
+    });
   return result;
 };
 
@@ -99,6 +114,27 @@ const updatedInterestStautsToDb = async (
   }
 
   const collaborationId = updatedStatus.Collaborate;
+
+  // send notifications
+  const influencerId = updatedStatus.influencer;
+
+  const influencerData = await User.findById(influencerId);
+
+  if (updatedStatus.status === 'Accepted') {
+    const data = {
+      text: `${influencerData?.fullName} Accept your interest`,
+      receiver: payload.influencer,
+    };
+    await sendNotifications(data);
+  } else {
+    updatedStatus.status === 'Rejected';
+    const data = {
+      text: `${influencerData?.fullName} Reject your interest`,
+      receiver: payload.influencer,
+    };
+    await sendNotifications(data);
+  }
+  // end notifications
 
   if (updatedStatus.status === 'Accepted') {
     const updateCollaboration = await Collaborate.findByIdAndUpdate(

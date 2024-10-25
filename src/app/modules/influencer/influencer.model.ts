@@ -29,6 +29,12 @@ const influencerShema = new Schema<IInfluencer>(
     followersIG: {
       type: Number,
     },
+    email: {
+      type: String,
+    },
+    fullName: {
+      type: String,
+    },
     followersTK: {
       type: Number,
     },

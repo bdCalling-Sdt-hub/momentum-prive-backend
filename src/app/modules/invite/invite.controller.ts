@@ -15,7 +15,7 @@ const createCategoryToDB = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllInvites = catchAsync(async (req: Request, res: Response) => {
-  const result = await InviteService.getAllInvites(req.query);
+  const result = await InviteService.getAllInvites();
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

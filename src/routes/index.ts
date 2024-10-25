@@ -17,6 +17,7 @@ import { TermsAndConditionRoutes } from '../app/modules/termsAndCondition/termsA
 import { InterestRoutes } from '../app/modules/interest_influencer/interest.route';
 import { SubscriptionRoutes } from '../app/modules/subscribtion/subscribtion.route';
 import { PackageRoutes } from '../app/modules/package/package.route';
+import { NotificationRoutes } from '../app/modules/notification/notification.route';
 
 const router = express.Router();
 
@@ -39,6 +40,7 @@ const apiRoutes = [
   { path: '/subscribtion', route: SubscriptionRoutes },
   { path: '/interest-influencer', route: InterestRoutes },
   { path: '/package', route: PackageRoutes },
+  { path: '/notification', route: NotificationRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

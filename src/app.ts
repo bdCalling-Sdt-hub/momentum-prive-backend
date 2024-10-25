@@ -1,4 +1,5 @@
 import cors from 'cors';
+import colors from 'colors';
 import express, { Request, Response } from 'express';
 import { StatusCodes } from 'http-status-codes';
 import globalErrorHandler from './app/middlewares/globalErrorHandler';
@@ -13,6 +14,7 @@ import { parseCustomDateFormat } from './util/cornJobHelper';
 import cron from 'node-cron';
 import ApiError from './errors/ApiError';
 import { User } from './app/modules/user/user.model';
+import { logger } from './shared/logger';
 
 const app = express();
 
@@ -103,18 +105,27 @@ export const checkExpiredSubscriptions = async () => {
 
             // Check if the user update was successful
             if (user) {
-              console.log(`User ${user._id} subscription set to false.`);
+              logger.info(
+                colors.green(`User ${user._id} subscription set to false.`)
+              );
             } else {
-              console.error(
-                `Failed to update user subscription for subscription ${subscription._id}.`
+              logger.info(
+                colors.red(
+                  `Failed to update user subscription for subscription ${subscription._id}.`
+                )
               );
             }
-
-            console.log(`Subscription ${subscription._id} updated to expired.`);
+            logger.info(
+              colors.yellow(
+                `Subscription ${subscription._id} updated to expired.`
+              )
+            );
           }
         } catch (error) {
-          console.error(
-            `Error parsing date for subscription ${subscription._id}: ${error}`
+          logger.info(
+            colors.red(
+              `Error parsing date for subscription ${subscription._id}: ${error}`
+            )
           );
         }
       }

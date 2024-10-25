@@ -7,6 +7,7 @@ import { USER_ROLES } from '../../../enums/user';
 
 const createAdminToDB = async (payload: IUser): Promise<IUser> => {
   payload.role = USER_ROLES.ADMIN;
+  payload.loginStatus = 'Approved';
 
   const createAdmin: any = await User.create(payload);
 

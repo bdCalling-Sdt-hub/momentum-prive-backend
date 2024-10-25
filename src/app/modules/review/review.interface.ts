@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
 export type IReview = {
-  brand: Types.ObjectId;
+  user: Types.ObjectId;
   influencer: Types.ObjectId;
   details: string;
   rating?: number;

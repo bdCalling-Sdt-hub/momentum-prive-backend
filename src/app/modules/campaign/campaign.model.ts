@@ -8,17 +8,14 @@ const campaignSchema = new Schema<ICampaign>(
   {
     image: {
       type: String,
-      default:
-        'https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png',
-      required: true,
     },
-    brand: {
+    user: {
       type: Schema.Types.ObjectId,
-      ref: 'Brand',
+      ref: 'User',
     },
     influencer: {
       type: Schema.Types.ObjectId,
-      ref: 'Influencer',
+      ref: 'User',
     },
     category: {
       type: String,

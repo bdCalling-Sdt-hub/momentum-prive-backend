@@ -12,7 +12,14 @@ const createReviewToDB = async (payload: Partial<IReview>) => {
 
 const getAllReview = async (query: Record<string, unknown>) => {
   const reviewBuilder = new QueryBuilder(
-    Review.find().populate(['brand', 'influencer']),
+    Review.find()
+      .populate('influencer')
+      .populate({
+        path: 'user',
+        populate: {
+          path: 'brand',
+        },
+      }),
     query
   )
     .search(reviewSearchAbleFields)
@@ -27,12 +34,16 @@ const getAllReview = async (query: Record<string, unknown>) => {
 };
 
 const getSingleReview = async (id: string) => {
-  const result = await Review.findOne({ _id: id, status: 'active' }).populate([
-    'brand',
-    'influencer',
-  ]);
+  const result = await Review.findOne({ _id: id, status: 'active' })
+    .populate('influencer')
+    .populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    });
 
-  if (!result?.brand || !result?.influencer) {
+  if (!result?.user || !result?.influencer) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Review not found');
   }
 

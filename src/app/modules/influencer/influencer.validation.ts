@@ -9,6 +9,8 @@ export const InfluencerValiation = z.object({
     .max(15),
   city: z.string({ required_error: 'required city' }),
   country: z.string({ required_error: 'required country' }),
+  fullName: z.string({ required_error: 'required FullName' }),
+  email: z.string({ required_error: 'required Email' }),
   zip: z.number().optional(),
   describe: z.string({ required_error: 'required describetion' }),
   followersIG: z.number({ required_error: 'required instagram followers' }),

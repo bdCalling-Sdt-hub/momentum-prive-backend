@@ -1,4 +1,5 @@
 import { Types } from 'mongoose';
+import { IInfluencer } from '../influencer/influencer.interface';
 
 type IInviteStatus =
   | 'Pending'
