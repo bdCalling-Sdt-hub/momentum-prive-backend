@@ -3,14 +3,14 @@ import { IReview } from './review.interface';
 
 const reviewSchema = new Schema<IReview>(
   {
-    user: {
+    brand: {
       type: Schema.Types.ObjectId,
       ref: 'User',
       required: true,
     },
     influencer: {
       type: Schema.Types.ObjectId,
-      ref: 'Influencer',
+      ref: 'User',
       required: true,
     },
     details: {

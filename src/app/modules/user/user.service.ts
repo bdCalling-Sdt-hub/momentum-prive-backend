@@ -165,6 +165,7 @@ const creatInfluencerToDB = async (payload: Partial<IUser & IInfluencer>) => {
     await session.endSession();
   }
 };
+
 const createBrandToDB = async (payload: Partial<IUser & IBrand>) => {
   const session = await startSession();
 

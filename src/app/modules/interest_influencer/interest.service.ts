@@ -5,6 +5,7 @@ import { IInterest } from './interest.interface';
 import { Interest } from './interest.model';
 import { User } from '../user/user.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
+import { Campaign } from '../campaign/campaign.model';
 
 const getAllInterest = async () => {
   const result = await Interest.find()
@@ -93,7 +94,7 @@ const updatedInterestStautsToDb = async (
 
   // Limit to only 4 "Accepted" statuses
   if (payload.status === 'Accepted' && acceptedCount >= 4) {
-    throw new Error('Cannot accept more than 4 statuses');
+    throw new Error('Cannot accept more than 4 interests');
   }
 
   const updatedStatus = await Interest.findByIdAndUpdate(
@@ -113,6 +114,12 @@ const updatedInterestStautsToDb = async (
     throw new Error('Interest not found');
   }
 
+  const isInsterest = await Interest.findById(id);
+
+  const isCampaign = await Campaign.findById(isInsterest?.campaign);
+
+  const isUser = await User.findById(isCampaign?.user);
+
   const collaborationId = updatedStatus.Collaborate;
 
   // send notifications
@@ -122,15 +129,15 @@ const updatedInterestStautsToDb = async (
 
   if (updatedStatus.status === 'Accepted') {
     const data = {
-      text: `${influencerData?.fullName} Accept your interest`,
-      receiver: payload.influencer,
+      text: `${isUser?.fullName} Accept your interest`,
+      receiver: influencerData,
     };
     await sendNotifications(data);
   } else {
     updatedStatus.status === 'Rejected';
     const data = {
-      text: `${influencerData?.fullName} Reject your interest`,
-      receiver: payload.influencer,
+      text: `${isUser?.fullName} Reject your interest`,
+      receiver: influencerData,
     };
     await sendNotifications(data);
   }

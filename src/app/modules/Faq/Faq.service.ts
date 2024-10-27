@@ -6,13 +6,13 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { faqSearchAbleFields } from './Faq.constant';
 
 const createFaqToDB = async (payload: Partial<IFaq>) => {
-  const isFaqExist = await Faq.findOne({
-    question: payload.question,
-  });
+  // const isFaqExist = await Faq.findOne({
+  //   question: payload.question,
+  // });
 
-  if (isFaqExist) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Faq already exist');
-  }
+  // if (isFaqExist) {
+  //   throw new ApiError(StatusCodes.BAD_REQUEST, 'Faq already exist');
+  // }
 
   const result = await Faq.create(payload);
   return result;
@@ -37,16 +37,17 @@ const getSingleFaq = async (id: string) => {
 };
 
 const updateFaq = async (id: string, payload: Partial<IFaq>) => {
-  const isFaqExist = await Faq.findOne({
-    question: payload.question,
-  });
+  // const isFaqExist = await Faq.findOne({
+  //   question: payload.question,
+  // });
 
-  if (isFaqExist) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Faq already exist please then update'
-    );
-  }
+  // if (isFaqExist) {
+  //   throw new ApiError(
+  //     StatusCodes.BAD_REQUEST,
+  //     'Faq already exist please then update'
+  //   );
+  // }
+
   const result = await Faq.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,

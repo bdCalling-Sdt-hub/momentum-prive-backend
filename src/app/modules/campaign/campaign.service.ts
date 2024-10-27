@@ -230,9 +230,14 @@ const getAllCampaigns = async (
 // };
 
 const getSingleCmpaign = async (id: string) => {
-  const result = await Campaign.findOne({ _id: id, status: 'active' }).populate(
-    ['brand', 'influencer', 'category']
-  );
+  const result = await Campaign.findOne({ _id: id, status: 'active' })
+    .populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    })
+    .populate(['influencer', 'category']);
 
   if (result === null) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');

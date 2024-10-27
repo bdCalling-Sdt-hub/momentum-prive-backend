@@ -10,9 +10,14 @@ import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
 import { User } from '../user/user.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
+import { Invite } from '../invite/invite.model';
 
 const createCollaborationToDB = async (payload: ICollaboration) => {
-  const isCampaign = await Campaign.findById(payload.campaign);
+  const isInvite = await Invite.findById(payload.invite);
+
+  const inviteData = isInvite?.campaign;
+
+  const isCampaign = await Campaign.findById(inviteData);
 
   const isInfluencer = await User.findById(payload.influencer);
 
@@ -39,13 +44,16 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   const result = await Collaborate.create(value);
 
   const createInterestInfluencer = await Interest.create({
-    campaign: result.campaign,
+    campaign: isCampaign,
     influencer: result.influencer,
     Collaborate: result._id,
   });
 
   if (!createInterestInfluencer) {
-    return `Failed to create interest with collaboration details`;
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Failed to create interest with collaboration details'
+    );
   }
 
   //send notification
@@ -76,7 +84,22 @@ const getAllCollaborations = async (
   filter: Record<string, any>
 ) => {
   const collaborateBuilder = new QueryBuilder(
-    Collaborate.find(filter).populate('campaign').populate('influencer'),
+    Collaborate.find(filter)
+      .populate({
+        path: 'campaign',
+        populate: {
+          path: 'user',
+          populate: {
+            path: 'brand',
+          },
+        },
+      })
+      .populate({
+        path: 'influencer',
+        populate: {
+          path: 'influencer',
+        },
+      }),
     query
   )
     .search(collaboratationSearchAbleFields)

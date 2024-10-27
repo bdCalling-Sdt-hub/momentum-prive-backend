@@ -4,13 +4,17 @@ import { inviteStatus } from './collaboration.constant';
 
 const collaborateSchema = new Schema<ICollaboration>(
   {
-    campaign: {
+    // campaign: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'Campaign',
+    // },
+    invite: {
       type: Schema.Types.ObjectId,
-      ref: 'Campaign',
+      ref: 'Invite',
     },
     influencer: {
       type: Schema.Types.ObjectId,
-      ref: 'Influencer',
+      ref: 'User',
     },
     image: {
       type: [String],
