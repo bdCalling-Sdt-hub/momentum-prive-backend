@@ -5,12 +5,12 @@ const reviewSchema = new Schema<IReview>(
   {
     brand: {
       type: Schema.Types.ObjectId,
-      ref: 'Brand',
+      ref: 'User',
       required: true,
     },
     influencer: {
       type: Schema.Types.ObjectId,
-      ref: 'Influencer',
+      ref: 'User',
       required: true,
     },
     details: {

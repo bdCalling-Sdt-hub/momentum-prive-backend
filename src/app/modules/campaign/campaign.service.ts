@@ -10,10 +10,15 @@ import { paginationHelpers } from '../../../helpers/paginationHelper';
 import { SortOrder } from 'mongoose';
 import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
+import { User } from '../user/user.model';
 
 const createCampaignToDB = async (payload: Partial<ICampaign>) => {
-  const isCategoryOfBrand = await Brand.findById(payload.brand);
-  const isCategoryName = isCategoryOfBrand?.category;
+  // const isCategoryOfBrand = await Brand.findById(payload.brand);
+  const isCategoryOfBrand = await User.findById(payload.user);
+
+  const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
+
+  const isCategoryName = isBrandOfCat?.category;
 
   const fineCategory = await Category.findOne({ _id: isCategoryName });
 
@@ -68,8 +73,13 @@ const getAllCampaigns = async (
     andConditions.length > 0 ? { $and: andConditions } : {};
 
   const result = await Campaign.find(whereConditions)
-    .populate(['brand', 'influencer', 'category'])
-
+    .populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    })
+    .populate(['influencer', 'category'])
     .sort(sortConditions)
     .skip(skip)
     .limit(limit);
@@ -220,9 +230,14 @@ const getAllCampaigns = async (
 // };
 
 const getSingleCmpaign = async (id: string) => {
-  const result = await Campaign.findOne({ _id: id, status: 'active' }).populate(
-    ['brand', 'influencer', 'category']
-  );
+  const result = await Campaign.findOne({ _id: id, status: 'active' })
+    .populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    })
+    .populate(['influencer', 'category']);
 
   if (result === null) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');

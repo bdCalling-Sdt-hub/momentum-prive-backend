@@ -22,7 +22,19 @@ const updateInfluencerToDB = async (
     throw new Error('Image must be an array of strings');
   }
 
-  const result = await Influencer.findByIdAndUpdate(id, payload, {
+  const { image, ...remainingData } = payload;
+
+  const modifiedUpdateData: Record<string, unknown> = {
+    ...remainingData,
+  };
+
+  if (image && image.length > 0) {
+    for (const [index, value] of image.entries()) {
+      modifiedUpdateData[`image.${index}`] = value;
+    }
+  }
+
+  const result = await Influencer.findByIdAndUpdate(id, modifiedUpdateData, {
     new: true,
     runValidators: true,
   });

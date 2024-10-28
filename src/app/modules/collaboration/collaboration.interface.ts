@@ -9,7 +9,8 @@ type ICollaborationStatus =
   | 'Completed';
 
 export type ICollaboration = {
-  campaign: Types.ObjectId;
+  // campaign: Types.ObjectId;
+  invite: Types.ObjectId;
   influencer: Types.ObjectId;
   status: 'active' | 'deleted';
   typeStatus: ICollaborationStatus;

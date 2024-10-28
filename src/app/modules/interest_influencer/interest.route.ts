@@ -1,4 +1,4 @@
-import express, { NextFunction, Request, Response } from 'express';
+import express from 'express';
 import { InterestController } from './interest.controller';
 
 const router = express.Router();

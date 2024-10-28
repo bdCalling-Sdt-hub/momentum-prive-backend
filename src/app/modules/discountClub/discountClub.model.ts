@@ -8,7 +8,7 @@ const discountClubSchema = new Schema<IDiscountClub>(
     image: {
       type: String,
     },
-    brand: {
+    user: {
       type: Schema.Types.ObjectId,
       ref: 'User',
     },

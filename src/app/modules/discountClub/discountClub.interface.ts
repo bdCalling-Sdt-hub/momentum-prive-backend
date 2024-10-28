@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 
 export type IDiscountClub = {
-  brand: Types.ObjectId;
+  user: Types.ObjectId;
   image: string;
   buyGuide: string;
   name: string;

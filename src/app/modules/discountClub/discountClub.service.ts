@@ -16,7 +16,12 @@ const createDiscountToDB = async (payload: Partial<IDiscountClub>) => {
 
 const getAllDiscount = async (query: Record<string, unknown>) => {
   const discountBuilder = new QueryBuilder(
-    DiscountClub.find().populate('brand'),
+    DiscountClub.find().populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    }),
     query
   )
     .search(DiscountSearchAbleFields)
@@ -30,7 +35,12 @@ const getAllDiscount = async (query: Record<string, unknown>) => {
 };
 
 const getSingleDiscount = async (id: string) => {
-  const result = await DiscountClub.findById(id);
+  const result = await DiscountClub.findById(id).populate({
+    path: 'user',
+    populate: {
+      path: 'brand',
+    },
+  });
   return result;
 };
 

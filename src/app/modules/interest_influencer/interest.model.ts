@@ -9,7 +9,7 @@ const interestSchema = new Schema<IInterest>(
     },
     influencer: {
       type: Schema.Types.ObjectId,
-      ref: 'Influencer',
+      ref: 'User',
     },
     Collaborate: {
       type: Schema.Types.ObjectId,

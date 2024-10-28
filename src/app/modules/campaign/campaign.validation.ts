@@ -61,7 +61,7 @@ const dateStringSchema = z.string().refine(
 
 const campaignValidation = z
   .object({
-    brand: z.string({ required_error: 'required brand' }),
+    user: z.string({ required_error: 'required user' }),
     influencer: z.string().optional(),
     name: z.string({ required_error: 'required name' }),
     startTime: dateStringSchema,
@@ -87,7 +87,7 @@ const campaignValidation = z
 
 const campaignUpdatedValidation = z
   .object({
-    brand: z.string().optional(),
+    user: z.string().optional(),
     influencer: z.string().optional(),
     name: z.string().optional(),
     rules: z.string().optional(),

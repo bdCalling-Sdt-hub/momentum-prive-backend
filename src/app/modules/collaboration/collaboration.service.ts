@@ -8,11 +8,22 @@ import { Campaign } from '../campaign/campaign.model';
 import { Interest } from '../interest_influencer/interest.model';
 import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
+import { User } from '../user/user.model';
+import { sendNotifications } from '../../../helpers/notificationHelper';
+import { Invite } from '../invite/invite.model';
 
 const createCollaborationToDB = async (payload: ICollaboration) => {
-  const isCampaign = await Campaign.findById(payload.campaign);
+  const isInvite = await Invite.findById(payload.invite);
 
-  const isBrand = await Brand.findById(isCampaign?.brand);
+  const inviteData = isInvite?.campaign;
+
+  const isCampaign = await Campaign.findById(inviteData);
+
+  const isInfluencer = await User.findById(payload.influencer);
+
+  const isUser = await User.findById(isCampaign?.user);
+
+  const isBrand = await Brand.findById(isUser?.brand);
 
   const isCateory = await Category.findById(isBrand?.category);
 
@@ -33,14 +44,37 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   const result = await Collaborate.create(value);
 
   const createInterestInfluencer = await Interest.create({
-    campaign: result.campaign,
+    campaign: isCampaign,
     influencer: result.influencer,
     Collaborate: result._id,
   });
 
   if (!createInterestInfluencer) {
-    return `Failed to create interest with collaboration details`;
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Failed to create interest with collaboration details'
+    );
   }
+
+  //send notification
+  if (result) {
+    const data = {
+      text: `${isInfluencer?.fullName} Accept your invitation`,
+      receiver: isCampaign?.user,
+    };
+
+    await sendNotifications(data);
+  }
+  if (result) {
+    const data = {
+      text: `${isInfluencer?.fullName} Booking a new Collaboration`,
+      receiver: isCampaign?.user,
+      type: 'ADMIN',
+    };
+
+    await sendNotifications(data);
+  }
+  //end notification
 
   return result;
 };
@@ -50,7 +84,22 @@ const getAllCollaborations = async (
   filter: Record<string, any>
 ) => {
   const collaborateBuilder = new QueryBuilder(
-    Collaborate.find(filter).populate('campaign').populate('influencer'),
+    Collaborate.find(filter)
+      .populate({
+        path: 'campaign',
+        populate: {
+          path: 'user',
+          populate: {
+            path: 'brand',
+          },
+        },
+      })
+      .populate({
+        path: 'influencer',
+        populate: {
+          path: 'influencer',
+        },
+      }),
     query
   )
     .search(collaboratationSearchAbleFields)
