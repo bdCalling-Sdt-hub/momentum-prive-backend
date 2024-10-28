@@ -6,7 +6,7 @@ const inviteSchema = new Schema<IInvite>(
   {
     influencer: {
       type: Schema.Types.ObjectId,
-      ref: 'Influencer',
+      ref: 'User',
       required: true,
     },
     campaign: {

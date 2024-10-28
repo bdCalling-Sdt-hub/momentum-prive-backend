@@ -7,25 +7,16 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
   return result;
 };
 
-const getAllInvites = async (query: Record<string, unknown>) => {
-  const inviteBuilder = new QueryBuilder(
-    Invite.find()
-      .populate({
-        path: 'campaign',
-        populate: {
-          path: 'brand',
-        },
-      })
-      .populate('influencer'),
-    query
-  )
-    .search(['campaign', 'influencer'])
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
-
-  const result = await inviteBuilder.modelQuery;
+//
+const getAllInvites = async () => {
+  const result = await Invite.find()
+    .populate({
+      path: 'campaign',
+      populate: {
+        path: 'brand',
+      },
+    })
+    .populate('influencer');
   return result;
 };
 

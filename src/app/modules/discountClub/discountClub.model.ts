@@ -10,7 +10,7 @@ const discountClubSchema = new Schema<IDiscountClub>(
     },
     brand: {
       type: Schema.Types.ObjectId,
-      ref: 'Brand',
+      ref: 'User',
     },
     name: {
       type: String,
