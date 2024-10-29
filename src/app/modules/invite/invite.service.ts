@@ -6,8 +6,18 @@ import { Campaign } from '../campaign/campaign.model';
 import { IInfluencer } from '../influencer/influencer.interface';
 import { IInvite } from './invite.interface';
 import { Invite } from './invite.model';
+import ApiError from '../../../errors/ApiError';
+import { StatusCodes } from 'http-status-codes';
 
 const createInviteToDB = async (payload: Partial<IInvite>) => {
+  const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
+
+  const approveStatus = isCampaignStatus?.approvalStatus;
+
+  if (approveStatus !== 'Approved') {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Campaign not approved');
+  }
+
   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
     'user',
     'fullName'
@@ -32,6 +42,17 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
   return result;
 };
 
+const resentInviteToDB = async () => {
+  const result = await Invite.find({ status: 'Pending' }).sort({
+    createdAt: -1,
+  });
+
+  if (!result || result.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No resent campaign found');
+  }
+
+  return result;
+};
 // const createInviteToDB = async (payloads: Partial<IInvite>[]) => {
 //   const results = await Invite.insertMany(payloads);
 
@@ -118,4 +139,5 @@ export const InviteService = {
   createInviteToDB,
   getAllInvites,
   updatedInviteToDB,
+  resentInviteToDB,
 };

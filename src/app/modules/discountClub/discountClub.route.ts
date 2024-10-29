@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   '/create-discount',
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.BRAND),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = DiscountClubValidation.createDiscountClubValidation.parse(
@@ -21,19 +21,19 @@ router.post(
 
 router.get(
   '/',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   DiscountClubController.getAllDiscount
 );
 
 router.get(
   '/:id',
-  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   DiscountClubController.getSingleDiscount
 );
 
 router.patch(
   '/:id',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = DiscountClubValidation.updatedDiscountClubValidation.parse(
@@ -45,7 +45,7 @@ router.patch(
 
 router.delete(
   '/:id',
-  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   DiscountClubController.deletedCampaignToDB
 );
 

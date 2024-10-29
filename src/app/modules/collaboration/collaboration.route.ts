@@ -3,13 +3,15 @@ import validateRequest from '../../middlewares/validateRequest';
 import { CollaborationController } from './collaboration.controller';
 import fileUploadHandler from '../../middlewares/fileUploadHandler';
 import { CollaborationValidation } from './collaboration.validation';
+import auth from '../../middlewares/auth';
+import { USER_ROLES } from '../../../enums/user';
 
 const router = express.Router();
 
 router.post(
   '/create-collaboration',
   fileUploadHandler(),
-
+  auth(USER_ROLES.INFLUENCER),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CollaborationValidation.createCollaboration.parse(
       JSON.parse(req.body.data)

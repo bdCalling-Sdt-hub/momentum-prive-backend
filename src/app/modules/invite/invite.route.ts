@@ -9,15 +9,26 @@ const router = express.Router();
 
 router.post(
   '/create-invite',
+  auth(USER_ROLES.BRAND),
   validateRequest(InviteValiationZodSchema.createInviteValiation),
   InviteController.createCategoryToDB
 );
 
-router.get('/', InviteController.getAllInvites);
+router.get(
+  '/',
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
+  InviteController.getAllInvites
+);
+
+router.get(
+  '/get-resent',
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
+  InviteController.resentInviteToDB
+);
 
 router.patch(
   '/:id',
-  // auth(USER_ROLES.INFLUENCER),
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
   InviteController.updatedInviteToDB
 );
 

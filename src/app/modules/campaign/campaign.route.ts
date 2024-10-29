@@ -10,6 +10,7 @@ const router = express.Router();
 
 router.post(
   '/create-campaign',
+  auth(USER_ROLES.BRAND),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CampaignValidationZodSchema.campaignValidation.parse(
@@ -21,18 +22,19 @@ router.post(
 
 router.get(
   '/',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
   CampaignController.getAllCampaigns
 );
 
 router.get(
   '/:id',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
   CampaignController.getSingleCmpaign
 );
 
 router.patch(
   '/:id',
+  auth(USER_ROLES.BRAND),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CampaignValidationZodSchema.campaignUpdatedValidation.parse(
@@ -44,13 +46,13 @@ router.patch(
 
 router.put(
   '/:userId',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
   CampaignController.updatedCampaignStatusToDB
 );
 
 router.delete(
   '/:id',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
   CampaignController.deletedCampaignToDB
 );
 

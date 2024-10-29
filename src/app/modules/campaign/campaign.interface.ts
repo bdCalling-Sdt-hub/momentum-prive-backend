@@ -18,6 +18,7 @@ export type ICampaign = {
   details: string;
   brandInstagram: string;
   collaboration: number;
+  approvalStatus: 'Approved' | 'Rejected' | 'Pending';
   rules?: string;
   exchange?: string;
   status: 'active' | 'deleted';

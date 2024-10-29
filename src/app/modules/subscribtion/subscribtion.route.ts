@@ -2,13 +2,31 @@ import { Router } from 'express';
 
 import express from 'express';
 import { SubscriptionController } from './subscribtion.controller';
+import auth from '../../middlewares/auth';
+import { USER_ROLES } from '../../../enums/user';
 
 const router = Router();
 
-router.post('/subscribe', SubscriptionController.createSubscription);
-router.post('/renew', SubscriptionController.renewExpiredSubscription);
-router.patch('/update', SubscriptionController.updateSubscription);
-router.delete('/cancel', SubscriptionController.CancelSubscription);
+router.post(
+  '/subscribe',
+  auth(USER_ROLES.BRAND),
+  SubscriptionController.createSubscription
+);
+router.post(
+  '/renew',
+  auth(USER_ROLES.BRAND),
+  SubscriptionController.renewExpiredSubscription
+);
+router.patch(
+  '/update',
+  auth(USER_ROLES.BRAND),
+  SubscriptionController.updateSubscription
+);
+router.delete(
+  '/cancel',
+  auth(USER_ROLES.BRAND),
+  SubscriptionController.CancelSubscription
+);
 router.get('/get', SubscriptionController.getAllSubscriptation);
 
 router.post(
@@ -17,7 +35,11 @@ router.post(
   SubscriptionController.webhookHandler
 );
 
-router.get('/subscribe', SubscriptionController.createSession);
+router.get(
+  '/subscribe',
+
+  SubscriptionController.createSession
+);
 router.get('/success', SubscriptionController.Success);
 router.get('/customers/:id', SubscriptionController.customerPortal);
 

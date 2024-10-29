@@ -18,6 +18,7 @@ import { InterestRoutes } from '../app/modules/interest_influencer/interest.rout
 import { SubscriptionRoutes } from '../app/modules/subscribtion/subscribtion.route';
 import { PackageRoutes } from '../app/modules/package/package.route';
 import { NotificationRoutes } from '../app/modules/notification/notification.route';
+import { UpdatedCampaignStatusRoutes } from '../app/modules/permission_access_campaign/permission_access_campaign.route';
 
 const router = express.Router();
 
@@ -41,6 +42,7 @@ const apiRoutes = [
   { path: '/interest-influencer', route: InterestRoutes },
   { path: '/package', route: PackageRoutes },
   { path: '/notification', route: NotificationRoutes },
+  { path: '/updated-campaign-status', route: UpdatedCampaignStatusRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

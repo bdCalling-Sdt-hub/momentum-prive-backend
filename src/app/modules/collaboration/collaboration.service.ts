@@ -86,20 +86,12 @@ const getAllCollaborations = async (
   const collaborateBuilder = new QueryBuilder(
     Collaborate.find(filter)
       .populate({
-        path: 'campaign',
+        path: 'invite',
         populate: {
-          path: 'user',
-          populate: {
-            path: 'brand',
-          },
+          path: 'campaign',
         },
       })
-      .populate({
-        path: 'influencer',
-        populate: {
-          path: 'influencer',
-        },
-      }),
+      .populate('influencer'),
     query
   )
     .search(collaboratationSearchAbleFields)

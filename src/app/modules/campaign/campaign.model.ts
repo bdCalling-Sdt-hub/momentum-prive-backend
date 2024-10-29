@@ -78,7 +78,11 @@ const campaignSchema = new Schema<ICampaign>(
       type: String,
       trim: true,
     },
-
+    approvalStatus: {
+      type: String,
+      enum: ['Approved', 'Rejected', 'Pending'],
+      default: 'Pending',
+    },
     status: {
       type: String,
       enum: ['active', 'delete'],
