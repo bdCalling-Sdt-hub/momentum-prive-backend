@@ -3,6 +3,7 @@ import { USER_ROLES } from '../../../enums/user';
 
 export type IUser = {
   role: USER_ROLES;
+  title?: string;
   fullName: string;
   email?: string;
   subscription: boolean;

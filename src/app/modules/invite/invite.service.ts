@@ -14,8 +14,18 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
 
   const approveStatus = isCampaignStatus?.approvalStatus;
 
+  if (approveStatus === 'Rejected') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Sorry, your Campaign was Rejected you cannot invite new Influencers'
+    );
+  }
+
   if (approveStatus !== 'Approved') {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Campaign not approved');
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Campaign not approved yet, please wait for approval'
+    );
   }
 
   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(

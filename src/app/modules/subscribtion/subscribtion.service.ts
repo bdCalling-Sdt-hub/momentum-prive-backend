@@ -9,6 +9,7 @@ import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { formatDate } from './timeFormat';
 import { User } from '../user/user.model';
+import { Package } from '../package/package.model';
 
 export const stripe = new Stripe(config.stripe_secret_key as string, {
   apiVersion: '2024-09-30.acacia',
@@ -141,11 +142,16 @@ const createCustomerAndSubscription = async (
     packages,
   });
 
+  const isPackageExist = await Package.findOne({ _id: packages });
+
+  const isPackage = isPackageExist?.title;
+
   if (createSub) {
     // Find and update the user based on the email
     const updateUserSubs = await User.findOneAndUpdate(
       { email },
-      { $set: { subscription: true } },
+      // { $set: { subscription: true } },
+      { $set: { subscription: true, title: isPackage } },
       { new: true }
     );
 

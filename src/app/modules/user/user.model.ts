@@ -11,6 +11,9 @@ const userSchema = new Schema<IUser, UserModal>(
     fullName: {
       type: String,
     },
+    title: {
+      type: String,
+    },
     role: {
       type: String,
       enum: Object.values(USER_ROLES),
