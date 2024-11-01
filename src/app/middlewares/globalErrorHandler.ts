@@ -5,6 +5,7 @@ import handleValidationError from '../../errors/handleValidationError';
 import handleZodError from '../../errors/handleZodError';
 import { errorLogger } from '../../shared/logger';
 import { IErrorMessage } from '../../types/errors.types';
+import { StatusCodes } from 'http-status-codes';
 
 const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
   config.node_env === 'development'
@@ -25,6 +26,17 @@ const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
     statusCode = simplifiedError.statusCode;
     message = simplifiedError.message;
     errorMessages = simplifiedError.errorMessages;
+  } else if (error.name === 'JsonWebTokenError') {
+    statusCode = StatusCodes.UNAUTHORIZED;
+    message = 'Invalid token, please login again';
+    errorMessages = error.message
+      ? [
+          {
+            path: '',
+            message: error.message,
+          },
+        ]
+      : [];
   } else if (error instanceof ApiError) {
     statusCode = error.statusCode;
     message = error.message;

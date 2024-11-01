@@ -10,7 +10,7 @@ const router = express.Router();
 router.patch(
   '/:id',
   fileUploadHandler(),
-  auth(USER_ROLES.BRAND),
+  // auth(USER_ROLES.BRAND),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = BrandValiationZodSchema.BrandValiation.parse(
       JSON.parse(req.body.data)

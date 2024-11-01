@@ -11,7 +11,7 @@ const router = express.Router();
 router.patch(
   '/:id',
   // validateRequest(InfluencerValiationZodSchema.InfluencerValiation),
-  auth(USER_ROLES.INFLUENCER),
+  // auth(USER_ROLES.INFLUENCER),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = InfluencerValiationZodSchema.InfluencerValiation.parse(
@@ -21,6 +21,10 @@ router.patch(
   }
 );
 
-router.get('/', InfluencerController.getAllInfluencer);
+router.get(
+  '/',
+  auth(USER_ROLES.INFLUENCER),
+  InfluencerController.getAllInfluencer
+);
 
 export const InfluencerRoutes = router;

@@ -19,6 +19,7 @@ import { SubscriptionRoutes } from '../app/modules/subscribtion/subscribtion.rou
 import { PackageRoutes } from '../app/modules/package/package.route';
 import { NotificationRoutes } from '../app/modules/notification/notification.route';
 import { UpdatedCampaignStatusRoutes } from '../app/modules/permission_access_campaign/permission_access_campaign.route';
+import { DashboardRoutes } from '../app/modules/dashboard/dashboard.route';
 
 const router = express.Router();
 
@@ -43,6 +44,7 @@ const apiRoutes = [
   { path: '/package', route: PackageRoutes },
   { path: '/notification', route: NotificationRoutes },
   { path: '/updated-campaign-status', route: UpdatedCampaignStatusRoutes },
+  { path: '/dashboard', route: DashboardRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

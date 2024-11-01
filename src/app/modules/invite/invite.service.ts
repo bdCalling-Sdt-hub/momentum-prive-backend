@@ -8,6 +8,8 @@ import { IInvite } from './invite.interface';
 import { Invite } from './invite.model';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
+import { Category } from '../category/category.model';
+import { populate } from 'dotenv';
 
 const createInviteToDB = async (payload: Partial<IInvite>) => {
   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
@@ -88,42 +90,123 @@ const resentInviteToDB = async () => {
 //   return populatedResults;
 // };
 
-// const getAllInvites = async (query: Record<string, unknown>) => {
-//   const inviteBuilder = new QueryBuilder(
-//     Invite.find()
-//       .populate({
-//         path: 'campaign',
+// const getAllInvites = async () => {
+//   const result = await Invite.find()
+//     .sort({
+//       createdAt: -1,
+//     })
+//     .populate({
+//       path: 'campaign',
+//       select: 'image name startTime endTime',
+//       populate: {
+//         path: 'user',
+//         select: 'fullName',
 //         populate: {
-//           path: 'user',
+//           path: 'brand',
+//           select: 'owner',
 //         },
-//       })
-//       .populate('influencer'),
-//     query
-//   )
-//     .search(['campaign', 'influencer'])
-//     .filter()
-//     .sort()
-//     .paginate()
-//     .fields();
-
-//   const result = await inviteBuilder.modelQuery;
+//       },
+//     })
+//     .populate('influencer');
 //   return result;
 // };
 
-const getAllInvites = async () => {
-  const result = await Invite.find()
+const getAllInvites = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, ...filterData } = query;
+  const anyConditions: any[] = [];
+
+  // Step 1: Search for campaigns by category name
+  if (searchTerm) {
+    const campaignIds = await Campaign.find({
+      category: {
+        $in: await Category.find({
+          categoryName: { $regex: searchTerm, $options: 'i' },
+        }).distinct('_id'),
+      },
+    }).distinct('_id');
+
+    if (campaignIds.length > 0) {
+      anyConditions.push({ campaign: { $in: campaignIds } });
+    }
+  }
+
+  // Step 2: Include other filter data
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({
+        [field]: value,
+      })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Apply filter conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  const result = await Invite.find(whereConditions)
     .populate({
       path: 'campaign',
+      // select: 'image name startTime endTime category',
+      populate: {
+        path: 'category',
+        select: 'categoryName',
+      },
+    })
+    .populate({
+      path: 'campaign',
+      select: 'image name startTime endTime category',
       populate: {
         path: 'user',
+        select: 'fullName',
         populate: {
           path: 'brand',
+          select: 'owner',
         },
       },
     })
-    .populate('influencer');
-  return result;
+    .populate({
+      path: 'influencer',
+      select: 'fullName',
+    })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await Invite.countDocuments(whereConditions);
+
+  const data: any = {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
+  return data;
 };
+
+// const updatedInviteToDB = async (id: string, payload: Partial<IInvite>) => {
+//   const invite = await Invite.findById(id);
+
+//   if (!invite) {
+//     throw new Error(`Invite with ID ${id} not found`);
+//   }
+
+//   const result = await Invite.findByIdAndUpdate(
+//     id,
+//     {
+//       $set: {
+//         status: payload.status,
+//       },
+//     },
+//     { new: true }
+//   );
+
+//   return result;
+// };
 
 const updatedInviteToDB = async (id: string, payload: Partial<IInvite>) => {
   const invite = await Invite.findById(id);
@@ -132,11 +215,15 @@ const updatedInviteToDB = async (id: string, payload: Partial<IInvite>) => {
     throw new Error(`Invite with ID ${id} not found`);
   }
 
+  // Check if the status is 'Accepted' and modify it to 'Accomplish'
+  const updatedStatus =
+    payload.status === 'Accepted' ? 'Accomplish' : payload.status;
+
   const result = await Invite.findByIdAndUpdate(
     id,
     {
       $set: {
-        status: payload.status,
+        status: updatedStatus,
       },
     },
     { new: true }

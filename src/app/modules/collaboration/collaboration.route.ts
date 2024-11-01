@@ -11,7 +11,7 @@ const router = express.Router();
 router.post(
   '/create-collaboration',
   fileUploadHandler(),
-  auth(USER_ROLES.INFLUENCER),
+  auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CollaborationValidation.createCollaboration.parse(
       JSON.parse(req.body.data)
@@ -20,7 +20,11 @@ router.post(
   }
 );
 
-router.get('/', CollaborationController.getAllCollaborations);
+router.get(
+  '/',
+  auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
+  CollaborationController.getAllCollaborations
+);
 
 router.patch('/:id', CollaborationController.updatedCollaborationToDB);
 

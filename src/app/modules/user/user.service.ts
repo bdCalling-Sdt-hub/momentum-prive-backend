@@ -249,7 +249,7 @@ const getUserProfileFromDB = async (
 
   const isExistUser = await User.findById(id).populate('brand influencer');
   if (!isExistUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+    throw new ApiError(StatusCodes.UNAUTHORIZED, "User doesn't exist!");
   }
 
   return isExistUser;

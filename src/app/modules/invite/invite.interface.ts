@@ -6,7 +6,8 @@ type IInviteStatus =
   | 'Accepted'
   | 'Rejected'
   | 'Review'
-  | 'Completed';
+  | 'Completed'
+  | 'Accomplish';
 
 export type IInvite = {
   influencer: Types.ObjectId;

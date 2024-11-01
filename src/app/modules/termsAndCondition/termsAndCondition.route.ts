@@ -10,15 +10,6 @@ router.post(
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   TermsAndConditionController.createCategoryToDB
 );
-router.get(
-  '/',
-  auth(
-    USER_ROLES.ADMIN,
-    USER_ROLES.SUPER_ADMIN,
-    USER_ROLES.INFLUENCER,
-    USER_ROLES.BRAND
-  ),
-  TermsAndConditionController.getAllTerms
-);
+router.get('/', TermsAndConditionController.getAllTerms);
 
 export const TermsAndConditionRoutes = router;

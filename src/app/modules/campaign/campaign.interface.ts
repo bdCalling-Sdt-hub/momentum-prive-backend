@@ -17,7 +17,7 @@ export type ICampaign = {
   dressCode: string;
   details: string;
   brandInstagram: string;
-  collaboration: number;
+  collaboration?: number;
   approvalStatus: 'Approved' | 'Rejected' | 'Pending';
   rules?: string;
   exchange?: string;

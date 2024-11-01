@@ -22,13 +22,13 @@ router.post(
 
 router.get(
   '/',
-  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
   CampaignController.getAllCampaigns
 );
 
 router.get(
   '/:id',
-  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER, USER_ROLES.ADMIN),
   CampaignController.getSingleCmpaign
 );
 
@@ -46,7 +46,7 @@ router.patch(
 
 router.put(
   '/:userId',
-  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
   CampaignController.updatedCampaignStatusToDB
 );
 

@@ -46,7 +46,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
   }
 
   if (!isExistUser) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+    throw new ApiError(StatusCodes.UNAUTHORIZED, "User doesn't exist!");
   }
 
   // Check if user is INFLUENCER or BRAND and their loginStatus is 'accept'
@@ -66,7 +66,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
     !isExistUser.verified
   ) {
     throw new ApiError(
-      StatusCodes.BAD_REQUEST,
+      StatusCodes.NOT_ACCEPTABLE,
       'Please verify your account, then try to login again'
     );
   }
@@ -74,7 +74,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
   // Check user status
   if (isExistUser && isExistUser.status === 'delete') {
     throw new ApiError(
-      StatusCodes.BAD_REQUEST,
+      StatusCodes.NOT_ACCEPTABLE,
       'You don’t have permission to access this content. It looks like your account has been deactivated.'
     );
   }

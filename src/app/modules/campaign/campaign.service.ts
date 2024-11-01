@@ -20,79 +20,68 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 
   const isCategoryName = isBrandOfCat?.category;
 
-  const fineCategory = await Category.findOne({ _id: isCategoryName });
-
   const campaign = await Campaign.create({
     ...payload,
     category: isCategoryName,
-    categoryName: fineCategory?.categoryName,
   });
   return campaign;
 };
 
-const getAllCampaigns = async (
-  filters: IICampaignFilters,
-  paginationOptions: IPaginationOptions
-) => {
-  const { searchTerm, ...filtersData } = filters;
-  const { page, limit, skip, sortBy, sortOrder } =
-    paginationHelpers.calculatePagination(paginationOptions);
+// const createCampaignToDB = async (payload: Partial<ICampaign>) => {
+//   const campaign = await Campaign.create(payload);
+//   return campaign;
+// };
 
-  const andConditions = [];
+const getAllCampaigns = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, ...filterData } = query;
+  const anyConditions: any[] = [];
 
   if (searchTerm) {
-    andConditions.push({
-      $or: CampaignSearchAbleFields.map(field => ({
-        [field]: {
-          $regex: searchTerm,
-          $options: 'i',
-        },
-      })),
-    });
+    const categoriesIds = await Category.find({
+      $or: [{ categoryName: { $regex: searchTerm, $options: 'i' } }],
+    }).distinct('_id');
+
+    // Only add `catogory` condition if there are matching users
+    if (categoriesIds.length > 0) {
+      anyConditions.push({ category: { $in: categoriesIds } });
+    }
   }
 
-  if (Object.keys(filtersData).length) {
-    andConditions.push({
-      $and: Object.entries(filtersData).map(([field, value]) => ({
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({
         [field]: value,
-      })),
-    });
+      })
+    );
+    anyConditions.push({ $and: filterConditions });
   }
 
-  andConditions.push({
-    status: 'active',
-  });
-
-  const sortConditions: { [key: string]: SortOrder } = {};
-
-  if (sortBy && sortOrder) {
-    sortConditions[sortBy] = sortOrder;
-  }
-
+  // Apply filter conditions
   const whereConditions =
-    andConditions.length > 0 ? { $and: andConditions } : {};
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
 
   const result = await Campaign.find(whereConditions)
     .populate({
-      path: 'user',
-      populate: {
-        path: 'brand',
-      },
+      path: 'category',
+      select: 'categoryName',
     })
-    .populate(['influencer', 'category'])
-    .sort(sortConditions)
     .skip(skip)
-    .limit(limit);
+    .limit(size)
+    .lean();
 
-  const total = await Campaign.countDocuments();
-  return {
+  const count = await Campaign.countDocuments(whereConditions);
+
+  const data: any = {
+    result,
     meta: {
-      page,
-      limit,
-      total,
+      page: pages,
+      total: count,
     },
-    data: result,
   };
+  return data;
 };
 
 // const getAllCampaigns = async (
@@ -103,130 +92,61 @@ const getAllCampaigns = async (
 //   const { page, limit, skip, sortBy, sortOrder } =
 //     paginationHelpers.calculatePagination(paginationOptions);
 
-//   const andConditions: any[] = [];
+//   const andConditions = [];
 
-//   // Base conditions for active status
-//   const baseConditions = {
-//     status: 'active',
-//   };
-
-//   // Search term conditions - only apply if searchTerm is present
 //   if (searchTerm) {
 //     andConditions.push({
-//       $or: [
-//         ...CampaignSearchAbleFields.map(field => ({
-//           [field]: {
-//             $regex: searchTerm,
-//             $options: 'i',
-//           },
-//         })),
-//         { 'category.categoryName': { $regex: searchTerm, $options: 'i' } },
-//         { 'brand.country': { $regex: searchTerm, $options: 'i' } },
-//         { 'brand.city': { $regex: searchTerm, $options: 'i' } },
-//         { 'brand.brandName': { $regex: searchTerm, $options: 'i' } },
-//       ],
+//       $or: CampaignSearchAbleFields.map(field => ({
+//         [field]: {
+//           $regex: searchTerm,
+//           $options: 'i',
+//         },
+//       })),
 //     });
 //   }
 
-//   console.log(searchTerm);
-
-//   // Filtering conditions from filterData
 //   if (Object.keys(filtersData).length) {
 //     andConditions.push({
-//       $and: Object.entries(filtersData).map(([field, value]) => {
-//         if (typeof value === 'string') {
-//           return {
-//             [field]: {
-//               $regex: value,
-//               $options: 'i',
-//             },
-//           };
-//         } else {
-//           return { [field]: value };
-//         }
-//       }),
+//       $and: Object.entries(filtersData).map(([field, value]) => ({
+//         [field]: value,
+//       })),
 //     });
 //   }
 
-//   // Combine base conditions and search/filter conditions
-//   const finalMatchConditions = {
-//     $and: [baseConditions, ...(andConditions.length > 0 ? andConditions : [])],
-//   };
+//   andConditions.push({
+//     status: 'active',
+//   });
 
-//   // Define sort conditions
-//   const sortConditions: Record<string, 1 | -1> = {};
+//   const sortConditions: { [key: string]: SortOrder } = {};
+
 //   if (sortBy && sortOrder) {
-//     sortConditions[sortBy] = sortOrder === 'asc' ? 1 : -1; // Ensure values are either 1 or -1
+//     sortConditions[sortBy] = sortOrder;
 //   }
 
-//   try {
-//     // Use aggregate to perform lookup and search on category.name
-//     const result = await Campaign.aggregate([
-//       {
-//         $match: finalMatchConditions,
-//       },
-//       {
-//         $lookup: {
-//           from: 'brands',
-//           localField: 'brand',
-//           foreignField: '_id',
-//           as: 'brand',
-//         },
-//       },
-//       {
-//         $unwind: '$brand',
-//       },
-//       {
-//         $lookup: {
-//           from: 'categories',
-//           localField: 'category',
-//           foreignField: '_id',
-//           as: 'category',
-//         },
-//       },
-//       {
-//         $unwind: '$category',
-//       },
-//       {
-//         $lookup: {
-//           from: 'influencers',
-//           localField: 'influencer',
-//           foreignField: '_id',
-//           as: 'influencer',
-//         },
-//       },
-//       {
-//         $unwind: '$influencer',
-//       },
-//       {
-//         $sort: sortConditions,
-//       },
-//       {
-//         $skip: skip,
-//       },
-//       {
-//         $limit: limit,
-//       },
-//     ]);
+//   const whereConditions =
+//     andConditions.length > 0 ? { $and: andConditions } : {};
 
-//     console.log({ result });
-
-//     // Count total documents matching the final match conditions
-//     const total = await Campaign.countDocuments(finalMatchConditions);
-
-//     // Debugging output
-
-//     return {
-//       meta: {
-//         page,
-//         limit,
-//         total,
+//   const result = await Campaign.find(whereConditions)
+//     .populate({
+//       path: 'user',
+//       populate: {
+//         path: 'brand',
 //       },
-//       data: result,
-//     };
-//   } catch (error) {
-//     throw new Error('Failed to fetch campaigns');
-//   }
+//     })
+//     .populate(['influencer', 'category'])
+//     .sort(sortConditions)
+//     .skip(skip)
+//     .limit(limit);
+
+//   const total = await Campaign.countDocuments();
+//   return {
+//     meta: {
+//       page,
+//       limit,
+//       total,
+//     },
+//     data: result,
+//   };
 // };
 
 const getSingleCmpaign = async (id: string) => {

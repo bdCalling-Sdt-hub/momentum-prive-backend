@@ -68,7 +68,6 @@ const campaignSchema = new Schema<ICampaign>(
     },
     collaboration: {
       type: Number,
-      required: true,
     },
     rules: {
       type: String,

@@ -102,6 +102,10 @@ const getAllCollaborations = async (
 
   const result = await collaborateBuilder.modelQuery;
 
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No collaboration found');
+  }
+
   return result;
 };
 

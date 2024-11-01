@@ -7,7 +7,19 @@ import { Influencer } from './influencer.model';
 //   id: string,
 //   payload: Partial<IInfluencer>
 // ) => {
-//   const result = await Influencer.findByIdAndUpdate(id, payload, {
+//   const { image, ...remainingData } = payload;
+
+//   const modifiedUpdateData: Record<string, unknown> = {
+//     ...remainingData,
+//   };
+
+//   if (image && image.length > 0) {
+//     for (const [index, value] of image.entries()) {
+//       modifiedUpdateData[`image.${index}`] = value;
+//     }
+//   }
+
+//   const result = await Influencer.findByIdAndUpdate(id, modifiedUpdateData, {
 //     new: true,
 //     runValidators: true,
 //   });
@@ -18,10 +30,6 @@ const updateInfluencerToDB = async (
   id: string,
   payload: Partial<IInfluencer>
 ) => {
-  if (payload.image && !Array.isArray(payload.image)) {
-    throw new Error('Image must be an array of strings');
-  }
-
   const { image, ...remainingData } = payload;
 
   const modifiedUpdateData: Record<string, unknown> = {
@@ -29,15 +37,27 @@ const updateInfluencerToDB = async (
   };
 
   if (image && image.length > 0) {
-    for (const [index, value] of image.entries()) {
-      modifiedUpdateData[`image.${index}`] = value;
+    const currentInfluencer = await Influencer.findById(id);
+
+    if (currentInfluencer) {
+      const updatedImages = [...currentInfluencer.image];
+
+      image.forEach((value, index) => {
+        if (value) {
+          updatedImages[index] = value;
+        }
+      });
+
+      modifiedUpdateData.image = updatedImages;
     }
   }
 
+  // Update the influencer document with modified update data
   const result = await Influencer.findByIdAndUpdate(id, modifiedUpdateData, {
     new: true,
     runValidators: true,
   });
+
   return result;
 };
 
@@ -45,7 +65,6 @@ const getAllInfluencer = async (
   query: Record<string, unknown>,
   filter: Record<string, any>
 ) => {
-  console.log(query);
   const influencerQuery = new QueryBuilder(Influencer.find(filter), query)
     .search(InfluencerSearchAbleFields)
     .filter()

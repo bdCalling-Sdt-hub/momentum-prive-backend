@@ -16,23 +16,13 @@ router.post(
 
 router.get(
   '/',
-  auth(
-    USER_ROLES.ADMIN,
-    USER_ROLES.SUPER_ADMIN,
-    USER_ROLES.INFLUENCER,
-    USER_ROLES.BRAND
-  ),
+
   FaqController.getAllFaq
 );
 
 router.get(
   '/:id',
-  auth(
-    USER_ROLES.ADMIN,
-    USER_ROLES.SUPER_ADMIN,
-    USER_ROLES.INFLUENCER,
-    USER_ROLES.BRAND
-  ),
+
   FaqController.getSingleFaq
 );
 
