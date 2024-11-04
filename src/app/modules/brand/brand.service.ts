@@ -15,29 +15,33 @@ const updateBrandToDB = async (id: string, payload: Partial<IBrand>) => {
     runValidators: true,
   });
 
-  console.log(result);
   return result;
 };
 
-const getAllBrands = async (
-  query: Record<string, unknown>,
-  filter: Record<string, any>
-) => {
-  const brandQuery = new QueryBuilder(
-    Brand.find(filter).populate('category'),
-    query
-  )
-    .search(brandSearchAbleFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+// const getAllBrands = async (query: Record<string, unknown>) => {
+//   const brandQuery = new QueryBuilder(Brand.find().populate('category'), query)
+//     .search(brandSearchAbleFields)
+//     .filter()
+//     .sort()
+//     .paginate()
+//     .fields();
 
-  const result = await brandQuery.modelQuery;
+//   const result = await brandQuery.modelQuery;
 
+//   return result;
+// };
+
+const getAllBrands = async (country?: string, city?: string) => {
+  const filter: any = {};
+  if (country) filter.country = country;
+  if (city) filter.city = city;
+
+  const result = await Brand.find(filter).populate({
+    path: 'category',
+    select: 'categoryName',
+  });
   return result;
 };
-
 export const BrandService = {
   updateBrandToDB,
   getAllBrands,

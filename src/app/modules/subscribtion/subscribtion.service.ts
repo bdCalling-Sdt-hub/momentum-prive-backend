@@ -147,10 +147,9 @@ const createCustomerAndSubscription = async (
   const isPackage = isPackageExist?.title;
 
   if (createSub) {
-    // Find and update the user based on the email
-    const updateUserSubs = await User.findOneAndUpdate(
-      { email },
-      // { $set: { subscription: true } },
+    // Find and update the user based on the id
+    const updateUserSubs = await User.findByIdAndUpdate(
+      user,
       { $set: { subscription: true, title: isPackage } },
       { new: true }
     );

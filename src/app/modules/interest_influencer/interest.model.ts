@@ -27,4 +27,4 @@ const interestSchema = new Schema<IInterest>(
   }
 );
 
-export const Interest = model<IInterest>('interest_influencer', interestSchema);
+export const Interest = model<IInterest>('Interest', interestSchema);

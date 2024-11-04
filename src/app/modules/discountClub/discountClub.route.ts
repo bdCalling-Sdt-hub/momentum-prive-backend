@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   '/create-discount',
-  auth(USER_ROLES.BRAND),
+  // auth(USER_ROLES.BRAND),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = DiscountClubValidation.createDiscountClubValidation.parse(

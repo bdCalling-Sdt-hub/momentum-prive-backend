@@ -37,6 +37,17 @@ const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
           },
         ]
       : [];
+  } else if (error.name === 'TokenExpiredError') {
+    statusCode = StatusCodes.UNAUTHORIZED;
+    message = 'Invalid token, please login again';
+    errorMessages = error.message
+      ? [
+          {
+            path: '',
+            message: error.message,
+          },
+        ]
+      : [];
   } else if (error instanceof ApiError) {
     statusCode = error.statusCode;
     message = error.message;

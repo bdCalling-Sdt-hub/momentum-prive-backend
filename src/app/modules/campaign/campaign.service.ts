@@ -11,30 +11,81 @@ import { SortOrder } from 'mongoose';
 import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
 import { User } from '../user/user.model';
+import dayjs from 'dayjs';
+
+// const createCampaignToDB = async (payload: Partial<ICampaign>) => {
+//   // const isCategoryOfBrand = await Brand.findById(payload.brand);
+//   const isCategoryOfBrand = await User.findById(payload.user);
+
+//   console.log(isCategoryOfBrand);
+
+//   if (
+//     isCategoryOfBrand?.title === 'Silver' &&
+//     isCategoryOfBrand.subscription === true
+//   ) {
+//   }
+//   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
+
+//   const isCategoryName = isBrandOfCat?.category;
+
+//   const campaign = await Campaign.create({
+//     ...payload,
+//     category: isCategoryName,
+//   });
+//   return campaign;
+// };
+
+// Use dayjs to handle date calculations
 
 const createCampaignToDB = async (payload: Partial<ICampaign>) => {
-  // const isCategoryOfBrand = await Brand.findById(payload.brand);
   const isCategoryOfBrand = await User.findById(payload.user);
 
-  const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
+  // Check if the user has the "Silver" title and an active subscription
+  if (
+    isCategoryOfBrand?.title === 'Silver' &&
+    isCategoryOfBrand.subscription === true
+  ) {
+    // Calculate the start and end dates for the current month
+    const startOfMonth = dayjs().startOf('month').toDate();
+    const endOfMonth = dayjs().endOf('month').toDate();
 
+    // Count campaigns created by the user within the current month
+    const monthlyCampaignCount = await Campaign.countDocuments({
+      user: payload.user,
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+    });
+
+    if (monthlyCampaignCount >= 10) {
+      throw new ApiError(
+        StatusCodes.UNAUTHORIZED,
+        'Silver users can only create up to 10 campaigns per month.'
+      );
+    }
+  }
+
+  const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
   const isCategoryName = isBrandOfCat?.category;
 
+  // Create the campaign with the associated category
   const campaign = await Campaign.create({
     ...payload,
     category: isCategoryName,
   });
-  return campaign;
-};
 
-// const createCampaignToDB = async (payload: Partial<ICampaign>) => {
-//   const campaign = await Campaign.create(payload);
-//   return campaign;
-// };
+  // Get the updated count of campaigns after the new creation
+  const startOfMonth = dayjs().startOf('month').toDate();
+  const endOfMonth = dayjs().endOf('month').toDate();
+  const CampaignsCount = await Campaign.countDocuments({
+    user: payload.user,
+    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  return { campaign, CampaignsCount };
+};
 
 const getAllCampaigns = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
-  const anyConditions: any[] = [];
+  const anyConditions: any[] = [{ status: 'active' }];
 
   if (searchTerm) {
     const categoriesIds = await Category.find({

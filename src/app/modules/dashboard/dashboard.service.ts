@@ -29,6 +29,7 @@ const getAllBrandStatistics = async () => {
     throw new Error('Unable to fetch statistics');
   }
 };
+
 const getAllInfluencerStatistics = async () => {
   try {
     const [totalCollaboration, totalInfluencer, monthlyRevenue] =
@@ -36,7 +37,6 @@ const getAllInfluencerStatistics = async () => {
         Collaborate.countDocuments(),
         Influencer.countDocuments(),
         Subscribation.aggregate([
-          // Aggregate to get monthly subscription revenue
           {
             $group: {
               _id: {
@@ -47,15 +47,20 @@ const getAllInfluencerStatistics = async () => {
             },
           },
           {
-            $sort: { '_id.year': 1, '_id.month': 1 },
+            $sort: { '_id.year': -1, '_id.month': -1 },
+          },
+          {
+            $limit: 1, // Get only the latest month
           },
         ]),
       ]);
 
     return {
-      totalCollaboration,
       totalInfluencer,
-      monthlyRevenue,
+      totalCollaboration,
+      latestMonthlyRevenue: monthlyRevenue[0]
+        ? monthlyRevenue[0].totalPriceAmount
+        : 0,
     };
   } catch (error) {
     throw new Error('Unable to fetch statistics');

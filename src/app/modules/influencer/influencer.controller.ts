@@ -31,9 +31,13 @@ const updatedInfluencer = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllInfluencer = catchAsync(async (req: Request, res: Response) => {
-  const filter = req.body;
+  const { country, city } = req.query;
 
-  const result = await InfluencerService.getAllInfluencer(req.query, filter);
+  const result = await InfluencerService.getAllInfluencer(
+    country as string | undefined,
+    city as string | undefined
+  );
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

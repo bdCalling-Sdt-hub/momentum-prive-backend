@@ -7,24 +7,58 @@ import { User } from '../user/user.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Campaign } from '../campaign/campaign.model';
 
-const getAllInterest = async () => {
-  const result = await Interest.find()
+// const getAllInterest = async () => {
+//   const result = await Interest.find()
+//     .populate({
+//       path: 'campaign',
+//       select: 'name',
+//       // populate: {
+//       //   path: 'user',
+//       //   select: 'fullName',
+//       //   populate: {
+//       //     path: 'brand',
+//       //     select: 'owner',
+//       //   },
+//       // },
+//     })
+//     .populate({
+//       path: 'influencer',
+//       select: 'fullName',
+//       populate: {
+//         path: 'influencer',
+//         select: 'fullName followersIG',
+//       },
+//     });
+//   return result;
+// };
+
+const getAllInterest = async (campaignId: string) => {
+  const query = campaignId ? { campaign: campaignId } : {};
+
+  const count = await Interest.countDocuments(query);
+
+  const result = await Interest.find(query)
     .populate({
       path: 'campaign',
-      populate: {
-        path: 'user',
-        populate: {
-          path: 'brand',
-        },
-      },
+      select: 'name',
+      // populate: {
+      //   path: 'user',
+      //   select: 'fullName',
+      //   populate: {
+      //     path: 'brand',
+      //     select: 'owner',
+      //   },
+      // },
     })
     .populate({
       path: 'influencer',
+      select: 'fullName',
       populate: {
         path: 'influencer',
+        select: 'fullName followersIG',
       },
     });
-  return result;
+  return { result, count };
 };
 
 // const updatedInterestStautsToDb = async (

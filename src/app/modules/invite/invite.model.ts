@@ -19,6 +19,10 @@ const inviteSchema = new Schema<IInvite>(
       enum: Invites,
       default: 'Pending',
     },
+    // user: {
+    //   type: Schema.Types.ObjectId,
+    //   ref: 'User',
+    // },
   },
   {
     timestamps: true,

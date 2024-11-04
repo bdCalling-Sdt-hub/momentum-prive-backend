@@ -24,16 +24,6 @@ const getAllInvites = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const resentInviteToDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await InviteService.resentInviteToDB();
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Resent-Invite retrived successfully',
-    data: result,
-  });
-});
-
 const updatedInviteToDB = catchAsync(async (req: Request, res: Response) => {
   const result = await InviteService.updatedInviteToDB(req.params.id, req.body);
   sendResponse(res, {
@@ -44,9 +34,19 @@ const updatedInviteToDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSingleInvite = catchAsync(async (req: Request, res: Response) => {
+  const result = await InviteService.getSingleInvite(req.params.id);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Singgle Invite retived successfully',
+    data: result,
+  });
+});
+
 export const InviteController = {
   createCategoryToDB,
   getAllInvites,
   updatedInviteToDB,
-  resentInviteToDB,
+  getSingleInvite,
 };

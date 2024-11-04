@@ -4,8 +4,20 @@ import { InterestService } from './interest.service';
 import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 
+// const getAllInterest = catchAsync(async (req: Request, res: Response) => {
+//   const result = await InterestService.getAllInterest();
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: StatusCodes.OK,
+//     message: 'Interest retrived successfully',
+//     data: result,
+//   });
+// });
+
 const getAllInterest = catchAsync(async (req: Request, res: Response) => {
-  const result = await InterestService.getAllInterest();
+  const { campaignId } = req.query;
+  const result = await InterestService.getAllInterest(campaignId as string);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

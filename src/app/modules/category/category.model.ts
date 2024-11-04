@@ -9,6 +9,9 @@ const categorySchema = new Schema<ICategory>(
       unique: true,
       trim: true,
     },
+    image: {
+      type: String,
+    },
     status: {
       type: String,
       enum: ['active', 'delete'],

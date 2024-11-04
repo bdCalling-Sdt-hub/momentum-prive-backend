@@ -41,10 +41,7 @@ const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
   const filters = pick(req.query, CampaignFilterableFields);
 
   const paginationOptions = pick(req.query, paginationFields);
-  const result = await CampaignService.getAllCampaigns(
-    filters,
-    paginationOptions
-  );
+  const result = await CampaignService.getAllCampaigns(req.query);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

@@ -4,9 +4,17 @@ import sendResponse from '../../../shared/sendResponse';
 import { CategoryService } from './category.service';
 import { Request, Response } from 'express';
 import e from 'cors';
+import getFilePath from '../../../shared/getFilePath';
 
 const createCategoryToDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await CategoryService.createCategiryToDB(req.body);
+  let image = getFilePath(req.files, 'images');
+
+  const value = {
+    image,
+    ...req.body,
+  };
+
+  const result = await CategoryService.createCategiryToDB(value);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -38,10 +46,15 @@ const getSingleCategory = catchAsync(async (req: Request, res: Response) => {
 const updateCategoryToDB = catchAsync(async (req: Request, res: Response) => {
   const categoryId = req.params.id;
   const categoryData = req.body;
-  const result = await CategoryService.updateCategoryToDB(
-    categoryId,
-    categoryData
-  );
+
+  let image = getFilePath(req.files, 'images');
+
+  const value = {
+    image,
+    ...req.body,
+  };
+
+  const result = await CategoryService.updateCategoryToDB(categoryId, value);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

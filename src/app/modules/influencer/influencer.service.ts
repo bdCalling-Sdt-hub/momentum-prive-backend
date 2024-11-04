@@ -61,19 +61,27 @@ const updateInfluencerToDB = async (
   return result;
 };
 
-const getAllInfluencer = async (
-  query: Record<string, unknown>,
-  filter: Record<string, any>
-) => {
-  const influencerQuery = new QueryBuilder(Influencer.find(filter), query)
-    .search(InfluencerSearchAbleFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+// const getAllInfluencer = async (
+//   query: Record<string, unknown>,
+//   filter: Record<string, any>
+// ) => {
+//   const influencerQuery = new QueryBuilder(Influencer.find(filter), query)
+//     .search(InfluencerSearchAbleFields)
+//     .filter()
+//     .sort()
+//     .paginate()
+//     .fields();
 
-  const result = await influencerQuery.modelQuery;
+//   const result = await influencerQuery.modelQuery;
 
+//   return result;
+// };
+const getAllInfluencer = async (country?: string, city?: string) => {
+  const filter: any = {};
+  if (country) filter.country = country;
+  if (city) filter.city = city;
+
+  const result = await Influencer.find(filter);
   return result;
 };
 

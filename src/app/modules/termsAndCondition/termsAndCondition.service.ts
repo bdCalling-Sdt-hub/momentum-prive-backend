@@ -1,16 +1,23 @@
-import { ITermsAndCondition } from './termsAndCondition.interface';
-import { Terms } from './termsAndCondition.model';
+import {
+  ITermsAndConditionBrand,
+  ITermsAndConditionInfluencer,
+} from './termsAndCondition.interface';
+import {
+  TermsAndConditionBrand,
+  TermsAndConditionInfluencer,
+} from './termsAndCondition.model';
 
-const createTermsToDB = async (payload: Partial<ITermsAndCondition>) => {
+//brand service
+const createTermsToDB = async (payload: Partial<ITermsAndConditionBrand>) => {
   try {
-    const existingTerm = await Terms.findOne();
+    const existingTerm = await TermsAndConditionBrand.findOne();
 
     if (existingTerm) {
       Object.assign(existingTerm, payload);
       const updatedTerm = await existingTerm.save();
       return updatedTerm;
     } else {
-      const newTerm = await Terms.create(payload);
+      const newTerm = await TermsAndConditionBrand.create(payload);
       return newTerm;
     }
   } catch (error) {
@@ -18,11 +25,39 @@ const createTermsToDB = async (payload: Partial<ITermsAndCondition>) => {
   }
 };
 const getTermsFromDB = async () => {
-  const terms = await Terms.find();
+  const terms = await TermsAndConditionBrand.findOne();
+  return terms;
+};
+
+//influencer service
+
+const createTermsToDBInfluencer = async (
+  payload: Partial<ITermsAndConditionInfluencer>
+) => {
+  try {
+    const existingTerm = await TermsAndConditionInfluencer.findOne();
+
+    if (existingTerm) {
+      Object.assign(existingTerm, payload);
+      const updatedTerm = await existingTerm.save();
+      return updatedTerm;
+    } else {
+      const newTerm = await TermsAndConditionInfluencer.create(payload);
+      return newTerm;
+    }
+  } catch (error) {
+    throw new Error('Unable to create or update terms.');
+  }
+};
+
+const getTermsFromDBInfluencer = async () => {
+  const terms = await TermsAndConditionInfluencer.findOne();
   return terms;
 };
 
 export const TermsAndConditionService = {
   createTermsToDB,
   getTermsFromDB,
+  getTermsFromDBInfluencer,
+  createTermsToDBInfluencer,
 };

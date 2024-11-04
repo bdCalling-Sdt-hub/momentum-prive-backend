@@ -24,6 +24,7 @@ export type ICampaign = {
   status: 'active' | 'deleted';
   category?: Types.ObjectId;
   categoryName?: string;
+  campaignTermAndCondition: string;
 };
 
 export type IICampaignFilters = {

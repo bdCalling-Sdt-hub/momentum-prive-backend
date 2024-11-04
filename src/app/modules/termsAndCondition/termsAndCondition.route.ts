@@ -10,6 +10,24 @@ router.post(
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   TermsAndConditionController.createCategoryToDB
 );
-router.get('/', TermsAndConditionController.getAllTerms);
+router.get(
+  '/get-terms-brand',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.BRAND),
+  TermsAndConditionController.getAllTerms
+);
+
+// influencers
+
+router.post(
+  '/create-terms-influences',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  TermsAndConditionController.createTermAndConditionInfluencers
+);
+
+router.get(
+  '/get-terms-influences',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.INFLUENCER),
+  TermsAndConditionController.getTermAndConditionInfluencers
+);
 
 export const TermsAndConditionRoutes = router;

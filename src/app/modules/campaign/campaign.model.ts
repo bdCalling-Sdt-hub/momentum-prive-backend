@@ -82,6 +82,10 @@ const campaignSchema = new Schema<ICampaign>(
       enum: ['Approved', 'Rejected', 'Pending'],
       default: 'Pending',
     },
+    campaignTermAndCondition: {
+      type: String,
+      default: '',
+    },
     status: {
       type: String,
       enum: ['active', 'delete'],
@@ -93,15 +97,15 @@ const campaignSchema = new Schema<ICampaign>(
   }
 );
 
-campaignSchema.pre('save', async function (next) {
-  //check user
+// campaignSchema.pre('save', async function (next) {
+//   //check user
 
-  const existingCampaign = await Campaign.findOne({ name: this.name });
-  if (existingCampaign) {
-    throw new ApiError(StatusCodes.CONFLICT, 'Campaign already exists');
-  }
+//   const existingCampaign = await Campaign.findOne({ name: this.name });
+//   if (existingCampaign) {
+//     throw new ApiError(StatusCodes.UNAUTHORIZED, 'Campaign already exists');
+//   }
 
-  next();
-});
+//   next();
+// });
 
 export const Campaign = model<ICampaign>('Campaign', campaignSchema);

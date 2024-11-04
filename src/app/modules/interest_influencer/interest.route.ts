@@ -5,7 +5,7 @@ import auth from '../../middlewares/auth';
 
 const router = express.Router();
 
-router.get('/get', auth(USER_ROLES.BRAND), InterestController.getAllInterest);
+router.get('/', auth(USER_ROLES.BRAND), InterestController.getAllInterest);
 
 router.patch('/:id', auth(USER_ROLES.BRAND), InterestController.updatedStatus);
 

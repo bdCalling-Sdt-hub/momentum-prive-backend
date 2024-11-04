@@ -22,6 +22,10 @@ const collaborateSchema = new Schema<ICollaboration>(
     instagram: {
       type: String,
     },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
     tiktok: {
       type: String,
     },

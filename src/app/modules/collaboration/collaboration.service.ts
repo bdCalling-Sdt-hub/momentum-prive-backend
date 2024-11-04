@@ -12,19 +12,92 @@ import { User } from '../user/user.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Invite } from '../invite/invite.model';
 
+// const createCollaborationToDB = async (payload: ICollaboration) => {
+//   const isInvite = await Invite.findById(payload.invite);
+
+//   const inviteData = isInvite?.campaign;
+
+//   const isCampaign = await Campaign.findById(inviteData);
+
+//   const isInfluencer = await User.findById(payload.influencer);
+
+//   const isUser = await User.findById(isCampaign?.user);
+
+//   console.log(isUser);
+
+//   if (isUser?.title === 'Silver' && isUser.subscription === true) {
+//   }
+
+//   const isBrand = await Brand.findById(isUser?.brand);
+
+//   const isCateory = await Category.findById(isBrand?.category);
+
+//   if (!isCateory || !isBrand || !isCampaign) {
+//     throw new ApiError(
+//       StatusCodes.NOT_FOUND,
+//       `${isBrand} ${isCampaign} ${isCateory} not found`
+//     );
+//   }
+
+//   const isCategoryName = isCateory?.categoryName;
+
+//   const value = {
+//     categoryName: isCategoryName,
+//     ...payload,
+//   };
+
+//   const result = await Collaborate.create(value);
+
+//   const createInterestInfluencer = await Interest.create({
+//     campaign: isCampaign,
+//     influencer: result.influencer,
+//     Collaborate: result._id,
+//   });
+
+//   // const updateCampaign = await Campaign.findByIdAndUpdate(isCampaign._id, {
+//   //   $push: { interest: result._id },
+//   // });
+
+//   // console.log(updateCampaign);
+
+//   if (!createInterestInfluencer) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Failed to create interest with collaboration details'
+//     );
+//   }
+
+//   //send notification
+//   if (result) {
+//     const data = {
+//       text: `${isInfluencer?.fullName} Accept your invitation`,
+//       receiver: isCampaign?.user,
+//     };
+
+//     await sendNotifications(data);
+//   }
+//   if (result) {
+//     const data = {
+//       text: `${isInfluencer?.fullName} Booking a new Collaboration`,
+//       receiver: isCampaign?.user,
+//       type: 'ADMIN',
+//     };
+
+//     await sendNotifications(data);
+//   }
+//   //end notification
+
+//   return result;
+// };
+
 const createCollaborationToDB = async (payload: ICollaboration) => {
   const isInvite = await Invite.findById(payload.invite);
-
   const inviteData = isInvite?.campaign;
-
   const isCampaign = await Campaign.findById(inviteData);
-
   const isInfluencer = await User.findById(payload.influencer);
-
   const isUser = await User.findById(isCampaign?.user);
 
   const isBrand = await Brand.findById(isUser?.brand);
-
   const isCateory = await Category.findById(isBrand?.category);
 
   if (!isCateory || !isBrand || !isCampaign) {
@@ -35,7 +108,6 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   }
 
   const isCategoryName = isCateory?.categoryName;
-
   const value = {
     categoryName: isCategoryName,
     ...payload,
@@ -59,22 +131,20 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   //send notification
   if (result) {
     const data = {
-      text: `${isInfluencer?.fullName} Accept your invitation`,
+      text: `${isInfluencer?.fullName} accepted your invitation`,
       receiver: isCampaign?.user,
     };
 
     await sendNotifications(data);
-  }
-  if (result) {
-    const data = {
-      text: `${isInfluencer?.fullName} Booking a new Collaboration`,
+
+    const bookingData = {
+      text: `${isInfluencer?.fullName} booked a new Collaboration`,
       receiver: isCampaign?.user,
       type: 'ADMIN',
     };
 
-    await sendNotifications(data);
+    await sendNotifications(bookingData);
   }
-  //end notification
 
   return result;
 };

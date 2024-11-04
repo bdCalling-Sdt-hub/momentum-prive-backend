@@ -6,14 +6,6 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { CategorySearchAbleFields } from './category.constant';
 
 const createCategiryToDB = async (payload: Partial<ICategory>) => {
-  const isCategoryExist = await Category.findOne({
-    categoryName: payload.categoryName,
-  });
-
-  if (isCategoryExist) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Category already exist');
-  }
-
   const result = await Category.create(payload);
   return result;
 };
@@ -42,14 +34,6 @@ const getSingleCategory = async (id: string) => {
 };
 
 const updateCategoryToDB = async (id: string, payload: Partial<ICategory>) => {
-  const isCategoryExist = await Category.findOne({
-    categoryName: payload.categoryName,
-  });
-
-  if (isCategoryExist) {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Category already exists');
-  }
-
   const category = await Category.findById(id);
   if (!category) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Category not found');
@@ -71,7 +55,7 @@ const updateCategoryToDB = async (id: string, payload: Partial<ICategory>) => {
 };
 
 const deleteCategoryToDB = async (id: string) => {
-  const result = await Category.findByIdAndUpdate(id, {
+  const result = await Category.findByIdAndDelete(id, {
     status: 'delete',
     new: true,
     runValidators: true,

@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/subscribe',
-  auth(USER_ROLES.BRAND),
+  // auth(USER_ROLES.BRAND),
   SubscriptionController.createSubscription
 );
 router.post(

@@ -1,7 +1,10 @@
 import { model, Schema } from 'mongoose';
-import { ITermsAndCondition } from './termsAndCondition.interface';
+import {
+  ITermsAndConditionBrand,
+  ITermsAndConditionInfluencer,
+} from './termsAndCondition.interface';
 
-const termAndConditionSchema = new Schema<ITermsAndCondition>(
+const termAndConditionSchemaBrand = new Schema<ITermsAndConditionBrand>(
   {
     details: {
       type: String,
@@ -19,7 +22,31 @@ const termAndConditionSchema = new Schema<ITermsAndCondition>(
   }
 );
 
-export const Terms = model<ITermsAndCondition>(
-  'termsandcondition',
-  termAndConditionSchema
+export const TermsAndConditionBrand = model<ITermsAndConditionBrand>(
+  'TermsAndConditionBrand',
+  termAndConditionSchemaBrand
+);
+
+const termAndConditionSchemaInfluencer =
+  new Schema<ITermsAndConditionInfluencer>(
+    {
+      details: {
+        type: String,
+        required: true,
+        trim: true,
+      },
+      status: {
+        type: String,
+        enum: ['active', 'delete'],
+        default: 'active',
+      },
+    },
+    {
+      timestamps: true,
+    }
+  );
+
+export const TermsAndConditionInfluencer = model<ITermsAndConditionInfluencer>(
+  'TermsAndConditionInfluencer',
+  termAndConditionSchemaInfluencer
 );

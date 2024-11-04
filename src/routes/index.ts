@@ -20,6 +20,7 @@ import { PackageRoutes } from '../app/modules/package/package.route';
 import { NotificationRoutes } from '../app/modules/notification/notification.route';
 import { UpdatedCampaignStatusRoutes } from '../app/modules/permission_access_campaign/permission_access_campaign.route';
 import { DashboardRoutes } from '../app/modules/dashboard/dashboard.route';
+import { ContactsRoutes } from '../app/modules/contact/contact.route';
 
 const router = express.Router();
 
@@ -45,6 +46,7 @@ const apiRoutes = [
   { path: '/notification', route: NotificationRoutes },
   { path: '/updated-campaign-status', route: UpdatedCampaignStatusRoutes },
   { path: '/dashboard', route: DashboardRoutes },
+  { path: '/contact', route: ContactsRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));

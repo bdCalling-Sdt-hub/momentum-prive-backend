@@ -15,6 +15,7 @@ export type ICollaboration = {
   status: 'active' | 'deleted';
   typeStatus: ICollaborationStatus;
   instagram: string;
+  user: Types.ObjectId;
   tiktok?: string;
   categoryName?: string;
   image?: string[];

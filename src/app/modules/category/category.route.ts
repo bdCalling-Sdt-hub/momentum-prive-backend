@@ -1,48 +1,54 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import validateRequest from '../../middlewares/validateRequest';
 import { CategoryValiationZodSchema } from './category.validation';
 import { CategoryController } from './category.controller';
 import auth from '../../middlewares/auth';
 import { USER_ROLES } from '../../../enums/user';
+import fileUploadHandler from '../../middlewares/fileUploadHandler';
 
 const router = express.Router();
 
+// router.post(
+//   '/create-category',
+//   // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+//   validateRequest(CategoryValiationZodSchema.CategoryValiation),
+//   CategoryController.createCategoryToDB
+// );
 router.post(
   '/create-category',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  validateRequest(CategoryValiationZodSchema.CategoryValiation),
-  CategoryController.createCategoryToDB
+  fileUploadHandler(),
+  // auth(USER_ROLES.BRAND),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = CategoryValiationZodSchema.CategoryValiation.parse(
+      JSON.parse(req.body.data)
+    );
+    return CategoryController.createCategoryToDB(req, res, next);
+  }
 );
 
 router.get(
   '/',
-  auth(
-    USER_ROLES.ADMIN,
-    USER_ROLES.SUPER_ADMIN,
-    USER_ROLES.BRAND,
-    USER_ROLES.INFLUENCER
-  ),
+
   CategoryController.getAllCategory
 );
 router.get(
   '/:id',
-  auth(
-    USER_ROLES.ADMIN,
-    USER_ROLES.SUPER_ADMIN,
-    USER_ROLES.BRAND,
-    USER_ROLES.INFLUENCER
-  ),
+
   CategoryController.getSingleCategory
 );
 router.patch(
   '/:id',
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  validateRequest(CategoryValiationZodSchema.updatedCategoryValiation),
-  CategoryController.updateCategoryToDB
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body = CategoryValiationZodSchema.updatedCategoryValiation.parse(
+      JSON.parse(req.body.data)
+    );
+    return CategoryController.updateCategoryToDB(req, res, next);
+  }
 );
 router.delete(
   '/:id',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   CategoryController.deleteCategory
 );
 
