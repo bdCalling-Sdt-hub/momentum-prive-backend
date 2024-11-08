@@ -12,6 +12,10 @@ const discountClubSchema = new Schema<IDiscountClub>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    category: {
+      type: Schema.Types.ObjectId,
+      ref: 'Category',
+    },
     name: {
       type: String,
       required: true,

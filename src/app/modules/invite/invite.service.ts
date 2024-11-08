@@ -12,6 +12,7 @@ import { Category } from '../category/category.model';
 import { populate } from 'dotenv';
 import { User } from '../user/user.model';
 import dayjs from 'dayjs';
+import { Influencer } from '../influencer/influencer.model';
 
 // const createInviteToDB = async (payload: Partial<IInvite>) => {
 //   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
@@ -173,6 +174,14 @@ import dayjs from 'dayjs';
 // };
 
 const createInviteToDB = async (payload: Partial<IInvite>) => {
+  // const isExistInfluencer = await Invite.findOne({
+  //   influencer: payload.influencer,
+  // });
+
+  // if (isExistInfluencer) {
+  //   throw new ApiError(StatusCodes.BAD_REQUEST, 'Influencer already invited');
+  // }
+
   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
 
   if (!isCampaignStatus) {
@@ -258,7 +267,7 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
 
   const result = await Invite.create(payload);
 
-  const updatedCampaignInviteCount = await Invite.countDocuments({
+  const CampaignInviteCount = await Invite.countDocuments({
     campaign: payload.campaign,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
   });
@@ -270,7 +279,7 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
   };
   await sendNotifications(data);
 
-  return { result, updatedCampaignInviteCount };
+  return { result, CampaignInviteCount };
 };
 
 ////////////////////////////////////////////////////////////////
@@ -399,26 +408,6 @@ const getAllInvites = async (query: Record<string, unknown>) => {
   return data;
 };
 
-// const updatedInviteToDB = async (id: string, payload: Partial<IInvite>) => {
-//   const invite = await Invite.findById(id);
-
-//   if (!invite) {
-//     throw new Error(`Invite with ID ${id} not found`);
-//   }
-
-//   const result = await Invite.findByIdAndUpdate(
-//     id,
-//     {
-//       $set: {
-//         status: payload.status,
-//       },
-//     },
-//     { new: true }
-//   );
-
-//   return result;
-// };
-
 const getSingleInvite = async (id: string) => {
   const result = await Invite.findById(id)
 
@@ -478,9 +467,119 @@ const updatedInviteToDB = async (id: string, payload: Partial<IInvite>) => {
   return result;
 };
 
+const createInviteForIncluencerToDB = async (payload: Partial<IInvite>) => {
+  const isExistInfluencer = await Invite.findOne({
+    influencer: payload.influencer,
+  });
+
+  if (isExistInfluencer) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Influencer already invited');
+  }
+
+  const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
+
+  if (!isCampaignStatus) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
+  }
+
+  const approveStatus = isCampaignStatus?.approvalStatus;
+  const isUsers = isCampaignStatus?.user;
+
+  if (!isUsers) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'No user associated with the campaign'
+    );
+  }
+
+  const isUser: any = await User.findById(isUsers);
+
+  if (!isUser) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  // payload.user = isUser._id;
+
+  if (isUser.title === 'Silver' && isUser.subscription === true) {
+    const startOfMonth = dayjs().startOf('month').toDate();
+    const endOfMonth = dayjs().endOf('month').toDate();
+
+    const userInvitationCount = await Invite.countDocuments({
+      campaign: payload.campaign,
+      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+    });
+
+    if (userInvitationCount >= 2) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'sorry you cannot send invite the campaign limit is full!'
+      );
+    }
+  }
+
+  if (approveStatus === 'Rejected') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Sorry, your campaign was rejected. You cannot invite new brand.'
+    );
+  }
+
+  if (approveStatus !== 'Approved') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Campaign not approved yet. Please wait for approval.'
+    );
+  }
+
+  // Check if the campaign has reached its monthly invite limit
+  const startOfMonth = dayjs().startOf('month').toDate();
+  const endOfMonth = dayjs().endOf('month').toDate();
+
+  const campaignInviteCount = await Invite.countDocuments({
+    campaign: payload.campaign,
+    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  if (campaignInviteCount >= 2) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Each campaign can only create up to 2 invites per month.'
+    );
+  }
+
+  const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
+    'user',
+    'fullName'
+  );
+
+  if (!isCampaign || !isCampaign.user) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
+  }
+
+  //@ts-ignore
+  const fullName = isCampaign.user.fullName;
+
+  const result = await Invite.create(payload);
+
+  const CampaignInviteCount = await Invite.countDocuments({
+    campaign: payload.campaign,
+    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  // Send notification
+  const data = {
+    text: `${fullName} invited you to join for events`,
+    receiver: payload.influencer,
+  };
+  await sendNotifications(data);
+
+  return { result, CampaignInviteCount };
+};
+
 export const InviteService = {
   createInviteToDB,
   getAllInvites,
   updatedInviteToDB,
   getSingleInvite,
+  createInviteForIncluencerToDB,
 };

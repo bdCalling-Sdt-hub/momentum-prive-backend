@@ -20,14 +20,14 @@ const influencerShema = new Schema<IInfluencer>(
       type: String,
     },
     zip: {
-      type: Number,
+      type: String,
     },
 
     describe: {
       type: String,
     },
     followersIG: {
-      type: Number,
+      type: String,
     },
     email: {
       type: String,
@@ -36,7 +36,7 @@ const influencerShema = new Schema<IInfluencer>(
       type: String,
     },
     followersTK: {
-      type: Number,
+      type: String,
     },
     gender: {
       type: String,

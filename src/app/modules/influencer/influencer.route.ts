@@ -10,13 +10,18 @@ const router = express.Router();
 
 router.patch(
   '/:id',
-  // validateRequest(InfluencerValiationZodSchema.InfluencerValiation),
-  // auth(USER_ROLES.INFLUENCER),
+
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
-    req.body = InfluencerValiationZodSchema.InfluencerValiation.parse(
-      JSON.parse(req.body.data)
+    const { imagesToDelete, data } = req.body;
+
+    // Parse and validate the data using Zod schema
+    const parsedData = InfluencerValiationZodSchema.InfluencerValiation.parse(
+      JSON.parse(data)
     );
+
+    req.body = { ...parsedData, imagesToDelete };
+
     return InfluencerController.updatedInfluencer(req, res, next);
   }
 );

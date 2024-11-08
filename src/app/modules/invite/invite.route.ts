@@ -13,6 +13,12 @@ router.post(
   validateRequest(InviteValiationZodSchema.createInviteValiation),
   InviteController.createCategoryToDB
 );
+router.post(
+  '/send-invite-influencer',
+  // auth(USER_ROLES.BRAND),
+  validateRequest(InviteValiationZodSchema.createInviteValiation),
+  InviteController.createInviteForInfluencerToDB
+);
 
 router.get(
   '/',

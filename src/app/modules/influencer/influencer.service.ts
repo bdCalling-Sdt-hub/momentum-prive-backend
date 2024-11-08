@@ -1,81 +1,47 @@
-import QueryBuilder from '../../builder/QueryBuilder';
-import { InfluencerSearchAbleFields } from './influencer.constant';
-import { IInfluencer } from './influencer.interface';
+import { StatusCodes } from 'http-status-codes';
+import ApiError from '../../../errors/ApiError';
+import { UpdateInfluencerPayload } from './influencer.interface';
 import { Influencer } from './influencer.model';
 
-// const updateInfluencerToDB = async (
-//   id: string,
-//   payload: Partial<IInfluencer>
-// ) => {
-//   const { image, ...remainingData } = payload;
-
-//   const modifiedUpdateData: Record<string, unknown> = {
-//     ...remainingData,
-//   };
-
-//   if (image && image.length > 0) {
-//     for (const [index, value] of image.entries()) {
-//       modifiedUpdateData[`image.${index}`] = value;
-//     }
-//   }
-
-//   const result = await Influencer.findByIdAndUpdate(id, modifiedUpdateData, {
-//     new: true,
-//     runValidators: true,
-//   });
-//   return result;
-// };
+import unlinkFile from '../../../shared/unlinkFile';
 
 const updateInfluencerToDB = async (
   id: string,
-  payload: Partial<IInfluencer>
+  payload: UpdateInfluencerPayload
 ) => {
-  const { image, ...remainingData } = payload;
+  const isExistInfluencer = await Influencer.findById(id);
 
-  const modifiedUpdateData: Record<string, unknown> = {
-    ...remainingData,
-  };
-
-  if (image && image.length > 0) {
-    const currentInfluencer = await Influencer.findById(id);
-
-    if (currentInfluencer) {
-      const updatedImages = [...currentInfluencer.image];
-
-      image.forEach((value, index) => {
-        if (value) {
-          updatedImages[index] = value;
-        }
-      });
-
-      modifiedUpdateData.image = updatedImages;
-    }
+  if (!isExistInfluencer) {
+    throw new ApiError(StatusCodes.NOT_FOUND, "Influencer doesn't exist!");
   }
 
-  // Update the influencer document with modified update data
-  const result = await Influencer.findByIdAndUpdate(id, modifiedUpdateData, {
+  if (payload.imagesToDelete && payload.imagesToDelete.length > 0) {
+    for (let image of payload.imagesToDelete) {
+      unlinkFile(image);
+    }
+    // Remove deleted images from the existing image array
+    isExistInfluencer.image = isExistInfluencer.image.filter(
+      (img: string) => !payload.imagesToDelete!.includes(img)
+    );
+  }
+
+  const updatedImages = payload.image
+    ? [...isExistInfluencer.image, ...payload.image]
+    : isExistInfluencer.image;
+
+  const updateData = {
+    ...payload,
+    image: updatedImages,
+  };
+
+  // Step 4: Save the updated influencer data
+  const result = await Influencer.findByIdAndUpdate(id, updateData, {
     new: true,
-    runValidators: true,
   });
 
   return result;
 };
 
-// const getAllInfluencer = async (
-//   query: Record<string, unknown>,
-//   filter: Record<string, any>
-// ) => {
-//   const influencerQuery = new QueryBuilder(Influencer.find(filter), query)
-//     .search(InfluencerSearchAbleFields)
-//     .filter()
-//     .sort()
-//     .paginate()
-//     .fields();
-
-//   const result = await influencerQuery.modelQuery;
-
-//   return result;
-// };
 const getAllInfluencer = async (country?: string, city?: string) => {
   const filter: any = {};
   if (country) filter.country = country;

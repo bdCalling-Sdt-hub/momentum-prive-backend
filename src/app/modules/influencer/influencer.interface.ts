@@ -8,8 +8,8 @@ export type IInfluencer = {
   email: string;
   instagram: string;
   tiktok?: string;
-  followersIG: number;
-  followersTK: number;
+  followersIG: string;
+  followersTK: string;
   describe: string;
   gender: IGender;
   number: string;
@@ -17,8 +17,12 @@ export type IInfluencer = {
   address: string;
   country: string;
   city: string;
-  zip?: number;
+  zip?: string;
   status: 'active' | 'delete';
 };
 
-export type InfluencerModel = {} & Model<IInfluencer>;
+export type UpdateInfluencerPayload = Partial<IInfluencer> & {
+  imagesToDelete?: string[]; // Optional field for images to delete
+};
+
+export type InfluencerModel = Model<IInfluencer>;

@@ -11,6 +11,7 @@ const superUser = {
   email: config.super_admin.email,
   password: config.super_admin.password,
   verified: true,
+  loginStatus: 'Approved',
 };
 
 const seedSuperAdmin = async () => {

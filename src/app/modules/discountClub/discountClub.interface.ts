@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 
 export type IDiscountClub = {
   user: Types.ObjectId;
+  category: Types.ObjectId;
   image: string;
   buyGuide: string;
   name: string;

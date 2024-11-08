@@ -69,9 +69,33 @@ const updateProfile = catchAsync(
   }
 );
 
+const getAllBrands = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getAllBrand();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'All Brand retrieved successfully',
+    data: result,
+  });
+});
+
+const getAllInfluencer = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getAllInfluencer();
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'All Influencer retrieved successfully',
+    data: result,
+  });
+});
+
 export const UserController = {
   getUserProfile,
   updateProfile,
   createBrandToDB,
   createInfluencer,
+  getAllBrands,
+  getAllInfluencer,
 };

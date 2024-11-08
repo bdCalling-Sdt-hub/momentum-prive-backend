@@ -1,3 +1,4 @@
+import { populate } from 'dotenv';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import QueryBuilder from '../../builder/QueryBuilder';
@@ -12,6 +13,7 @@ import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
 import { User } from '../user/user.model';
 import dayjs from 'dayjs';
+import { formatCurrentDate } from './dateformat';
 
 // const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 //   // const isCategoryOfBrand = await Brand.findById(payload.brand);
@@ -85,128 +87,91 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 
 const getAllCampaigns = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
-  const anyConditions: any[] = [{ status: 'active' }];
+  const anyConditions: any[] = [
+    { status: 'active' },
+    { approvalStatus: 'Approved' },
+  ];
 
+  // Filter by searchTerm in categories if provided
   if (searchTerm) {
     const categoriesIds = await Category.find({
       $or: [{ categoryName: { $regex: searchTerm, $options: 'i' } }],
     }).distinct('_id');
-
-    // Only add `catogory` condition if there are matching users
     if (categoriesIds.length > 0) {
       anyConditions.push({ category: { $in: categoriesIds } });
     }
   }
 
+  // Filter by additional filterData fields
   if (Object.keys(filterData).length > 0) {
     const filterConditions = Object.entries(filterData).map(
-      ([field, value]) => ({
-        [field]: value,
-      })
+      ([field, value]) => ({ [field]: value })
     );
     anyConditions.push({ $and: filterConditions });
   }
 
-  // Apply filter conditions
+  // Filter by `endTime` from current date to specified endTime
+  if (filterData.endTime) {
+    const specifiedEndTime = new Date(filterData.endTime as string);
+
+    const endTimeFormatted = specifiedEndTime.toISOString().split('T')[0];
+
+    const currentDate = new Date();
+    currentDate.setHours(0, 0, 0, 0);
+    const currentDateFormatted = currentDate.toISOString().split('T')[0];
+
+    // Filter by `endTime` from current date to specified endTime
+    anyConditions.push({
+      endTime: { $gte: currentDateFormatted, $lte: endTimeFormatted },
+    });
+  }
+
+  // Combine all conditions
   const whereConditions =
     anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
   const pages = parseInt(page as string) || 1;
   const size = parseInt(limit as string) || 10;
   const skip = (pages - 1) * size;
 
+  // Fetch campaigns
   const result = await Campaign.find(whereConditions)
+    .populate('category', 'categoryName')
     .populate({
-      path: 'category',
-      select: 'categoryName',
+      path: 'user',
+      select: 'brand',
+      populate: { path: 'brand', select: 'image owner' },
     })
+    .sort({ createdAt: -1 })
     .skip(skip)
     .limit(size)
     .lean();
 
   const count = await Campaign.countDocuments(whereConditions);
 
-  const data: any = {
+  return {
     result,
     meta: {
       page: pages,
       total: count,
     },
   };
-  return data;
 };
-
-// const getAllCampaigns = async (
-//   filters: IICampaignFilters,
-//   paginationOptions: IPaginationOptions
-// ) => {
-//   const { searchTerm, ...filtersData } = filters;
-//   const { page, limit, skip, sortBy, sortOrder } =
-//     paginationHelpers.calculatePagination(paginationOptions);
-
-//   const andConditions = [];
-
-//   if (searchTerm) {
-//     andConditions.push({
-//       $or: CampaignSearchAbleFields.map(field => ({
-//         [field]: {
-//           $regex: searchTerm,
-//           $options: 'i',
-//         },
-//       })),
-//     });
-//   }
-
-//   if (Object.keys(filtersData).length) {
-//     andConditions.push({
-//       $and: Object.entries(filtersData).map(([field, value]) => ({
-//         [field]: value,
-//       })),
-//     });
-//   }
-
-//   andConditions.push({
-//     status: 'active',
-//   });
-
-//   const sortConditions: { [key: string]: SortOrder } = {};
-
-//   if (sortBy && sortOrder) {
-//     sortConditions[sortBy] = sortOrder;
-//   }
-
-//   const whereConditions =
-//     andConditions.length > 0 ? { $and: andConditions } : {};
-
-//   const result = await Campaign.find(whereConditions)
-//     .populate({
-//       path: 'user',
-//       populate: {
-//         path: 'brand',
-//       },
-//     })
-//     .populate(['influencer', 'category'])
-//     .sort(sortConditions)
-//     .skip(skip)
-//     .limit(limit);
-
-//   const total = await Campaign.countDocuments();
-//   return {
-//     meta: {
-//       page,
-//       limit,
-//       total,
-//     },
-//     data: result,
-//   };
-// };
 
 const getSingleCmpaign = async (id: string) => {
   const result = await Campaign.findOne({ _id: id, status: 'active' })
+
     .populate({
       path: 'user',
+      select: 'brand',
       populate: {
         path: 'brand',
       },
+    })
+    .populate({
+      path: 'category',
+      select: 'categoryName',
     })
     .populate(['influencer', 'category']);
 
@@ -283,6 +248,17 @@ const updatedCampaignStatusToDB = async (
   return result;
 };
 
+const getCampaignforBrand = async (brandId: string) => {
+  const campaigns = await Campaign.find({
+    user: brandId,
+    status: 'active',
+  }).populate('user', 'brand');
+
+  const count = campaigns.length;
+
+  return { campaigns, count };
+};
+
 export const CampaignService = {
   createCampaignToDB,
   getAllCampaigns,
@@ -290,4 +266,5 @@ export const CampaignService = {
   updateCampaignToDB,
   deletedCampaignToDB,
   updatedCampaignStatusToDB,
+  getCampaignforBrand,
 };

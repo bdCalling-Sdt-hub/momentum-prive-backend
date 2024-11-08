@@ -1,3 +1,5 @@
+import unlinkFile from '../../../shared/unlinkFile';
+
 export const Gender = ['male', 'female', 'other'];
 
 export const InfluencerSearchAbleFields = [
@@ -15,3 +17,17 @@ export const InfluencerSearchAbleFields = [
   'manager',
   'instagram',
 ];
+
+export const filterImages = (
+  existingImages: string[],
+  imagesToDelete: string[]
+) => {
+  return existingImages.filter(image => !imagesToDelete.includes(image));
+};
+
+// Helper function to remove files from the server
+export const removeFiles = async (imagesToDelete: string[]) => {
+  for (let image of imagesToDelete) {
+    await unlinkFile(image); // Assuming unlinkFile is an async function
+  }
+};

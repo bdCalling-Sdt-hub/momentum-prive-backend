@@ -6,22 +6,20 @@ import { StatusCodes } from 'http-status-codes';
 import getFilePath, { getFilePaths } from '../../../shared/getFilePath';
 
 const updatedInfluencer = catchAsync(async (req: Request, res: Response) => {
-  const influencerId = req.params.id;
-  const influencerData = req.body;
+  console.log(req.body);
 
-  let images = getFilePaths(req.files, 'images');
+  const images = getFilePaths(req.files, 'images');
 
   const value = {
     image: images,
-    ...influencerData,
+    ...req.body,
   };
 
   const result = await InfluencerService.updateInfluencerToDB(
-    influencerId,
+    req.params.id,
     value
   );
 
-  // Send the response
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

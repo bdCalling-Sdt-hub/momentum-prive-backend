@@ -277,9 +277,32 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
+const getAllBrand = async () => {
+  const brands = await User.find({ role: 'BRAND' }).populate('brand');
+
+  if (!brands) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Brands not found');
+  }
+
+  return brands;
+};
+const getAllInfluencer = async () => {
+  const influencer = await User.find({ role: 'INFLUENCER' }).populate(
+    'influencer'
+  );
+
+  if (!influencer) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Influencer not found');
+  }
+
+  return influencer;
+};
+
 export const UserService = {
   createBrandToDB,
   getUserProfileFromDB,
   updateProfileToDB,
   creatInfluencerToDB,
+  getAllBrand,
+  getAllInfluencer,
 };

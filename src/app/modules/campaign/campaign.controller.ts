@@ -101,6 +101,16 @@ const updatedCampaignStatusToDB = catchAsync(
   }
 );
 
+const getCampaignforBrand = catchAsync(async (req: Request, res: Response) => {
+  const result = await CampaignService.getCampaignforBrand(req.params.brandId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Campaign retrived successfully',
+    data: result,
+  });
+});
+
 export const CampaignController = {
   createCampaignToDB,
   getAllCampaigns,
@@ -108,4 +118,5 @@ export const CampaignController = {
   updateCampaignToDB,
   deletedCampaignToDB,
   updatedCampaignStatusToDB,
+  getCampaignforBrand,
 };

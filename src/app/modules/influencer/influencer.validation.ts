@@ -1,24 +1,21 @@
 import { z } from 'zod';
 
 export const InfluencerValiation = z.object({
-  address: z.string(),
-
-  whatAppNum: z
-    .string({ required_error: 'required wahtapp number' })
-    .min(4)
-    .max(15),
-  city: z.string({ required_error: 'required city' }),
-  country: z.string({ required_error: 'required country' }),
-  fullName: z.string({ required_error: 'required FullName' }),
-  email: z.string({ required_error: 'required Email' }),
-  zip: z.number().optional(),
-  describe: z.string({ required_error: 'required describetion' }),
-  followersIG: z.number({ required_error: 'required instagram followers' }),
-  followersTK: z.number().optional(),
-  gender: z.enum(['male', 'female', 'other']),
-  number: z.string({ required_error: 'required number' }).min(4).max(15),
-  instagram: z.string({ required_error: 'required instagram' }),
-  tiktok: z.string({ required_error: 'required tiktok' }),
+  address: z.string().optional(),
+  whatAppNum: z.string().min(4).max(15).optional(),
+  city: z.string().optional(),
+  country: z.string().optional(),
+  fullName: z.string().optional(),
+  email: z.string().optional(),
+  zip: z.string().optional(),
+  describe: z.string().optional(),
+  followersIG: z.string().optional(),
+  followersTK: z.string().optional(),
+  gender: z.enum(['male', 'female', 'other']).optional(),
+  number: z.string().min(4).max(15).optional(),
+  instagram: z.string().optional(),
+  tiktok: z.string().optional(),
+  imagesToDelete: z.array(z.string()).optional(),
 });
 
 export const InfluencerValiationZodSchema = {

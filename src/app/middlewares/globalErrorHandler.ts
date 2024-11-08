@@ -48,6 +48,17 @@ const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
           },
         ]
       : [];
+  } else if (error.name === 'SyntaxError') {
+    statusCode = StatusCodes.UNAUTHORIZED;
+    message = 'Invalid JSON, please valid JSON';
+    errorMessages = error.message
+      ? [
+          {
+            path: '',
+            message: error.message,
+          },
+        ]
+      : [];
   } else if (error instanceof ApiError) {
     statusCode = error.statusCode;
     message = error.message;

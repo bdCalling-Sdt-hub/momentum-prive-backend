@@ -9,10 +9,22 @@ const createCategoryToDB = catchAsync(async (req: Request, res: Response) => {
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: 'Invite created successfully',
+    message: 'Invite send successfully',
     data: result,
   });
 });
+
+const createInviteForInfluencerToDB = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await InviteService.createInviteForIncluencerToDB(req.body);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Invite send successfully',
+      data: result,
+    });
+  }
+);
 
 const getAllInvites = catchAsync(async (req: Request, res: Response) => {
   const result = await InviteService.getAllInvites(req.query);
@@ -49,4 +61,5 @@ export const InviteController = {
   getAllInvites,
   updatedInviteToDB,
   getSingleInvite,
+  createInviteForInfluencerToDB,
 };

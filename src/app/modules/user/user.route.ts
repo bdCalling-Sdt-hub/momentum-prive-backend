@@ -42,4 +42,15 @@ router.get(
   UserController.getUserProfile
 );
 
+router.get(
+  '/brand',
+  // auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  UserController.getAllBrands
+);
+router.get(
+  '/influencer',
+  // auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  UserController.getAllInfluencer
+);
+
 export const UserRoutes = router;
