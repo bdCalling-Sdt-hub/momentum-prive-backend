@@ -3,6 +3,7 @@ import { StatusCodes } from 'http-status-codes';
 import catchAsync from '../../../shared/catchAsync';
 import sendResponse from '../../../shared/sendResponse';
 import { UserService } from './user.service';
+import getFilePath from '../../../shared/getFilePath';
 
 const createBrandToDB = catchAsync(
   async (req: Request, res: Response, next: NextFunction) => {
@@ -91,6 +92,29 @@ const getAllInfluencer = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const updateProfileToDB = catchAsync(async (req: Request, res: Response) => {
+  let image;
+  if (req.files && 'image' in req.files && req.files.image[0]) {
+    image = `/images/${req.files.image[0].filename}`;
+  }
+
+  const value = {
+    image,
+    ...req.body,
+  };
+
+  console.log(value);
+
+  const result = await UserService.updateProfile(req.params.id, value);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Profile updated successfully',
+    data: result,
+  });
+});
+
 export const UserController = {
   getUserProfile,
   updateProfile,
@@ -98,4 +122,5 @@ export const UserController = {
   createInfluencer,
   getAllBrands,
   getAllInfluencer,
+  updateProfileToDB,
 };

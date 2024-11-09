@@ -40,11 +40,14 @@ const getMonthlyEarnings = catchAsync(async (req: Request, res: Response) => {
 
 const getMonthlyUserRegistration = catchAsync(
   async (req: Request, res: Response) => {
-    const result = await DashboardService.getMonthlyUserRegistration();
+    const year = req.query.year
+      ? parseInt(req.query.year as string, 10)
+      : undefined;
+    const result = await DashboardService.getMonthlyUserRegistration(year);
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
-      message: 'Monthly Registration User retrived successfully',
+      message: 'Monthly Registration User retrieved successfully',
       data: result,
     });
   }

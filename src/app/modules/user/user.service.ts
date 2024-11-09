@@ -298,10 +298,18 @@ const getAllInfluencer = async () => {
   return influencer;
 };
 
+const updateProfile = async (id: string, payload: Partial<IUser>) => {
+  const update = await User.findByIdAndUpdate(id, payload, {
+    new: true,
+  });
+  return update;
+};
+
 export const UserService = {
   createBrandToDB,
   getUserProfileFromDB,
   updateProfileToDB,
+  updateProfile,
   creatInfluencerToDB,
   getAllBrand,
   getAllInfluencer,

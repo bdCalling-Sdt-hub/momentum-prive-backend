@@ -61,9 +61,37 @@ const getTermAndConditionInfluencers = catchAsync(
   }
 );
 
+//app
+
+const createTermAndConditionApp = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await TermsAndConditionService.createTermsToDBApp(req.body);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Term-and-condition created app successfully',
+      data: result,
+    });
+  }
+);
+
+const getTermAndConditionApp = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await TermsAndConditionService.getTermsFromDBApp();
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Term-and-condition retrieved App successfully',
+      data: result,
+    });
+  }
+);
+
 export const TermsAndConditionController = {
   createCategoryToDB,
   getAllTerms,
   createTermAndConditionInfluencers,
   getTermAndConditionInfluencers,
+  createTermAndConditionApp,
+  getTermAndConditionApp,
 };

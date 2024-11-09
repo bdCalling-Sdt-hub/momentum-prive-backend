@@ -12,7 +12,12 @@ router.post(
 );
 router.get(
   '/get-terms-brand',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.BRAND),
+  auth(
+    USER_ROLES.ADMIN,
+    USER_ROLES.SUPER_ADMIN,
+    USER_ROLES.BRAND,
+    USER_ROLES.INFLUENCER
+  ),
   TermsAndConditionController.getAllTerms
 );
 
@@ -26,8 +31,32 @@ router.post(
 
 router.get(
   '/get-terms-influences',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN, USER_ROLES.INFLUENCER),
+  auth(
+    USER_ROLES.ADMIN,
+    USER_ROLES.SUPER_ADMIN,
+    USER_ROLES.BRAND,
+    USER_ROLES.INFLUENCER
+  ),
   TermsAndConditionController.getTermAndConditionInfluencers
+);
+
+// app
+
+router.post(
+  '/create-terms-app',
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  TermsAndConditionController.createTermAndConditionApp
+);
+
+router.get(
+  '/get-terms-app',
+  auth(
+    USER_ROLES.ADMIN,
+    USER_ROLES.SUPER_ADMIN,
+    USER_ROLES.BRAND,
+    USER_ROLES.INFLUENCER
+  ),
+  TermsAndConditionController.getTermAndConditionApp
 );
 
 export const TermsAndConditionRoutes = router;

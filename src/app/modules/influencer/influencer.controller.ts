@@ -6,8 +6,6 @@ import { StatusCodes } from 'http-status-codes';
 import getFilePath, { getFilePaths } from '../../../shared/getFilePath';
 
 const updatedInfluencer = catchAsync(async (req: Request, res: Response) => {
-  console.log(req.body);
-
   const images = getFilePaths(req.files, 'images');
 
   const value = {

@@ -5,13 +5,14 @@ import { USER_ROLES } from '../enums/user';
 import { logger } from '../shared/logger';
 
 const superUser = {
-  firstName: 'Super',
-  lastName: 'Admin',
+  fullName: 'null',
   role: USER_ROLES.SUPER_ADMIN,
   email: config.super_admin.email,
   password: config.super_admin.password,
   verified: true,
   loginStatus: 'Approved',
+  image: 'https://i.ibb.co.com/2sw32KM/user.png',
+  status: 'active',
 };
 
 const seedSuperAdmin = async () => {

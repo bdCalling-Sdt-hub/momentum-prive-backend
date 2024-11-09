@@ -13,6 +13,7 @@ import { populate } from 'dotenv';
 import { User } from '../user/user.model';
 import dayjs from 'dayjs';
 import { Influencer } from '../influencer/influencer.model';
+import { Track } from '../track/track.model';
 
 // const createInviteToDB = async (payload: Partial<IInvite>) => {
 //   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
@@ -174,14 +175,6 @@ import { Influencer } from '../influencer/influencer.model';
 // };
 
 const createInviteToDB = async (payload: Partial<IInvite>) => {
-  // const isExistInfluencer = await Invite.findOne({
-  //   influencer: payload.influencer,
-  // });
-
-  // if (isExistInfluencer) {
-  //   throw new ApiError(StatusCodes.BAD_REQUEST, 'Influencer already invited');
-  // }
-
   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
 
   if (!isCampaignStatus) {
@@ -539,6 +532,17 @@ const createInviteForIncluencerToDB = async (payload: Partial<IInvite>) => {
     campaign: payload.campaign,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
   });
+
+  const isTrack = await Track.create({
+    user: isUser._id,
+    campaign: payload.campaign,
+  });
+
+  if (!isTrack) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Track not found');
+  }
+
+  console.log(isTrack, 'isTrack');
 
   if (campaignInviteCount >= 2) {
     throw new ApiError(

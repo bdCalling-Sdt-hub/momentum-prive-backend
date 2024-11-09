@@ -92,12 +92,79 @@ const getMonthlyEarnings = async () => {
   ]);
   return result;
 };
-const getMonthlyUserRegistration = async () => {
+// const getMonthlyUserRegistration = async () => {
+//   const totalUsers = await User.countDocuments();
+
+//   const result = await User.aggregate([
+//     // Optionally filter by active status
+//     // { $match: { status: 'active' } },
+//     {
+//       $group: {
+//         _id: {
+//           year: { $year: '$createdAt' },
+//           month: { $month: '$createdAt' },
+//         },
+//         totalRegistrations: { $sum: 1 },
+//       },
+//     },
+//     {
+//       $addFields: {
+//         month: {
+//           $arrayElemAt: [
+//             [
+//               'Jan',
+//               'Feb',
+//               'Mar',
+//               'Apr',
+//               'May',
+//               'Jun',
+//               'Jul',
+//               'Aug',
+//               'Sep',
+//               'Oct',
+//               'Nov',
+//               'Dec',
+//             ],
+//             { $subtract: ['$_id.month', 1] },
+//           ],
+//         },
+//       },
+//     },
+//     {
+//       $project: {
+//         _id: 0,
+//         month: 1,
+//         year: '$_id.year',
+//         totalRegistrations: 1,
+//         totalUsers: totalUsers,
+//       },
+//     },
+//     {
+//       $sort: { year: 1, month: 1 },
+//     },
+//   ]);
+
+//   return result;
+// };
+const getMonthlyUserRegistration = async (year?: number) => {
   const totalUsers = await User.countDocuments();
 
-  const result = await User.aggregate([
-    // Optionally filter by active status
-    // { $match: { status: 'active' } },
+  // Build the aggregation pipeline with conditional stages
+  const pipeline: any[] = [];
+
+  // Only add the $match stage if a specific year is provided
+  if (year) {
+    pipeline.push({
+      $match: {
+        $expr: {
+          $eq: [{ $year: '$createdAt' }, year],
+        },
+      },
+    });
+  }
+
+  // Add the remaining stages
+  pipeline.push(
     {
       $group: {
         _id: {
@@ -141,9 +208,10 @@ const getMonthlyUserRegistration = async () => {
     },
     {
       $sort: { year: 1, month: 1 },
-    },
-  ]);
+    }
+  );
 
+  const result = await User.aggregate(pipeline);
   return result;
 };
 

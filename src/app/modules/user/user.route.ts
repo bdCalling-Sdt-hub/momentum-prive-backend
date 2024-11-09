@@ -1,4 +1,4 @@
-import express from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import { USER_ROLES } from '../../../enums/user';
 import auth from '../../middlewares/auth';
 import fileUploadHandler from '../../middlewares/fileUploadHandler';
@@ -31,6 +31,20 @@ router
     UserController.updateProfile
   );
 
+router.patch(
+  '/:id',
+  fileUploadHandler(),
+  // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  (req: Request, res: Response, next: NextFunction) => {
+    req.body.data
+      ? (req.body = UserValidation.updateUserZodSchema.parse(
+          JSON.parse(req.body.data)
+        ))
+      : {};
+    return UserController.updateProfileToDB(req, res, next);
+  }
+);
+
 router.get(
   '/profile',
   auth(
@@ -44,12 +58,12 @@ router.get(
 
 router.get(
   '/brand',
-  // auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   UserController.getAllBrands
 );
 router.get(
   '/influencer',
-  // auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   UserController.getAllInfluencer
 );
 

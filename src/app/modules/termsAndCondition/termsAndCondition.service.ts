@@ -1,8 +1,10 @@
 import {
+  ITermsAndConditionApp,
   ITermsAndConditionBrand,
   ITermsAndConditionInfluencer,
 } from './termsAndCondition.interface';
 import {
+  TermsAndConditionApp,
   TermsAndConditionBrand,
   TermsAndConditionInfluencer,
 } from './termsAndCondition.model';
@@ -55,9 +57,33 @@ const getTermsFromDBInfluencer = async () => {
   return terms;
 };
 
+const createTermsToDBApp = async (payload: Partial<ITermsAndConditionApp>) => {
+  try {
+    const existingTerm = await TermsAndConditionApp.findOne();
+
+    if (existingTerm) {
+      Object.assign(existingTerm, payload);
+      const updatedTerm = await existingTerm.save();
+      return updatedTerm;
+    } else {
+      const newTerm = await TermsAndConditionApp.create(payload);
+      return newTerm;
+    }
+  } catch (error) {
+    throw new Error('Unable to create or update terms.');
+  }
+};
+
+const getTermsFromDBApp = async () => {
+  const terms = await TermsAndConditionApp.findOne();
+  return terms;
+};
+
 export const TermsAndConditionService = {
   createTermsToDB,
   getTermsFromDB,
   getTermsFromDBInfluencer,
   createTermsToDBInfluencer,
+  getTermsFromDBApp,
+  createTermsToDBApp,
 };

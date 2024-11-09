@@ -21,6 +21,9 @@ import { NotificationRoutes } from '../app/modules/notification/notification.rou
 import { UpdatedCampaignStatusRoutes } from '../app/modules/permission_access_campaign/permission_access_campaign.route';
 import { DashboardRoutes } from '../app/modules/dashboard/dashboard.route';
 import { ContactsRoutes } from '../app/modules/contact/contact.route';
+import { TrackRoutes } from '../app/modules/track/track.route';
+import { ShowInterestRoutes } from '../app/modules/showInterest/showInterest.route';
+import { SubmitProveRoutes } from '../app/modules/submitProve/submitProve.route';
 
 const router = express.Router();
 
@@ -47,6 +50,9 @@ const apiRoutes = [
   { path: '/updated-campaign-status', route: UpdatedCampaignStatusRoutes },
   { path: '/dashboard', route: DashboardRoutes },
   { path: '/contact', route: ContactsRoutes },
+  { path: '/track', route: TrackRoutes },
+  { path: '/show-interest', route: ShowInterestRoutes },
+  { path: '/submit-prove', route: SubmitProveRoutes },
 ];
 
 apiRoutes.forEach(route => router.use(route.path, route.route));
