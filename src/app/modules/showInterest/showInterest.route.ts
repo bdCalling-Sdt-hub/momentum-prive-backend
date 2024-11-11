@@ -14,4 +14,27 @@ router.post(
   ShowInterestController.createInviteForInfluencerToDB
 );
 
+router.get(
+  '/get/:influencerId',
+  // auth(USER_ROLES.BRAND),
+  ShowInterestController.getAllShowInterest
+);
+
+router.get(
+  '/get-single/:id',
+  // auth(USER_ROLES.BRAND),
+  ShowInterestController.getOneShowInterest
+);
+
+router.get(
+  '/get-all-brand/:userId',
+  // auth(USER_ROLES.BRAND),
+  ShowInterestController.getAllShowInterestForBrand
+);
+router.patch(
+  '/:id',
+  // auth(USER_ROLES.BRAND),
+  ShowInterestController.updateInterestStatusToDB
+);
+
 export const ShowInterestRoutes = router;

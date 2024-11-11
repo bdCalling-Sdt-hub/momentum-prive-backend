@@ -9,7 +9,7 @@ const router = Router();
 
 router.post(
   '/subscribe',
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.BRAND),
   SubscriptionController.createSubscription
 );
 router.post(
@@ -27,7 +27,17 @@ router.delete(
   auth(USER_ROLES.BRAND),
   SubscriptionController.CancelSubscription
 );
-router.get('/get', SubscriptionController.getAllSubscriptation);
+router.get(
+  '/get',
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  SubscriptionController.getAllSubscriptation
+);
+
+router.get(
+  '/get/:userId',
+  auth(USER_ROLES.BRAND),
+  SubscriptionController.getAllSubscriptationForBrand
+);
 
 router.post(
   '/allHooks',

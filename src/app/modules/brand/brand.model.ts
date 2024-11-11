@@ -26,9 +26,7 @@ const brandSchema = new Schema<IBrand>(
     image: {
       type: String,
     },
-    name: {
-      type: String,
-    },
+
     owner: {
       type: String,
     },

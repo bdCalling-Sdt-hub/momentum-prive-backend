@@ -38,9 +38,6 @@ const createCampaignToDB = catchAsync(async (req: Request, res: Response) => {
 // });
 
 const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
-  const filters = pick(req.query, CampaignFilterableFields);
-
-  const paginationOptions = pick(req.query, paginationFields);
   const result = await CampaignService.getAllCampaigns(req.query);
   sendResponse(res, {
     success: true,
@@ -49,6 +46,17 @@ const getAllCampaigns = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getAllCampaignsForAdmin = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await CampaignService.getAllCampaignsForAdmin(req.query);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Campaign retrieved for admin successfully',
+      data: result,
+    });
+  }
+);
 
 const getSingleCmpaign = catchAsync(async (req: Request, res: Response) => {
   const result = await CampaignService.getSingleCmpaign(req.params.id);
@@ -119,4 +127,5 @@ export const CampaignController = {
   deletedCampaignToDB,
   updatedCampaignStatusToDB,
   getCampaignforBrand,
+  getAllCampaignsForAdmin,
 };

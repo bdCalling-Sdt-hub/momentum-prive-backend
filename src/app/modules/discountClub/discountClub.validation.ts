@@ -42,24 +42,29 @@ const updatedDiscountClubValidation = z
     user: z.string().optional(),
     category: z.string().optional(),
     buyGuide: z.string().optional(),
-    startTime: dateStringSchema,
-    endTime: dateStringSchema,
+    startTime: dateStringSchema.optional(),
+    endTime: dateStringSchema.optional(),
     price: z.string().optional(),
     discount: z.string().optional(),
     description: z.string().optional(),
   })
   .refine(
     data => {
-      const start = new Date(data.startTime);
-      const end = new Date(data.endTime);
+      // Check if both startTime and endTime are provided
+      if (data.startTime && data.endTime) {
+        const start = new Date(data.startTime);
+        const end = new Date(data.endTime);
 
-      return end > start;
+        return end > start;
+      }
+
+      // If either startTime or endTime is missing, return true (valid)
+      return true;
     },
     {
       message: 'Start time should be before End time!',
     }
   );
-
 export const DiscountClubValidation = {
   createDiscountClubValidation,
   updatedDiscountClubValidation,

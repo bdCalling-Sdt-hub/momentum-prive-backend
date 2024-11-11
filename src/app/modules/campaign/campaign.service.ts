@@ -8,7 +8,7 @@ import { Campaign } from './campaign.model';
 import { Collaborate } from '../collaboration/collaboration.model';
 import { IPaginationOptions } from '../../../types/pagination';
 import { paginationHelpers } from '../../../helpers/paginationHelper';
-import { SortOrder } from 'mongoose';
+import { SortOrder, Types } from 'mongoose';
 import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
 import { User } from '../user/user.model';
@@ -158,6 +158,76 @@ const getAllCampaigns = async (query: Record<string, unknown>) => {
     },
   };
 };
+const getAllCampaignsForAdmin = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, ...filterData } = query;
+  const anyConditions: any[] = [];
+
+  // Check if searchTerm is provided
+  if (searchTerm) {
+    const brandIds = await Brand.find({
+      owner: { $regex: searchTerm, $options: 'i' },
+    }).distinct('_id');
+
+    if (brandIds.length > 0) {
+      const userIds = await User.find({
+        brand: { $in: brandIds },
+      }).distinct('_id');
+
+      if (userIds.length > 0) {
+        anyConditions.push({ user: { $in: userIds } });
+      }
+    }
+  }
+
+  // If no user matches the brand search, check for campaign name
+  if (searchTerm && anyConditions.length === 0) {
+    const campaignNameCondition = {
+      name: { $regex: searchTerm, $options: 'i' },
+    };
+
+    anyConditions.push(campaignNameCondition);
+  }
+
+  // Filter by additional filterData fields
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({ [field]: value })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  // Fetch campaigns with the combined conditions
+  const result = await Campaign.find(whereConditions)
+    .populate('category', 'categoryName')
+    .populate({
+      path: 'user',
+      select: 'brand fullName',
+      populate: { path: 'brand', select: 'image owner' },
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await Campaign.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
+};
 
 const getSingleCmpaign = async (id: string) => {
   const result = await Campaign.findOne({ _id: id, status: 'active' })
@@ -267,4 +337,5 @@ export const CampaignService = {
   deletedCampaignToDB,
   updatedCampaignStatusToDB,
   getCampaignforBrand,
+  getAllCampaignsForAdmin,
 };

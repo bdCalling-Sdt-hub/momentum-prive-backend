@@ -91,7 +91,7 @@ const createInviteForIncluencerToDB = async (
   }
 
   const isTrack = await Track.create({
-    user: isUser._id,
+    influencer: payload.influencer,
     campaign: payload.campaign,
   });
 
@@ -113,21 +113,69 @@ const createInviteForIncluencerToDB = async (
 
   const result = await ShowInterest.create(payload);
 
-  const CampaignInviteCount = await ShowInterest.countDocuments({
+  const showInterestCount = await ShowInterest.countDocuments({
     campaign: payload.campaign,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
   });
 
   // Send notification
   const data = {
-    text: `${fullName} invited you to join for events`,
-    receiver: payload.influencer,
+    text: `${fullName} show interested in your campaign "${isCampaign.name}"`,
+    receiver: isUsers,
   };
   await sendNotifications(data);
 
-  return { result, CampaignInviteCount };
+  return { result, showInterestCount };
+};
+
+const getAllShowInterest = async (influencerId: string) => {
+  const result = await ShowInterest.find({ influencer: influencerId })
+    .populate('influencer', 'fullName')
+    .populate('campaign');
+
+  const count = result.length;
+
+  return { result, count };
+};
+
+const getAllShowInterestForBrand = async (userId: string | undefined) => {
+  const filter: any = {};
+
+  const result = await ShowInterest.find(filter)
+    .populate('influencer', 'fullName')
+    .populate('campaign');
+
+  const filteredResult = result.filter(
+    (item: any) => item.campaign && item.campaign.user.toString() === userId
+  );
+
+  const count = filteredResult.length;
+
+  if (!filteredResult.length) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  }
+
+  return { result: filteredResult, count };
+};
+
+const getOneShowInterest = async (id: string) => {
+  const result = await ShowInterest.findById(id);
+  return result;
+};
+
+const updateInterestStatus = async (id: string, payload: IShowInterest) => {
+  const result = await ShowInterest.findByIdAndUpdate(
+    id,
+    { status: payload.status },
+    { new: true }
+  );
+  return result;
 };
 
 export const ShowInterestService = {
   createInviteForIncluencerToDB,
+  updateInterestStatus,
+  getAllShowInterest,
+  getAllShowInterestForBrand,
+  getOneShowInterest,
 };

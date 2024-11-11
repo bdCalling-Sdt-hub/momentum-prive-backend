@@ -5,11 +5,21 @@ import { Request, Response } from 'express';
 import catchAsync from '../../../shared/catchAsync';
 
 const getAlllTrackToDB = async (req: Request, res: Response) => {
-  const result = await TrackService.getAllTracks();
+  const result = await TrackService.getAllTracks(req.params.id);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
     message: 'Track retrived successfully',
+    data: result,
+  });
+};
+
+const getAllTrackForBrandToDB = async (req: Request, res: Response) => {
+  const result = await TrackService.getAllTrackForBrand(req.params.userId);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Track for brand retrived successfully',
     data: result,
   });
 };
@@ -27,4 +37,5 @@ const updateTrackStatus = catchAsync(async (req: Request, res: Response) => {
 export const TrackController = {
   getAlllTrackToDB,
   updateTrackStatus,
+  getAllTrackForBrandToDB,
 };

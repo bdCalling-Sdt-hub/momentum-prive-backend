@@ -9,6 +9,9 @@ const campaignSchema = new Schema<ICampaign>(
     image: {
       type: String,
     },
+    addressLink: {
+      type: String,
+    },
     user: {
       type: Schema.Types.ObjectId,
       ref: 'User',

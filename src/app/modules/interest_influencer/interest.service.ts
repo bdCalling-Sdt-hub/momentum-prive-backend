@@ -124,12 +124,12 @@ const updatedInterestStautsToDb = async (
   id: string,
   payload: Partial<IInterest>
 ) => {
-  const acceptedCount = await Interest.countDocuments({ status: 'Accepted' });
+  // const acceptedCount = await Interest.countDocuments({ status: 'Accepted' });
 
-  // Limit to only 4 "Accepted" statuses
-  if (payload.status === 'Accepted' && acceptedCount >= 4) {
-    throw new Error('Cannot accept more than 4 interests');
-  }
+  // // Limit to only 4 "Accepted" statuses
+  // if (payload.status === 'Accepted' && acceptedCount >= 4) {
+  //   throw new Error('Cannot accept more than 4 interests');
+  // }
 
   const updatedStatus = await Interest.findByIdAndUpdate(
     id,

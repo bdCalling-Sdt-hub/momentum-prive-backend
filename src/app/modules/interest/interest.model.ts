@@ -15,10 +15,14 @@ const interestInfluencerSchema = new Schema<IInterestInfo>(
       type: Schema.Types.ObjectId,
       ref: 'SubmitProve',
     },
+    track: {
+      type: Schema.Types.ObjectId,
+      ref: 'Track',
+    },
 
     status: {
       type: String,
-      enum: ['Pending', 'Accepted', 'Rejected'],
+      enum: ['Pending', 'Accepted', 'Rejected', 'Completed'],
       default: 'Pending',
     },
   },

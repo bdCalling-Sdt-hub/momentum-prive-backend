@@ -24,14 +24,28 @@ const createDiscountClubToDB = catchAsync(
 );
 
 const getAllDiscount = catchAsync(async (req: Request, res: Response) => {
-  const result = await DiscountClubService.getAllDiscount(req.query);
+  const { userId } = req.params; // Extract userId from URL params
+  const query = { ...req.query, userId }; // Merge userId into query object
+
+  const result = await DiscountClubService.getAllDiscount(query);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: 'Discount-Club retrived successfully',
+    message: 'Discount Club data retrieved successfully',
     data: result,
   });
 });
+const getAllDiscountForOther = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await DiscountClubService.getAllDiscountForOther(req.query);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Discount-Club retrived successfully',
+      data: result,
+    });
+  }
+);
 
 const getSingleDiscount = catchAsync(async (req: Request, res: Response) => {
   const result = await DiscountClubService.getSingleDiscount(req.params.id);
@@ -44,9 +58,19 @@ const getSingleDiscount = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateCampaignToDB = catchAsync(async (req: Request, res: Response) => {
+  let image;
+  if (req.files && 'image' in req.files && req.files.image[0]) {
+    image = `/images/${req.files.image[0].filename}`;
+  }
+
+  const data = {
+    image,
+    ...req.body,
+  };
+
   const result = await DiscountClubService.updateDiscountToDB(
     req.params.id,
-    req.body
+    data
   );
   sendResponse(res, {
     success: true,
@@ -56,20 +80,26 @@ const updateCampaignToDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const deletedCampaignToDB = catchAsync(async (req: Request, res: Response) => {
-  const result = await DiscountClubService.deletedDiscountToDB(req.params.id);
-  sendResponse(res, {
-    success: true,
-    statusCode: StatusCodes.OK,
-    message: 'Discount-Club deleted successfully',
-    data: result,
-  });
-});
+const DiscountClubUpdateSatus = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await DiscountClubService.DiscountClubUpdateSatus(
+      req.params.id,
+      req.body
+    );
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Discount-Club deleted successfully',
+      data: result,
+    });
+  }
+);
 
 export const DiscountClubController = {
   createDiscountClubToDB,
   getAllDiscount,
   getSingleDiscount,
   updateCampaignToDB,
-  deletedCampaignToDB,
+  DiscountClubUpdateSatus,
+  getAllDiscountForOther,
 };

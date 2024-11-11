@@ -7,6 +7,10 @@ const router = express.Router();
 
 router.get('/', auth(USER_ROLES.BRAND), InterestController.getAllInterest);
 
-router.patch('/:id', auth(USER_ROLES.BRAND), InterestController.updatedStatus);
+router.patch(
+  '/:id',
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
+  InterestController.updatedStatus
+);
 
 export const InterestRoutes = router;

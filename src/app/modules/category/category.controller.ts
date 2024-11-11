@@ -45,9 +45,11 @@ const getSingleCategory = catchAsync(async (req: Request, res: Response) => {
 
 const updateCategoryToDB = catchAsync(async (req: Request, res: Response) => {
   const categoryId = req.params.id;
-  const categoryData = req.body;
 
-  let image = getFilePath(req.files, 'images');
+  let image;
+  if (req.files && 'image' in req.files && req.files.image[0]) {
+    image = `/images/${req.files.image[0].filename}`;
+  }
 
   const value = {
     image,

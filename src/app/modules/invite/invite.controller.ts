@@ -36,6 +36,21 @@ const getAllInvites = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllInvitesForInfluencer = catchAsync(
+  async (req: Request, res: Response) => {
+    const { influencerId } = req.params; // Extract userId from URL params
+    const query = { ...req.query, influencerId }; // Merge userId into query object
+
+    const result = await InviteService.getAllInvitesForInfluencer(query);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Invite retrived successfully',
+      data: result,
+    });
+  }
+);
+
 const updatedInviteToDB = catchAsync(async (req: Request, res: Response) => {
   const result = await InviteService.updatedInviteToDB(req.params.id, req.body);
   sendResponse(res, {
@@ -61,5 +76,5 @@ export const InviteController = {
   getAllInvites,
   updatedInviteToDB,
   getSingleInvite,
-  createInviteForInfluencerToDB,
+  getAllInvitesForInfluencer,
 };

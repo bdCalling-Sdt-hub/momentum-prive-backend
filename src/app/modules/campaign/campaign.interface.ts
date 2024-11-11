@@ -13,6 +13,7 @@ export type ICampaign = {
   startTime: string;
   endTime: string;
   address: string;
+  addressLink: string;
   gender: IGender;
   dressCode: string;
   details: string;

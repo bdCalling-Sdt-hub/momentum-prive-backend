@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 export const createSubmitProve = z.object({
   campaign: z.string().optional(),
+  track: z.string().optional(),
   invite: z.string().optional(),
   influencer: z.string(),
   instagram: z.string().optional(),

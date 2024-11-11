@@ -28,6 +28,7 @@ const submitProveToDB = async (payload: ISubmitProve) => {
     campaign: isCampaign,
     influencer: result.influencer,
     submitProve: result._id,
+    track: payload.track,
   });
 
   if (!createInterestInfluencer) {

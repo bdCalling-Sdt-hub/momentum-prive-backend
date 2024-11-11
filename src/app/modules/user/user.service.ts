@@ -14,6 +14,7 @@ import { IBrand } from '../brand/brand.interface';
 import { Brand } from '../brand/brand.model';
 import { IInfluencer } from '../influencer/influencer.interface';
 import { Influencer } from '../influencer/influencer.model';
+import QueryBuilder from '../../builder/QueryBuilder';
 
 // const createBrandToDB = async (payload: Partial<IUser & IBrand>) => {
 //   const session = await startSession();
@@ -277,25 +278,111 @@ const updateProfileToDB = async (
   return updateDoc;
 };
 
-const getAllBrand = async () => {
-  const brands = await User.find({ role: 'BRAND' }).populate('brand');
+const getAllBrand = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, ...filterData } = query;
+  const anyConditions: any[] = [];
 
-  if (!brands) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Brands not found');
+  // Add searchTerm condition if present
+  if (searchTerm) {
+    anyConditions.push({
+      $or: [{ fullName: { $regex: searchTerm, $options: 'i' } }],
+    });
   }
 
-  return brands;
+  // Filter by additional filterData fields
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({ [field]: value })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Add 'role: INFLUENCER' to the conditions
+  anyConditions.push({
+    role: 'BRAND',
+  });
+
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  // Fetch influencer data
+  const result = await User.find(whereConditions)
+    .populate({
+      path: 'brand',
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await User.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
 };
-const getAllInfluencer = async () => {
-  const influencer = await User.find({ role: 'INFLUENCER' }).populate(
-    'influencer'
-  );
+const getAllInfluencer = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, ...filterData } = query;
+  const anyConditions: any[] = [];
 
-  if (!influencer) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Influencer not found');
+  // Add searchTerm condition if present
+  if (searchTerm) {
+    anyConditions.push({
+      $or: [{ fullName: { $regex: searchTerm, $options: 'i' } }],
+    });
   }
 
-  return influencer;
+  // Filter by additional filterData fields
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({ [field]: value })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Add 'role: INFLUENCER' to the conditions
+  anyConditions.push({
+    role: 'INFLUENCER',
+  });
+
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  // Fetch influencer data
+  const result = await User.find(whereConditions)
+    .populate({
+      path: 'influencer',
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await User.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
 };
 
 const updateProfile = async (id: string, payload: Partial<IUser>) => {

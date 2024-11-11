@@ -7,18 +7,26 @@ import { AdminValidation } from './admin.validation';
 import fileUploadHandler from '../../middlewares/fileUploadHandler';
 const router = express.Router();
 
+// router.post(
+//   '/create-admin',
+//   auth(USER_ROLES.SUPER_ADMIN),
+//   fileUploadHandler(),
+
+//   (req: Request, res: Response, next: NextFunction) => {
+//     req.body = AdminValidation.createAdminZodSchema.parse(
+//       JSON.parse(req.body.data)
+//     );
+//     return AdminController.createAdmin(req, res, next);
+//   }
+// );
+
 router.post(
   '/create-admin',
+  validateRequest(AdminValidation.createAdminZodSchema),
   auth(USER_ROLES.SUPER_ADMIN),
-  fileUploadHandler(),
-
-  (req: Request, res: Response, next: NextFunction) => {
-    req.body = AdminValidation.createAdminZodSchema.parse(
-      JSON.parse(req.body.data)
-    );
-    return AdminController.createAdmin(req, res, next);
-  }
+  AdminController.createAdmin
 );
+
 router.get(
   '/get-admin',
   auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),

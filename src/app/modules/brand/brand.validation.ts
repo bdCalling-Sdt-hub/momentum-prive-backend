@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 export const BrandValiation = z.object({
   // image: z.string({ required_error: 'required image' }),
-  name: z.string({ required_error: 'required name' }),
   email: z.string({ required_error: 'required email' }).email(),
   whatAppNum: z
     .string({ required_error: 'required whatApp number' })

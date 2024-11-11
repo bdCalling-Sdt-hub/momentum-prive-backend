@@ -5,16 +5,27 @@ import sendResponse from '../../../shared/sendResponse';
 import { AdminService } from './admin.service';
 import getFilePath from '../../../shared/getFilePath';
 
+// const createAdmin = catchAsync(async (req: Request, res: Response) => {
+//   const payload = req.body;
+
+//   let image = getFilePath(req.files, 'images');
+//   const value = {
+//     image,
+//     ...payload,
+//   };
+
+//   const result = await AdminService.createAdminToDB(value);
+
+//   sendResponse(res, {
+//     statusCode: StatusCodes.OK,
+//     success: true,
+//     message: 'Admin created Successfully',
+//     data: result,
+//   });
+// });
+
 const createAdmin = catchAsync(async (req: Request, res: Response) => {
-  const payload = req.body;
-
-  let image = getFilePath(req.files, 'images');
-  const value = {
-    image,
-    ...payload,
-  };
-
-  const result = await AdminService.createAdminToDB(value);
+  const result = await AdminService.createAdminToDB(req.body);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,

@@ -12,6 +12,10 @@ const submitProveSchema = new Schema<ISubmitProve>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    track: {
+      type: Schema.Types.ObjectId,
+      ref: 'Track',
+    },
     image: {
       type: [String],
     },

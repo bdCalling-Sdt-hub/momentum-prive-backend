@@ -34,7 +34,7 @@ router
 router.patch(
   '/:id',
   fileUploadHandler(),
-  // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   (req: Request, res: Response, next: NextFunction) => {
     req.body.data
       ? (req.body = UserValidation.updateUserZodSchema.parse(

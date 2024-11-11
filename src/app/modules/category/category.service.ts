@@ -10,17 +10,65 @@ const createCategiryToDB = async (payload: Partial<ICategory>) => {
   return result;
 };
 
+// const getAllCategory = async (query: Record<string, unknown>) => {
+//   const categoryBuilder = new QueryBuilder(Category.find(), query)
+//     .search(CategorySearchAbleFields)
+//     .filter()
+//     .sort()
+//     .paginate()
+//     .fields();
+
+//   const result = await categoryBuilder.modelQuery;
+
+//   const count: number = await Category.countDocuments();
+
+//   return { result, count };
+// };
+
 const getAllCategory = async (query: Record<string, unknown>) => {
-  const categoryBuilder = new QueryBuilder(Category.find(), query)
-    .search(CategorySearchAbleFields)
-    .filter()
-    .sort()
-    .paginate()
-    .fields();
+  const { searchTerm, page, limit, ...filterData } = query;
+  const anyConditions: any[] = [{ status: 'active' }];
 
-  const result = await categoryBuilder.modelQuery;
+  // Add searchTerm condition if present
+  if (searchTerm) {
+    anyConditions.push({
+      $or: [{ categoryName: { $regex: searchTerm, $options: 'i' } }],
+    });
+  }
 
-  return result;
+  // Filter by additional filterData fields
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({ [field]: value })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  // Fetch Category data
+  const result = await Category.find(whereConditions)
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await Category.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
 };
 
 const getSingleCategory = async (id: string) => {

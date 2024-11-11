@@ -189,6 +189,75 @@ const getAllSubscriptation = async () => {
   return result;
 };
 
+// const getAllSubscriptationForBrand = async (brandId: string) => {
+//   const result = await Subscribation.find({ user: brandId })
+//     .populate({
+//       path: 'user',
+//       populate: {
+//         path: 'brand',
+//       },
+//     })
+//     .populate('packages');
+
+//   const count = Subscribation.countDocuments();
+
+//   return { result, count };
+// };
+
+const getAllSubscriptationForBrand = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, userId, ...filterData } = query;
+  const anyConditions: any[] = [];
+
+  // Add searchTerm condition if present
+
+  if (userId) {
+    anyConditions.push({ user: userId });
+  }
+
+  console.log(userId);
+
+  // Filter by additional filterData fields
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({ [field]: value })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  // Fetch Category data
+  const result = await Subscribation.find(whereConditions)
+    .populate({
+      path: 'user',
+      populate: {
+        path: 'brand',
+      },
+    })
+    .populate('packages')
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await Subscribation.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
+};
+
 // const updateustomerAndSubscription = async (
 //   subscriptionId: string,
 //   newPriceId: string
@@ -766,4 +835,5 @@ export const subscriptionService = {
   cancelSubscription,
   renewExpiredSubscriptions,
   getAllSubscriptation,
+  getAllSubscriptationForBrand,
 };

@@ -8,16 +8,10 @@ import fileUploadHandler from '../../middlewares/fileUploadHandler';
 
 const router = express.Router();
 
-// router.post(
-//   '/create-category',
-//   // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-//   validateRequest(CategoryValiationZodSchema.CategoryValiation),
-//   CategoryController.createCategoryToDB
-// );
 router.post(
   '/create-category',
   fileUploadHandler(),
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CategoryValiationZodSchema.CategoryValiation.parse(
       JSON.parse(req.body.data)
@@ -26,29 +20,26 @@ router.post(
   }
 );
 
-router.get(
-  '/',
+router.get('/', CategoryController.getAllCategory);
+router.get('/:id', CategoryController.getSingleCategory);
 
-  CategoryController.getAllCategory
-);
-router.get(
-  '/:id',
-
-  CategoryController.getSingleCategory
-);
 router.patch(
   '/:id',
+  fileUploadHandler(),
   auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   (req: Request, res: Response, next: NextFunction) => {
-    req.body = CategoryValiationZodSchema.updatedCategoryValiation.parse(
-      JSON.parse(req.body.data)
-    );
+    req.body.data
+      ? (req.body = CategoryValiationZodSchema.updatedCategoryValiation.parse(
+          JSON.parse(req.body.data)
+        ))
+      : {};
     return CategoryController.updateCategoryToDB(req, res, next);
   }
 );
+
 router.delete(
   '/:id',
-  // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   CategoryController.deleteCategory
 );
 

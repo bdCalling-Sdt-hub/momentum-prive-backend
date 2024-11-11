@@ -5,8 +5,6 @@ export const InfluencerValiation = z.object({
   whatAppNum: z.string().min(4).max(15).optional(),
   city: z.string().optional(),
   country: z.string().optional(),
-  fullName: z.string().optional(),
-  email: z.string().optional(),
   zip: z.string().optional(),
   describe: z.string().optional(),
   followersIG: z.string().optional(),

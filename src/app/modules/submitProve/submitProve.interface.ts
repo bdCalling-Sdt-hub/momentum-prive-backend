@@ -12,6 +12,7 @@ export type ISubmitProve = {
   campaign: Types.ObjectId;
   //   invite: Types.ObjectId;
   influencer: Types.ObjectId;
+  track: Types.ObjectId;
   status: 'active' | 'deleted';
   typeStatus: ISubmitStatus;
   instagram: string;

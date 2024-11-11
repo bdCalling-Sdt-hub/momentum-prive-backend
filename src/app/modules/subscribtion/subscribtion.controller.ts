@@ -146,6 +146,23 @@ const getAllSubscriptation = catchAsync(async (req, res) => {
   });
 });
 
+const getAllSubscriptationForBrand = catchAsync(async (req, res) => {
+  const { userId } = req.params;
+
+  console.log(userId);
+
+  const query = { ...req.query, userId };
+
+  const result = await subscriptionService.getAllSubscriptationForBrand(query);
+
+  sendResponse(res, {
+    statusCode: StatusCodes.OK,
+    success: true,
+    message: 'subscriptions for brand retrived successfully',
+    data: result,
+  });
+});
+
 export const SubscriptionController = {
   createSession,
   Success,
@@ -156,4 +173,5 @@ export const SubscriptionController = {
   CancelSubscription,
   renewExpiredSubscription,
   getAllSubscriptation,
+  getAllSubscriptationForBrand,
 };

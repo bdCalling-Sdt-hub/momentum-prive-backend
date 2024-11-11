@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   '/create-discount',
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.BRAND),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = DiscountClubValidation.createDiscountClubValidation.parse(
@@ -20,12 +20,26 @@ router.post(
 );
 
 router.get(
-  '/',
-  auth(),
-  // USER_ROLES.BRAND,
-  // USER_ROLES.INFLUENCER,
-  // USER_ROLES.ADMIN,
-  // USER_ROLES.SUPER_ADMIN
+  '/brand/:userId',
+  auth(
+    USER_ROLES.BRAND,
+    USER_ROLES.INFLUENCER,
+    USER_ROLES.ADMIN,
+    USER_ROLES.SUPER_ADMIN
+  ),
+
+  DiscountClubController.getAllDiscount
+);
+
+router.get(
+  '/get-all-discount',
+  auth(
+    USER_ROLES.BRAND,
+    USER_ROLES.INFLUENCER,
+    USER_ROLES.ADMIN,
+    USER_ROLES.SUPER_ADMIN
+  ),
+
   DiscountClubController.getAllDiscount
 );
 
@@ -44,18 +58,21 @@ router.patch(
   '/:id',
   auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   fileUploadHandler(),
+
   (req: Request, res: Response, next: NextFunction) => {
-    req.body = DiscountClubValidation.updatedDiscountClubValidation.parse(
-      JSON.parse(req.body.data)
-    );
+    req.body.data
+      ? (req.body = DiscountClubValidation.updatedDiscountClubValidation.parse(
+          JSON.parse(req.body.data)
+        ))
+      : {};
     return DiscountClubController.updateCampaignToDB(req, res, next);
   }
 );
 
-router.delete(
-  '/:id',
+router.patch(
+  '/statusUpdate/:id',
   auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
-  DiscountClubController.deletedCampaignToDB
+  DiscountClubController.DiscountClubUpdateSatus
 );
 
 export const DiscountClubRoutes = router;

@@ -71,7 +71,7 @@ const updateProfile = catchAsync(
 );
 
 const getAllBrands = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.getAllBrand();
+  const result = await UserService.getAllBrand(req.query);
 
   sendResponse(res, {
     success: true,
@@ -82,7 +82,7 @@ const getAllBrands = catchAsync(async (req: Request, res: Response) => {
 });
 
 const getAllInfluencer = catchAsync(async (req: Request, res: Response) => {
-  const result = await UserService.getAllInfluencer();
+  const result = await UserService.getAllInfluencer(req.query);
 
   sendResponse(res, {
     success: true,
@@ -102,8 +102,6 @@ const updateProfileToDB = catchAsync(async (req: Request, res: Response) => {
     image,
     ...req.body,
   };
-
-  console.log(value);
 
   const result = await UserService.updateProfile(req.params.id, value);
 

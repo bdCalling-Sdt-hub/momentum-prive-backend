@@ -26,6 +26,12 @@ router.get(
   CollaborationController.getAllCollaborations
 );
 
+router.get(
+  '/:id',
+  auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
+  CollaborationController.getAllCollaborationForInfluencer
+);
+
 router.patch('/:id', CollaborationController.updatedCollaborationToDB);
 
 export const CollaborationRoutes = router;

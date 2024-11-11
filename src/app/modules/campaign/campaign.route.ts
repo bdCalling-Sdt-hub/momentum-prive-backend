@@ -22,18 +22,24 @@ router.post(
 
 router.get(
   '/brand/:brandId',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
   CampaignController.getCampaignforBrand
 );
+
 router.get(
   '/',
-  // auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
   CampaignController.getAllCampaigns
+);
+router.get(
+  '/admin',
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  CampaignController.getAllCampaignsForAdmin
 );
 
 router.get(
   '/:id',
-  // auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER, USER_ROLES.ADMIN),
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER, USER_ROLES.ADMIN),
   CampaignController.getSingleCmpaign
 );
 

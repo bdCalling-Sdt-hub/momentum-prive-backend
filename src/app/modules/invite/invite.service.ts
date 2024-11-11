@@ -400,6 +400,85 @@ const getAllInvites = async (query: Record<string, unknown>) => {
   };
   return data;
 };
+const getAllInvitesForInfluencer = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, influencerId, limit, ...filterData } = query;
+  const anyConditions: any[] = [];
+
+  // Step 1: Search for campaigns by category name
+  if (searchTerm) {
+    const campaignIds = await Campaign.find({
+      category: {
+        $in: await Category.find({
+          categoryName: { $regex: searchTerm, $options: 'i' },
+        }).distinct('_id'),
+      },
+    }).distinct('_id');
+
+    if (campaignIds.length > 0) {
+      anyConditions.push({ campaign: { $in: campaignIds } });
+    }
+  }
+
+  anyConditions.push({ influencer: influencerId });
+
+  // Step 2: Include other filter data
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({
+        [field]: value,
+      })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Apply filter conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+  const pages = parseInt(page as string) || 1;
+  const size = parseInt(limit as string) || 10;
+  const skip = (pages - 1) * size;
+
+  const result = await Invite.find(whereConditions)
+    .populate({
+      path: 'campaign',
+      // select: 'image name startTime endTime category',
+      populate: {
+        path: 'category',
+        select: 'categoryName',
+      },
+    })
+    .populate({
+      path: 'campaign',
+      select: 'image name startTime endTime category',
+      populate: {
+        path: 'user',
+        select: 'fullName',
+        populate: {
+          path: 'brand',
+          select: 'owner image',
+        },
+      },
+    })
+    .populate({
+      path: 'influencer',
+      select: 'fullName',
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await Invite.countDocuments(whereConditions);
+
+  const data: any = {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
+  return data;
+};
 
 const getSingleInvite = async (id: string) => {
   const result = await Invite.findById(id)
@@ -586,4 +665,5 @@ export const InviteService = {
   updatedInviteToDB,
   getSingleInvite,
   createInviteForIncluencerToDB,
+  getAllInvitesForInfluencer,
 };

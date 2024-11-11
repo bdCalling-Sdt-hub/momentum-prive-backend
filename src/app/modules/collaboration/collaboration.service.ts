@@ -178,6 +178,18 @@ const getAllCollaborations = async (
 
   return result;
 };
+const getAllCollaborationForInfluencer = async (influencerId: string) => {
+  const result = await Collaborate.find({ influencer: influencerId }).populate({
+    path: 'invite',
+    populate: {
+      path: 'campaign',
+    },
+  });
+
+  const count = result.length;
+
+  return { result, count };
+};
 
 const updatedCollaborationToDB = async (
   id: string,
@@ -196,4 +208,6 @@ export const CollaborationService = {
   createCollaborationToDB,
   getAllCollaborations,
   updatedCollaborationToDB,
+
+  getAllCollaborationForInfluencer,
 };

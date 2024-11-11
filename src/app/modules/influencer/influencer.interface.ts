@@ -4,8 +4,6 @@ export type IGender = 'male' | 'female' | 'other';
 
 export type IInfluencer = {
   image: string[];
-  fullName: string;
-  email: string;
   instagram: string;
   tiktok?: string;
   followersIG: string;
