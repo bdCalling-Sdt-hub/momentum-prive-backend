@@ -36,6 +36,11 @@ const campaignSchema = new Schema<ICampaign>(
       required: true,
       trim: true,
     },
+    requiredDocuments: [
+      {
+        type: String,
+      },
+    ],
     name: {
       type: String,
       required: true,
@@ -69,7 +74,7 @@ const campaignSchema = new Schema<ICampaign>(
       required: true,
       trim: true,
     },
-    collaboration: {
+    collaborationLimit: {
       type: Number,
     },
     rules: {

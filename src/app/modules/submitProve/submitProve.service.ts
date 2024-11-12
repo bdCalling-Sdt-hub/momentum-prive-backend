@@ -7,9 +7,24 @@ import { ISubmitProve } from './submitProve.interface';
 import { SubmitProve } from './submitProve.model';
 import { User } from '../user/user.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
+import { Track } from '../track/track.model';
+import { Types } from 'mongoose';
+import { populate } from 'dotenv';
 
 const submitProveToDB = async (payload: ISubmitProve) => {
-  const isCampaign = await Campaign.findById(payload.campaign);
+  const trackId = payload.track;
+
+  const trackStatus = await Track.findById(trackId);
+
+  if (trackStatus?.status !== 'Accepted') {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Track is not Accepted yet');
+  }
+
+  const isTrack = await Track.findById(trackId);
+
+  const isCampaign = await Campaign.findById(isTrack?.campaign);
+
+  const isInfluencer = await User.findById(isTrack?.influencer);
 
   const isCategory = await Category.findById(isCampaign?.category);
 
@@ -20,13 +35,11 @@ const submitProveToDB = async (payload: ISubmitProve) => {
     ...payload,
   };
 
-  const isInfluencer = await User.findById(payload.influencer);
-
   const result = await SubmitProve.create(value);
 
   const createInterestInfluencer = await InterestInfluencer.create({
     campaign: isCampaign,
-    influencer: result.influencer,
+    influencer: isInfluencer,
     submitProve: result._id,
     track: payload.track,
   });
@@ -57,6 +70,46 @@ const submitProveToDB = async (payload: ISubmitProve) => {
   return result;
 };
 
+const getAllSubmitProve = async (influencerId: string) => {
+  const influencerTracks = await Track.find({
+    influencer: new Types.ObjectId(influencerId),
+  });
+
+  const trackIds = influencerTracks.map(track => track._id);
+
+  const result = await SubmitProve.find({ track: { $in: trackIds } }).populate({
+    path: 'track',
+    select: 'campaign',
+    populate: {
+      path: 'campaign',
+      populate: {
+        path: 'user',
+        select: 'brand',
+        populate: {
+          path: 'brand',
+          select: 'image owner',
+        },
+      },
+    },
+  });
+
+  return result;
+};
+
 export const SubmitProveService = {
   submitProveToDB,
+  getAllSubmitProve,
 };
+
+// .populate({
+//   path: 'campaign',
+//   select: 'user image name',
+//   populate: {
+//     path: 'user',
+//     select: 'brand',
+//     populate: {
+//       path: 'brand',
+//       select: 'image owner',
+//     },
+//   },
+// });

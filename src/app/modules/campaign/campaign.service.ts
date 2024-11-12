@@ -16,31 +16,68 @@ import dayjs from 'dayjs';
 import { formatCurrentDate } from './dateformat';
 
 // const createCampaignToDB = async (payload: Partial<ICampaign>) => {
-//   // const isCategoryOfBrand = await Brand.findById(payload.brand);
 //   const isCategoryOfBrand = await User.findById(payload.user);
 
-//   console.log(isCategoryOfBrand);
+//   // Check if the user has the "Silver" title and an active subscription
+//   if (
+//     isCategoryOfBrand?.title === 'Silver' &&
+//     isCategoryOfBrand.subscription === true
+//   ) {
+//     // Calculate the start and end dates for the current month
+//     const startOfMonth = dayjs().startOf('month').toDate();
+//     const endOfMonth = dayjs().endOf('month').toDate();
+
+//     // Count campaigns created by the user within the current month
+//     const monthlyCampaignCount = await Campaign.countDocuments({
+//       user: payload.user,
+//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//     });
+
+//     if (monthlyCampaignCount >= 10) {
+//       throw new ApiError(
+//         StatusCodes.UNAUTHORIZED,
+//         'Silver users can only create up to 10 campaigns per month.'
+//       );
+//     }
+//   }
 
 //   if (
 //     isCategoryOfBrand?.title === 'Silver' &&
 //     isCategoryOfBrand.subscription === true
 //   ) {
+//     if (payload.collaborationLimit && payload.collaborationLimit > 2) {
+//       throw new ApiError(
+//         StatusCodes.UNAUTHORIZED,
+//         'Silver users can only set a collaboration limit of up to 2.'
+//       );
+//     }
 //   }
-//   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
 
+//   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
 //   const isCategoryName = isBrandOfCat?.category;
 
+//   // Create the campaign with the associated category
 //   const campaign = await Campaign.create({
 //     ...payload,
 //     category: isCategoryName,
 //   });
-//   return campaign;
-// };
 
-// Use dayjs to handle date calculations
+//   // Get the updated count of campaigns after the new creation
+//   const startOfMonth = dayjs().startOf('month').toDate();
+//   const endOfMonth = dayjs().endOf('month').toDate();
+//   const CampaignsCount = await Campaign.countDocuments({
+//     user: payload.user,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   return { campaign, CampaignsCount };
+// };
 
 const createCampaignToDB = async (payload: Partial<ICampaign>) => {
   const isCategoryOfBrand = await User.findById(payload.user);
+
+  // Convert collaborationLimit to a number, with a default value of 0 if undefined or invalid
+  const collaborationLimit = Number(payload.collaborationLimit) || 0;
 
   // Check if the user has the "Silver" title and an active subscription
   if (
@@ -65,8 +102,22 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
     }
   }
 
+  if (
+    isCategoryOfBrand?.title === 'Silver' &&
+    isCategoryOfBrand.subscription === true
+  ) {
+    if (collaborationLimit > 2) {
+      throw new ApiError(
+        StatusCodes.UNAUTHORIZED,
+        'Silver users can only set a collaboration limit of up to 2.'
+      );
+    }
+  }
+
   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
   const isCategoryName = isBrandOfCat?.category;
+
+  payload.collaborationLimit = collaborationLimit;
 
   // Create the campaign with the associated category
   const campaign = await Campaign.create({
@@ -140,8 +191,11 @@ const getAllCampaigns = async (query: Record<string, unknown>) => {
     .populate('category', 'categoryName')
     .populate({
       path: 'user',
-      select: 'brand',
-      populate: { path: 'brand', select: 'image owner' },
+      select: 'brand ',
+      populate: {
+        path: 'brand',
+        select: 'image owner',
+      },
     })
     .sort({ createdAt: -1 })
     .skip(skip)
@@ -230,7 +284,7 @@ const getAllCampaignsForAdmin = async (query: Record<string, unknown>) => {
 };
 
 const getSingleCmpaign = async (id: string) => {
-  const result = await Campaign.findOne({ _id: id, status: 'active' })
+  const result = await Campaign.findById(id, { status: 'active' })
 
     .populate({
       path: 'user',
@@ -242,8 +296,7 @@ const getSingleCmpaign = async (id: string) => {
     .populate({
       path: 'category',
       select: 'categoryName',
-    })
-    .populate(['influencer', 'category']);
+    });
 
   if (result === null) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');

@@ -1,17 +1,13 @@
 import { z } from 'zod';
 
 export const createSubmitProve = z.object({
-  campaign: z.string().optional(),
-  track: z.string().optional(),
-  invite: z.string().optional(),
-  influencer: z.string(),
-  instagram: z.string().optional(),
-  tiktok: z.string().optional(),
+  track: z.string(),
+  instagram: z.string(),
+  tiktok: z.string(),
 });
 
 export const updatedSubmitProve = z.object({
-  invite: z.string().optional(),
-  influencer: z.string().optional(),
+  track: z.string().optional(),
   instagram: z.string().optional(),
   tiktok: z.string().optional(),
 });

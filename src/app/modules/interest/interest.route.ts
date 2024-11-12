@@ -6,7 +6,11 @@ import { InterestController } from './interest.controller';
 
 const router = express.Router();
 
-router.get('/', InterestController.getAllInterest);
+router.get(
+  '/get-all/:userId',
+  auth(USER_ROLES.BRAND),
+  InterestController.getAllInterest
+);
 
 router.patch('/:id', InterestController.updatedStatus);
 

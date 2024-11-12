@@ -22,4 +22,11 @@ router.post(
   }
 );
 
+router.get(
+  '/get/:id',
+  fileUploadHandler(),
+  auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
+  SubmitProveController.getAllSubmitProve
+);
+
 export const SubmitProveRoutes = router;

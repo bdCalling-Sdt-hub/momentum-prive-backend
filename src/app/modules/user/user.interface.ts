@@ -5,6 +5,7 @@ export type IUser = {
   role: USER_ROLES;
   title?: string;
   fullName: string;
+  limit?: number;
   email?: string;
   subscription: boolean;
   referralCode?: string;

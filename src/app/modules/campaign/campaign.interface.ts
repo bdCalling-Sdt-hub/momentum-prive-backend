@@ -1,6 +1,6 @@
 import { Types } from 'mongoose';
 
-export type IGender = 'male' | 'female' | 'other';
+export type IGender = 'Male' | 'Female' | 'Other' | 'All';
 
 type ITypeStatus = 'Accepted' | 'Rejected' | 'Pending';
 
@@ -18,7 +18,7 @@ export type ICampaign = {
   dressCode: string;
   details: string;
   brandInstagram: string;
-  collaboration?: number;
+  collaborationLimit?: number;
   approvalStatus: 'Approved' | 'Rejected' | 'Pending';
   rules?: string;
   exchange?: string;
@@ -26,6 +26,7 @@ export type ICampaign = {
   category?: Types.ObjectId;
   categoryName?: string;
   campaignTermAndCondition: string;
+  requiredDocuments?: string[];
 };
 
 export type IICampaignFilters = {

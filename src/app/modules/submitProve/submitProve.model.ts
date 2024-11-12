@@ -4,14 +4,6 @@ import { inviteStatus } from '../collaboration/collaboration.constant';
 
 const submitProveSchema = new Schema<ISubmitProve>(
   {
-    campaign: {
-      type: Schema.Types.ObjectId,
-      ref: 'Campaign',
-    },
-    influencer: {
-      type: Schema.Types.ObjectId,
-      ref: 'User',
-    },
     track: {
       type: Schema.Types.ObjectId,
       ref: 'Track',

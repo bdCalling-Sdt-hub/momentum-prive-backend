@@ -85,18 +85,23 @@ const campaignValidation = z.object({
   endTime: z.string({ required_error: 'End time required' }),
   address: z.string({ required_error: 'Address is required' }),
   addressLink: z.string({ required_error: 'AddressLink is required' }),
-  gender: z.enum(['male', 'female', 'other']),
+  gender: z.enum(['Male', 'Female', 'Other', 'All']),
   dressCode: z.string({ required_error: 'Dress code is required' }),
   brandInstagram: z.string({ required_error: 'Instagram is required' }),
   details: z.string({ required_error: 'Details is required' }),
+  collaborationLimit: z.string({
+    required_error: 'collaborationLimit is required',
+  }),
   campaignTermAndCondition: z.string({
     required_error: 'CampaignTermAndCondition is required',
   }),
   // collaboration: z.number().min(0, 'Collaboration must be a positive number'),
+  requiredDocuments: z.array(z.string()).optional(),
 });
 
 const campaignUpdatedValidation = z.object({
   user: z.string().optional(),
+  requiredDocuments: z.array(z.string()).optional(),
   influencer: z.string().optional(),
   name: z.string().optional(),
   rules: z.string().optional(),
@@ -105,11 +110,12 @@ const campaignUpdatedValidation = z.object({
   endTime: z.string().optional(),
   address: z.string().optional(),
   addressLink: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']),
+  gender: z.enum(['Male', 'Female', 'Other', 'All']).optional(),
   dressCode: z.string().optional(),
   details: z.string().optional(),
   brandInstagram: z.string().optional(),
   campaignTermAndCondition: z.string().optional(),
+  collaborationLimit: z.string().optional(),
   // collaboration: z.number().min(0).optional(),
 });
 

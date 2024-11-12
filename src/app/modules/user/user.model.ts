@@ -23,6 +23,9 @@ const userSchema = new Schema<IUser, UserModal>(
       type: String,
       // default: null,
     },
+    limit: {
+      type: Number,
+    },
     password: {
       type: String,
       required: true,

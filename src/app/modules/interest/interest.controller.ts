@@ -5,8 +5,7 @@ import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 
 const getAllInterest = catchAsync(async (req: Request, res: Response) => {
-  const { campaignId } = req.query;
-  const result = await InterestService.getAllInterest(campaignId as string);
+  const result = await InterestService.getAllInterest(req.params.userId);
 
   sendResponse(res, {
     success: true,

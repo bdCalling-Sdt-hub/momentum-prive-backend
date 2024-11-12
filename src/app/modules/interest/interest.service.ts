@@ -1,3 +1,5 @@
+import { StatusCodes } from 'http-status-codes';
+import ApiError from '../../../errors/ApiError';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Campaign } from '../campaign/campaign.model';
 import { ShowInterest } from '../showInterest/showInterest.model';
@@ -7,34 +9,69 @@ import { User } from '../user/user.model';
 import { IInterestInfo } from './interest.interface';
 import { InterestInfluencer } from './interest.model';
 
-const getAllInterest = async (campaignId: string) => {
-  const query = campaignId ? { campaign: campaignId } : {};
+// const getAllInterest = async (campaignId: string) => {
+//   const query = campaignId ? { campaign: campaignId } : {};
 
-  const count = await InterestInfluencer.countDocuments(query);
+//   const count = await InterestInfluencer.countDocuments(query);
 
-  const result = await InterestInfluencer.find(query)
+//   const result = await InterestInfluencer.find(query)
+//     .populate({
+//       path: 'campaign',
+//       select: 'name',
+//       populate: {
+//         path: 'user',
+//         select: 'fullName',
+//         populate: {
+//           path: 'brand',
+//           select: 'owner',
+//         },
+//       },
+//     })
+//     .populate({
+//       path: 'influencer',
+//       select: 'fullName',
+//       populate: {
+//         path: 'influencer',
+//         select: 'fullName ',
+//       },
+//     });
+
+//   return { result, count };
+// };
+const getAllInterest = async (userId: string) => {
+  if (!userId) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'UserId is required');
+  }
+
+  const allResults = await InterestInfluencer.find({})
+    .populate('influencer', 'fullName')
     .populate({
       path: 'campaign',
-      select: 'name',
+      select: 'user image name',
       populate: {
         path: 'user',
-        select: 'fullName',
+        select: 'brand',
         populate: {
           path: 'brand',
-          select: 'owner',
+          select: 'image owner',
         },
-      },
-    })
-    .populate({
-      path: 'influencer',
-      select: 'fullName',
-      populate: {
-        path: 'influencer',
-        select: 'fullName ',
       },
     });
 
-  return { result, count };
+  const filteredResult = allResults.filter(
+    (item: any) => item.campaign && item.campaign.user._id.toString() === userId
+  );
+
+  if (filteredResult.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  }
+
+  const count = filteredResult.length;
+  if (!count) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  }
+
+  return { result: filteredResult, count };
 };
 
 const updatedInterestStautsToDb = async (
@@ -89,10 +126,10 @@ const updatedInterestStautsToDb = async (
     updatedStatus.status === 'Completed' ||
     updatedStatus.status === 'Rejected'
   ) {
-    const statusToUpdate = updatedStatus.status; // This is safe because the status is either 'Completed' or 'Rejected'
+    const statusToUpdate = updatedStatus.status; // 'Completed' or 'Rejected'
 
     // Update the collaboration and track status
-    const updateCollaboration = await SubmitProve.findByIdAndUpdate(
+    const updateSubmitProve = await SubmitProve.findByIdAndUpdate(
       collaborationId,
       {
         $set: {
@@ -118,7 +155,25 @@ const updatedInterestStautsToDb = async (
       }
     );
 
-    return { updatedStatus, updateCollaboration, updateTrack };
+    const updatedInterst = await ShowInterest.findByIdAndUpdate(
+      influencerId,
+      {
+        $set: {
+          status: statusToUpdate,
+        },
+      },
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    return {
+      updatedStatus,
+      updateSubmitProve,
+      updateTrack,
+      updatedInterst,
+    };
   }
 
   return updatedStatus;

@@ -9,7 +9,6 @@ import dayjs from 'dayjs';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Category } from '../category/category.model';
-import { populate } from 'dotenv';
 
 const stripe = new Stripe(config.stripe_secret_key as string, {
   apiVersion: '2024-09-30.acacia',
@@ -18,8 +17,15 @@ const stripe = new Stripe(config.stripe_secret_key as string, {
 const createDiscountToDB = async (payload: Partial<IDiscountClub>) => {
   const isUser = await User.findById(payload.user);
 
+  if (!isUser) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
   // Check if the user has the "Silver" title and an active subscription
-  if (isUser?.title === 'Discount' && isUser.subscription === true) {
+  if (
+    isUser?.title === 'Discount' ||
+    (isUser?.title === 'Silver' && isUser.subscription === true)
+  ) {
     // Calculate the start and end dates for the current month
     const startOfMonth = dayjs().startOf('month').toDate();
     const endOfMonth = dayjs().endOf('month').toDate();
@@ -187,8 +193,6 @@ const updateDiscountToDB = async (
   id: string,
   payload: Partial<IDiscountClub>
 ) => {
-  console.log(payload, 'dsddsd');
-
   const result = await DiscountClub.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
