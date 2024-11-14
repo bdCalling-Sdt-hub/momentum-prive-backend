@@ -58,13 +58,24 @@ router.get(
 
 router.get(
   '/brand',
-  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.BRAND),
   UserController.getAllBrands
 );
 router.get(
   '/influencer',
-  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN, USER_ROLES.BRAND),
   UserController.getAllInfluencer
+);
+
+router.get(
+  '/influencer/:id',
+  auth(
+    USER_ROLES.INFLUENCER,
+    USER_ROLES.BRAND,
+    USER_ROLES.SUPER_ADMIN,
+    USER_ROLES.ADMIN
+  ),
+  UserController.getSingleInflueencer
 );
 
 export const UserRoutes = router;

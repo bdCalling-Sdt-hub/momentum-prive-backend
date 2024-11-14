@@ -335,14 +335,51 @@ const getAllInfluencer = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
   const anyConditions: any[] = [];
 
-  // Add searchTerm condition if present
+  // Check if searchTerm is a number (for searching followers count)
+  const followersSearch = !isNaN(Number(searchTerm))
+    ? Number(searchTerm)
+    : null;
+
   if (searchTerm) {
+    // Search by gender or followers count, based on the type of searchTerm
+    const searchConditions = [];
+    if (followersSearch !== null) {
+      // If searchTerm is a number, search by followers count
+      searchConditions.push({ followersIG: followersSearch });
+    } else {
+      // If searchTerm is a string, search by gender
+      searchConditions.push({ gender: { $regex: searchTerm, $options: 'i' } });
+      searchConditions.push({
+        fullName: { $regex: searchTerm, $options: 'i' },
+      });
+    }
+
+    // Find Influencers matching gender or followers count
+    const matchedInfluencerIds = await Influencer.find({
+      $or: searchConditions,
+    }).distinct('_id');
+
+    if (matchedInfluencerIds.length > 0) {
+      const userIds = await User.find({
+        influencer: { $in: matchedInfluencerIds },
+        role: 'INFLUENCER',
+      }).distinct('_id');
+
+      if (userIds.length > 0) {
+        anyConditions.push({ _id: { $in: userIds } });
+      }
+    }
+  }
+
+  // Fallback to search by fullName if no matches for gender or followers count
+  if (searchTerm && anyConditions.length === 0) {
     anyConditions.push({
-      $or: [{ fullName: { $regex: searchTerm, $options: 'i' } }],
+      fullName: { $regex: searchTerm, $options: 'i' },
+      role: 'INFLUENCER',
     });
   }
 
-  // Filter by additional filterData fields
+  // Apply additional filters
   if (Object.keys(filterData).length > 0) {
     const filterConditions = Object.entries(filterData).map(
       ([field, value]) => ({ [field]: value })
@@ -350,10 +387,8 @@ const getAllInfluencer = async (query: Record<string, unknown>) => {
     anyConditions.push({ $and: filterConditions });
   }
 
-  // Add 'role: INFLUENCER' to the conditions
-  anyConditions.push({
-    role: 'INFLUENCER',
-  });
+  // Ensure only influencers are fetched
+  anyConditions.push({ role: 'INFLUENCER' });
 
   // Combine all conditions
   const whereConditions =
@@ -385,6 +420,11 @@ const getAllInfluencer = async (query: Record<string, unknown>) => {
   };
 };
 
+const getSingleInflueencer = async (id: string) => {
+  const result = await User.findById(id).populate('influencer');
+  return result;
+};
+
 const updateProfile = async (id: string, payload: Partial<IUser>) => {
   const update = await User.findByIdAndUpdate(id, payload, {
     new: true,
@@ -400,4 +440,5 @@ export const UserService = {
   creatInfluencerToDB,
   getAllBrand,
   getAllInfluencer,
+  getSingleInflueencer,
 };

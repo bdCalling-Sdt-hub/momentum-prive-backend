@@ -113,6 +113,17 @@ const updateProfileToDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSingleInflueencer = catchAsync(async (req: Request, res: Response) => {
+  const result = await UserService.getSingleInflueencer(req.params.id);
+
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'get single Influeencer successfully',
+    data: result,
+  });
+});
+
 export const UserController = {
   getUserProfile,
   updateProfile,
@@ -121,4 +132,5 @@ export const UserController = {
   getAllBrands,
   getAllInfluencer,
   updateProfileToDB,
+  getSingleInflueencer,
 };

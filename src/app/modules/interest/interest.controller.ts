@@ -5,7 +5,10 @@ import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 
 const getAllInterest = catchAsync(async (req: Request, res: Response) => {
-  const result = await InterestService.getAllInterest(req.params.userId);
+  const { userId } = req.params;
+  const { status } = req.query;
+  console.log(userId);
+  const result = await InterestService.getAllInterest(userId, status as string);
 
   sendResponse(res, {
     success: true,
@@ -28,7 +31,18 @@ const updatedStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSingle = catchAsync(async (req: Request, res: Response) => {
+  const result = await InterestService.getSingleInterest(req.params.id);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Get Single Interest influencer successfully',
+    data: result,
+  });
+});
+
 export const InterestController = {
   getAllInterest,
   updatedStatus,
+  getSingle,
 };

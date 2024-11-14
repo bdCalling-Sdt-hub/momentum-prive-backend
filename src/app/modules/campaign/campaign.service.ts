@@ -14,6 +14,7 @@ import { Category } from '../category/category.model';
 import { User } from '../user/user.model';
 import dayjs from 'dayjs';
 import { formatCurrentDate } from './dateformat';
+import { Subscribation } from '../subscribtion/subscribtion.model';
 
 // const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 //   const isCategoryOfBrand = await User.findById(payload.user);
@@ -76,43 +77,33 @@ import { formatCurrentDate } from './dateformat';
 const createCampaignToDB = async (payload: Partial<ICampaign>) => {
   const isCategoryOfBrand = await User.findById(payload.user);
 
-  // Convert collaborationLimit to a number, with a default value of 0 if undefined or invalid
+  const isSubs: any = await Subscribation.findOne({
+    user: payload.user,
+  }).populate('packages', 'limit');
+
+  // Get the current month's start and end dates
+  const startOfMonth = dayjs().startOf('month').toDate();
+  const endOfMonth = dayjs().endOf('month').toDate();
+
+  // Count campaigns created by the user in the current month
+  const isCamps = await Campaign.countDocuments({
+    user: payload.user,
+    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  if (isSubs?.packages?.limit) {
+    if (isCamps >= Number(isSubs.packages.limit)) {
+      throw new ApiError(
+        StatusCodes.UNAUTHORIZED,
+        `Silver users can only create up to ${Number(
+          isSubs.packages.limit
+        )} campaigns per month.`
+      );
+    }
+  }
+
+  // Convert collaborationLimit to a number, defaulting to 0 if undefined or invalid
   const collaborationLimit = Number(payload.collaborationLimit) || 0;
-
-  // Check if the user has the "Silver" title and an active subscription
-  if (
-    isCategoryOfBrand?.title === 'Silver' &&
-    isCategoryOfBrand.subscription === true
-  ) {
-    // Calculate the start and end dates for the current month
-    const startOfMonth = dayjs().startOf('month').toDate();
-    const endOfMonth = dayjs().endOf('month').toDate();
-
-    // Count campaigns created by the user within the current month
-    const monthlyCampaignCount = await Campaign.countDocuments({
-      user: payload.user,
-      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-    });
-
-    if (monthlyCampaignCount >= 10) {
-      throw new ApiError(
-        StatusCodes.UNAUTHORIZED,
-        'Silver users can only create up to 10 campaigns per month.'
-      );
-    }
-  }
-
-  if (
-    isCategoryOfBrand?.title === 'Silver' &&
-    isCategoryOfBrand.subscription === true
-  ) {
-    if (collaborationLimit > 2) {
-      throw new ApiError(
-        StatusCodes.UNAUTHORIZED,
-        'Silver users can only set a collaboration limit of up to 2.'
-      );
-    }
-  }
 
   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
   const isCategoryName = isBrandOfCat?.category;
@@ -125,9 +116,7 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
     category: isCategoryName,
   });
 
-  // Get the updated count of campaigns after the new creation
-  const startOfMonth = dayjs().startOf('month').toDate();
-  const endOfMonth = dayjs().endOf('month').toDate();
+  // Count updated campaigns after creating the new one
   const CampaignsCount = await Campaign.countDocuments({
     user: payload.user,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
@@ -135,6 +124,86 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 
   return { campaign, CampaignsCount };
 };
+
+// const createCampaignToDB = async (payload: Partial<ICampaign>) => {
+//   const isCategoryOfBrand = await User.findById(payload.user);
+
+//   const isSubs: any = await Subscribation.findOne({
+//     user: payload.user,
+//   }).populate('packages', 'limit');
+
+//   const isCamps = await Campaign.countDocuments({ user: payload.user });
+
+//   if (isSubs?.packages?.limit) {
+//     if (isCamps >= Number(isSubs.packages.limit)) {
+//       throw new ApiError(
+//         StatusCodes.UNAUTHORIZED,
+//         `Silver users can only create up to ${Number(
+//           isSubs.packages.limit
+//         )} campaigns per month.`
+//       );
+//     }
+//   }
+
+//   // Convert collaborationLimit to a number, with a default value of 0 if undefined or invalid
+//   const collaborationLimit = Number(payload.collaborationLimit) || 0;
+
+//   // Check if the user has the "Silver" title and an active subscription
+//   if (
+//     isCategoryOfBrand?.title === 'Silver' &&
+//     isCategoryOfBrand.subscription === true
+//   ) {
+//     // Calculate the start and end dates for the current month
+//     const startOfMonth = dayjs().startOf('month').toDate();
+//     const endOfMonth = dayjs().endOf('month').toDate();
+
+//     // Count campaigns created by the user within the current month
+//     const monthlyCampaignCount = await Campaign.countDocuments({
+//       user: payload.user,
+//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//     });
+
+//     if (monthlyCampaignCount >= 10) {
+//       throw new ApiError(
+//         StatusCodes.UNAUTHORIZED,
+//         'Silver users can only create up to 10 campaigns per month.'
+//       );
+//     }
+//   }
+
+//   if (
+//     isCategoryOfBrand?.title === 'Silver' &&
+//     isCategoryOfBrand.subscription === true
+//   ) {
+//     if (collaborationLimit > 2) {
+//       throw new ApiError(
+//         StatusCodes.UNAUTHORIZED,
+//         'Silver users can only set a collaboration limit of up to 2.'
+//       );
+//     }
+//   }
+
+//   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
+//   const isCategoryName = isBrandOfCat?.category;
+
+//   payload.collaborationLimit = collaborationLimit;
+
+//   // Create the campaign with the associated category
+//   const campaign = await Campaign.create({
+//     ...payload,
+//     category: isCategoryName,
+//   });
+
+//   // Get the updated count of campaigns after the new creation
+//   const startOfMonth = dayjs().startOf('month').toDate();
+//   const endOfMonth = dayjs().endOf('month').toDate();
+//   const CampaignsCount = await Campaign.countDocuments({
+//     user: payload.user,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   return { campaign, CampaignsCount };
+// };
 
 const getAllCampaigns = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
@@ -284,8 +353,7 @@ const getAllCampaignsForAdmin = async (query: Record<string, unknown>) => {
 };
 
 const getSingleCmpaign = async (id: string) => {
-  const result = await Campaign.findById(id, { status: 'active' })
-
+  const result = await Campaign.findById(id)
     .populate({
       path: 'user',
       select: 'brand',
@@ -382,6 +450,18 @@ const getCampaignforBrand = async (brandId: string) => {
   return { campaigns, count };
 };
 
+const getCampaignforAllData = async (brandId: string) => {
+  const campaigns = await Campaign.find({
+    user: brandId,
+    status: 'active',
+    approvalStatus: 'Approved',
+  }).select('name');
+
+  const count = campaigns.length;
+
+  return { campaigns, count };
+};
+
 export const CampaignService = {
   createCampaignToDB,
   getAllCampaigns,
@@ -391,4 +471,5 @@ export const CampaignService = {
   updatedCampaignStatusToDB,
   getCampaignforBrand,
   getAllCampaignsForAdmin,
+  getCampaignforAllData,
 };

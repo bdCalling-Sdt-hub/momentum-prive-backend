@@ -18,6 +18,9 @@ const packageSchema = new Schema<IPackage>(
     //   enum: ['Monthly', 'Yearly', 'HalfYearly'],
     //   required: true,
     // },
+    limit: {
+      type: String,
+    },
     price: {
       type: String,
       required: true,

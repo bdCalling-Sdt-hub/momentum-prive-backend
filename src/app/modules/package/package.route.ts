@@ -12,6 +12,7 @@ router.post(
   PackageController.createPackage
 );
 
+router.patch('/:id', PackageController.updatePackage);
 router.get('/', PackageController.getAllPackage);
 
 export const PackageRoutes = router;

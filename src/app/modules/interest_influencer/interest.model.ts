@@ -11,14 +11,14 @@ const interestSchema = new Schema<IInterest>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
-    Collaborate: {
+    collaborate: {
       type: Schema.Types.ObjectId,
       ref: 'Collaborate',
     },
 
     status: {
       type: String,
-      enum: ['Pending', 'Accepted', 'Rejected'],
+      enum: ['Pending', 'Accepted', 'Rejected', 'Completed'],
       default: 'Pending',
     },
   },

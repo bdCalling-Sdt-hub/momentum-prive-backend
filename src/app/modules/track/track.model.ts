@@ -12,6 +12,10 @@ const inviteSchema = new Schema<ITrack>(
       type: Schema.Types.ObjectId,
       ref: 'Campaign',
     },
+    brand: {
+      type: Schema.Types.ObjectId,
+      ref: 'User',
+    },
     influencer: {
       type: Schema.Types.ObjectId,
       ref: 'User',

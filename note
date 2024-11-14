@@ -306,3 +306,377 @@
 //     .populate('influencer');
 //   return result;
 // };
+
+//campaign
+// const createCollaborationToDB = async (payload: ICollaboration) => {
+//   const isInvite = await Invite.findById(payload.invite);
+//   const inviteData = isInvite?.campaign;
+//   const isCampaign = await Campaign.findById(inviteData);
+//   const isInfluencer = await User.findById(payload.influencer);
+//   const isUser = await User.findById(isCampaign?.user);
+
+//   const isBrand = await Brand.findById(isUser?.brand);
+//   const isCateory = await Category.findById(isBrand?.category);
+
+//   if (!isCateory || !isBrand || !isCampaign) {
+//     throw new ApiError(
+//       StatusCodes.NOT_FOUND,
+//       `${isBrand} ${isCampaign} ${isCateory} not found`
+//     );
+//   }
+
+//   const isCategoryName = isCateory?.categoryName;
+//   const value = {
+//     categoryName: isCategoryName,
+//     ...payload,
+//   };
+
+//   const result = await Collaborate.create(value);
+
+//   const createInterestInfluencer = await Interest.create({
+//     campaign: isCampaign,
+//     influencer: result.influencer,
+//     Collaborate: result._id,
+//   });
+
+//   if (!createInterestInfluencer) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Failed to create interest with collaboration details'
+//     );
+//   }
+
+//   //send notification
+//   if (result) {
+//     const data = {
+//       text: `${isInfluencer?.fullName} accepted your invitation`,
+//       receiver: isCampaign?.user,
+//     };
+
+//     await sendNotifications(data);
+
+//     const bookingData = {
+//       text: `${isInfluencer?.fullName} booked a new Collaboration`,
+//       receiver: isCampaign?.user,
+//       type: 'ADMIN',
+//     };
+
+//     await sendNotifications(bookingData);
+//   }
+
+//   return result;
+// };
+
+///
+
+// const createCollaborationToDB = async (payload: ICollaboration) => {
+//   const isInvite = await Invite.findById(payload.invite);
+
+//   const inviteData = isInvite?.campaign;
+
+//   const isCampaign = await Campaign.findById(inviteData);
+
+//   const isInfluencer = await User.findById(payload.influencer);
+
+//   const isUser = await User.findById(isCampaign?.user);
+
+//   console.log(isUser);
+
+//   if (isUser?.title === 'Silver' && isUser.subscription === true) {
+//   }
+
+//   const isBrand = await Brand.findById(isUser?.brand);
+
+//   const isCateory = await Category.findById(isBrand?.category);
+
+//   if (!isCateory || !isBrand || !isCampaign) {
+//     throw new ApiError(
+//       StatusCodes.NOT_FOUND,
+//       `${isBrand} ${isCampaign} ${isCateory} not found`
+//     );
+//   }
+
+//   const isCategoryName = isCateory?.categoryName;
+
+//   const value = {
+//     categoryName: isCategoryName,
+//     ...payload,
+//   };
+
+//   const result = await Collaborate.create(value);
+
+//   const createInterestInfluencer = await Interest.create({
+//     campaign: isCampaign,
+//     influencer: result.influencer,
+//     Collaborate: result._id,
+//   });
+
+//   // const updateCampaign = await Campaign.findByIdAndUpdate(isCampaign._id, {
+//   //   $push: { interest: result._id },
+//   // });
+
+//   // console.log(updateCampaign);
+
+//   if (!createInterestInfluencer) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Failed to create interest with collaboration details'
+//     );
+//   }
+
+//   //send notification
+//   if (result) {
+//     const data = {
+//       text: `${isInfluencer?.fullName} Accept your invitation`,
+//       receiver: isCampaign?.user,
+//     };
+
+//     await sendNotifications(data);
+//   }
+//   if (result) {
+//     const data = {
+//       text: `${isInfluencer?.fullName} Booking a new Collaboration`,
+//       receiver: isCampaign?.user,
+//       type: 'ADMIN',
+//     };
+
+//     await sendNotifications(data);
+//   }
+//   //end notification
+
+//   return result;
+// };
+
+//invite latest
+
+// const createInviteToDB = async (payload: Partial<IInvite>) => {
+//   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
+
+//   if (!isCampaignStatus) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
+//   }
+//   console.log(isCampaignStatus);
+//   const approveStatus = isCampaignStatus?.approvalStatus;
+//   const isUsers = isCampaignStatus?.user;
+
+//   if (!isUsers) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'No user associated with the campaign'
+//     );
+//   }
+
+//   const isUser: any = await User.findById(isUsers);
+
+//   if (!isUser) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+//   }
+
+//   // payload.user = isUser._id;
+
+//   if (isUser.title === 'Silver' && isUser.subscription === true) {
+//     const startOfMonth = dayjs().startOf('month').toDate();
+//     const endOfMonth = dayjs().endOf('month').toDate();
+
+//     const userInvitationCount = await Invite.countDocuments({
+//       campaign: payload.campaign,
+//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//     });
+
+//     if (userInvitationCount >= 2) {
+//       throw new ApiError(
+//         StatusCodes.BAD_REQUEST,
+//         'Silver users can only create up to 2 collaborations per month.'
+//       );
+//     }
+//   }
+
+//   if (approveStatus === 'Rejected') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Sorry, your campaign was rejected. You cannot invite new influencers.'
+//     );
+//   }
+
+//   if (approveStatus !== 'Approved') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Campaign not approved yet. Please wait for approval.'
+//     );
+//   }
+
+//   // Check if the campaign has reached its monthly invite limit
+//   const startOfMonth = dayjs().startOf('month').toDate();
+//   const endOfMonth = dayjs().endOf('month').toDate();
+
+//   const campaignInviteCount = await Invite.countDocuments({
+//     campaign: payload.campaign,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   if (campaignInviteCount >= 2) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Each campaign can only create up to 2 invites per month.'
+//     );
+//   }
+
+//   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
+//     'user',
+//     'fullName'
+//   );
+
+//   if (!isCampaign || !isCampaign.user) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
+//   }
+
+//   //@ts-ignore
+//   const fullName = isCampaign.user.fullName;
+
+//   const result = await Invite.create(payload);
+
+//   const CampaignInviteCount = await Invite.countDocuments({
+//     campaign: payload.campaign,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   // Send notification
+//   const data = {
+//     text: `${fullName} invited you to join for events`,
+//     receiver: payload.influencer,
+//   };
+//   await sendNotifications(data);
+
+//   return { result, CampaignInviteCount };
+// };
+
+// interest.service.ts
+// const getAllInterest = async (userId: string, status?: string) => {
+//   if (!userId) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'User ID is required');
+//   }
+
+//   // Base filter conditions
+//   const baseConditions: Record<string, any> = {};
+
+//   // Add status filter if provided
+//   if (status) {
+//     baseConditions['status'] = status;
+//   }
+
+//   const allResults = await Interest.find(baseConditions)
+//     .populate({
+//       path: 'campaign',
+//       populate: {
+//         path: 'user',
+//         select: 'fullName',
+//       },
+//     })
+//     .populate({
+//       path: 'influencer',
+//       select: 'fullName',
+//       populate: {
+//         path: 'influencer',
+//         select: 'fullName followersIG',
+//       },
+//     });
+
+//   // Filter results by userId
+//   const filteredResult = allResults.filter(
+//     (item: any) => item.campaign && item.campaign.user._id.toString() === userId
+//   );
+
+//   if (filteredResult.length === 0) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+//   }
+
+//   const count = filteredResult.length;
+
+//   return { result: filteredResult, count };
+// };
+
+// interest_influencer.service.ts
+// const updatedInterestStautsToDb = async (
+//   id: string,
+//   payload: Partial<IInterest>
+// ) => {
+//   const updatedStatus = await Interest.findByIdAndUpdate(
+//     id,
+//     {
+//       $set: {
+//         status: payload.status,
+//       },
+//     },
+//     {
+//       new: true,
+//       runValidators: true,
+//     }
+//   );
+
+//   if (!updatedStatus) {
+//     throw new Error('Interest not found');
+//   }
+
+//   const isInsterest = await Interest.findById(id);
+
+//   const isCampaign = await Campaign.findById(isInsterest?.campaign);
+
+//   const isUser = await User.findById(isCampaign?.user);
+
+//   const collaborationId = updatedStatus.collaborate;
+
+//   // send notifications
+//   const influencerId = updatedStatus.influencer;
+
+//   const influencerData = await User.findById(influencerId);
+
+//   if (updatedStatus.status === 'Accepted') {
+//     const data = {
+//       text: `${isUser?.fullName} Accept your interest`,
+//       receiver: influencerData,
+//     };
+//     await sendNotifications(data);
+//   } else {
+//     updatedStatus.status === 'Rejected';
+//     const data = {
+//       text: `${isUser?.fullName} Reject your interest`,
+//       receiver: influencerData,
+//     };
+//     await sendNotifications(data);
+//   }
+//   // end notifications
+
+//   if (updatedStatus.status === 'Accepted') {
+//     const updateCollaboration = await Collaborate.findByIdAndUpdate(
+//       collaborationId,
+//       {
+//         $set: {
+//           typeStatus: 'Completed',
+//         },
+//       },
+//       {
+//         new: true,
+//         runValidators: true,
+//       }
+//     );
+
+//     return updateCollaboration;
+//   } else if (updatedStatus.status === 'Rejected') {
+//     const update = await Collaborate.findByIdAndUpdate(
+//       collaborationId,
+//       {
+//         $set: {
+//           typeStatus: 'Rejected',
+//         },
+//       },
+//       {
+//         new: true,
+//         runValidators: true,
+//       }
+//     );
+
+//     return update;
+//   }
+
+//   return updatedStatus;
+// };

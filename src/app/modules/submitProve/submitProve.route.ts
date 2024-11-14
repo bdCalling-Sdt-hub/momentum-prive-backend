@@ -24,9 +24,14 @@ router.post(
 
 router.get(
   '/get/:id',
-  fileUploadHandler(),
   auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
   SubmitProveController.getAllSubmitProve
+);
+
+router.get(
+  '/get-brand/:id',
+  auth(USER_ROLES.BRAND),
+  SubmitProveController.getAllSubmitProveForBrand
 );
 
 export const SubmitProveRoutes = router;

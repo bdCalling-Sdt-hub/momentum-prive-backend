@@ -12,7 +12,15 @@ const getAllPackage = async (filter: Record<string, any>) => {
   return result;
 };
 
+const updatePackage = async (id: string, payload: Partial<IPackage>) => {
+  const result = await Package.findOneAndUpdate({ _id: id }, payload, {
+    new: true,
+  });
+  return result;
+};
+
 export const PackageService = {
   createPackage,
   getAllPackage,
+  updatePackage,
 };

@@ -8,6 +8,7 @@ import { Track } from '../track/track.model';
 import { User } from '../user/user.model';
 import { IInterestInfo } from './interest.interface';
 import { InterestInfluencer } from './interest.model';
+import { populate } from 'dotenv';
 
 // const getAllInterest = async (campaignId: string) => {
 //   const query = campaignId ? { campaign: campaignId } : {};
@@ -38,13 +39,31 @@ import { InterestInfluencer } from './interest.model';
 
 //   return { result, count };
 // };
-const getAllInterest = async (userId: string) => {
+const getAllInterest = async (userId: string, status?: string) => {
   if (!userId) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'UserId is required');
   }
 
-  const allResults = await InterestInfluencer.find({})
-    .populate('influencer', 'fullName')
+  const baseConditions: Record<string, any> = { campaign: userId };
+
+  // Add status filter if provided
+  if (status) {
+    baseConditions['status'] = status;
+  }
+
+  // Add status filter if provided
+  if (status) {
+    baseConditions['status'] = status;
+  }
+
+  const allResults = await InterestInfluencer.find(baseConditions)
+    .populate({
+      path: 'influencer',
+      select: 'fullName',
+      populate: {
+        path: 'influencer',
+      },
+    })
     .populate({
       path: 'campaign',
       select: 'user image name',
@@ -59,7 +78,7 @@ const getAllInterest = async (userId: string) => {
     });
 
   const filteredResult = allResults.filter(
-    (item: any) => item.campaign && item.campaign.user._id.toString() === userId
+    (item: any) => item.campaign && item.campaign._id.toString() === userId
   );
 
   if (filteredResult.length === 0) {
@@ -179,7 +198,33 @@ const updatedInterestStautsToDb = async (
   return updatedStatus;
 };
 
+const getSingleInterest = async (id: string) => {
+  const result = await InterestInfluencer.findById(id)
+    .populate({
+      path: 'submitProve',
+      select: 'image tiktok instagram typeStatus',
+    })
+    .populate({
+      path: 'influencer',
+      select: 'influencer fullName',
+      populate: {
+        path: 'influencer',
+        // select: 'fullName followersIG',
+      },
+    })
+    .populate({
+      path: 'campaign',
+    });
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  }
+
+  return result;
+};
+
 export const InterestService = {
   getAllInterest,
   updatedInterestStautsToDb,
+  getSingleInterest,
 };

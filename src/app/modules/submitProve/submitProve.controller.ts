@@ -33,8 +33,25 @@ const getAllSubmitProve = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getAllSubmitProveForBrand = catchAsync(
+  async (req: Request, res: Response) => {
+    // Calling the service method to fetch data for the given brand
+    const result = await SubmitProveService.getAllSubmitProveForBrand(
+      req.params.id
+    );
+
+    // Sending the response back to the client
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Submit prove for brand retrieved successfully',
+      data: result,
+    });
+  }
+);
 
 export const SubmitProveController = {
   submitProveToDB,
   getAllSubmitProve,
+  getAllSubmitProveForBrand,
 };

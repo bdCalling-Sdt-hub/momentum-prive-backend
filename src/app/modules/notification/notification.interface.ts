@@ -5,6 +5,8 @@ export type INotification = {
   receiver?: Types.ObjectId;
   read: boolean;
   type?: string;
+  name?: string;
+  image?: string;
 };
 
 export type NotificationModel = Model<INotification>;

@@ -178,7 +178,7 @@ const createCustomerAndSubscription = async (
 };
 
 const getAllSubscriptation = async () => {
-  const result = await Subscribation.find()
+  const result = await Subscribation.find({ status: 'active' })
     .populate({
       path: 'user',
       populate: {

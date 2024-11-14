@@ -50,13 +50,37 @@ const loginUserFromDB = async (payload: ILoginData) => {
   }
 
   // Check if user is INFLUENCER or BRAND and their loginStatus is 'accept'
+  // if (
+  //   ['INFLUENCER', 'BRAND'].includes(isExistUser.role) &&
+  //   isExistUser.loginStatus !== 'Approved'
+  // ) {
+  //   throw new ApiError(
+  //     StatusCodes.NOT_ACCEPTABLE,
+  //     'Your account is not yet approved for login. Please wait for approval.'
+  //   );
+  // }
+
+  if (['INFLUENCER', 'BRAND'].includes(isExistUser.role)) {
+    if (isExistUser.loginStatus === 'Rejected') {
+      throw new ApiError(
+        StatusCodes.NOT_ACCEPTABLE,
+        'Your account is rejected for approval. You cannot login.'
+      );
+    } else if (isExistUser.loginStatus !== 'Approved') {
+      throw new ApiError(
+        StatusCodes.NOT_ACCEPTABLE,
+        'Your account is not yet approved for login. Please wait for approval.'
+      );
+    }
+  }
+
   if (
     ['INFLUENCER', 'BRAND'].includes(isExistUser.role) &&
-    isExistUser.loginStatus !== 'Approved'
+    isExistUser.loginStatus === 'Rejected'
   ) {
     throw new ApiError(
       StatusCodes.NOT_ACCEPTABLE,
-      'Your account is not yet approved for login. Please wait for approval.'
+      'Your account is rejected. Please contact support.'
     );
   }
 

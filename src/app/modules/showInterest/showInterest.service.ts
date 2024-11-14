@@ -186,23 +186,27 @@ const createInviteForIncluencerToDB = async (
     );
   }
 
-  // Check if the influencer has already shown interest
-  const isExistInfluencer = await ShowInterest.findOne({
-    influencer: payload.influencer,
-    campaign: payload.campaign,
-  });
+  // console.log(isUser);
 
-  if (isExistInfluencer) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Influencer already showed interest'
-    );
-  }
+  // Check if the influencer has already shown interest
+  // const isExistInfluencer = await ShowInterest.findOne({
+  //   influencer: payload.influencer,
+  //   campaign: payload.campaign,
+  //   brand: isUser._id,
+  // });
+
+  // if (isExistInfluencer) {
+  //   throw new ApiError(
+  //     StatusCodes.BAD_REQUEST,
+  //     'Influencer already showed interest'
+  //   );
+  // }
 
   // Create a tracking record and invitation
   const isTrack = await Track.create({
     influencer: payload.influencer,
     campaign: payload.campaign,
+    brand: isUser._id,
   });
 
   if (!isTrack) {
@@ -279,8 +283,6 @@ const updateInterestStatus = async (id: string, payload: IShowInterest) => {
     { status: payload.status },
     { new: true }
   );
-
-  console.log(result);
 
   return result;
 };

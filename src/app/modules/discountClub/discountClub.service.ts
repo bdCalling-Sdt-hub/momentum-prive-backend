@@ -9,44 +9,44 @@ import dayjs from 'dayjs';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Category } from '../category/category.model';
-
-const stripe = new Stripe(config.stripe_secret_key as string, {
-  apiVersion: '2024-09-30.acacia',
-});
+import { Subscribation } from '../subscribtion/subscribtion.model';
 
 const createDiscountToDB = async (payload: Partial<IDiscountClub>) => {
   const isUser = await User.findById(payload.user);
+
+  const isSubs: any = await Subscribation.findOne({
+    user: payload.user,
+  }).populate('packages', 'limit');
+
+  // Get the current month's start and end dates
+  const startOfMonth = dayjs().startOf('month').toDate();
+  const endOfMonth = dayjs().endOf('month').toDate();
+
+  // Count campaigns created by the user in the current month
+  const isCamps = await DiscountClub.countDocuments({
+    user: payload.user,
+    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+  });
+
+  if (isSubs?.packages?.limit) {
+    if (isCamps >= Number(isSubs.packages.limit)) {
+      throw new ApiError(
+        StatusCodes.UNAUTHORIZED,
+        `Discount users can only create up to ${Number(
+          isSubs.packages.limit
+        )} discountClub per month.`
+      );
+    }
+  }
 
   if (!isUser) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
 
   // Check if the user has the "Silver" title and an active subscription
-  if (
-    isUser?.title === 'Discount' ||
-    (isUser?.title === 'Silver' && isUser.subscription === true)
-  ) {
-    // Calculate the start and end dates for the current month
-    const startOfMonth = dayjs().startOf('month').toDate();
-    const endOfMonth = dayjs().endOf('month').toDate();
 
-    // Count campaigns created by the user within the current month
-    const monthlyDiscountCount = await DiscountClub.countDocuments({
-      user: payload.user,
-      createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-    });
-
-    if (monthlyDiscountCount >= 10) {
-      throw new ApiError(
-        StatusCodes.UNAUTHORIZED,
-        'Discount users can only create up to 10 discountClub per month.'
-      );
-    }
-  }
   const campaign = await DiscountClub.create(payload);
 
-  const startOfMonth = dayjs().startOf('month').toDate();
-  const endOfMonth = dayjs().endOf('month').toDate();
   const monthlyDiscountCounts = await DiscountClub.countDocuments({
     user: payload.user,
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },

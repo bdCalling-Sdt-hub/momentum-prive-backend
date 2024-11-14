@@ -4,24 +4,19 @@ import { InterestService } from './interest.service';
 import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 
-// const getAllInterest = catchAsync(async (req: Request, res: Response) => {
-//   const result = await InterestService.getAllInterest();
-//   sendResponse(res, {
-//     success: true,
-//     statusCode: StatusCodes.OK,
-//     message: 'Interest retrived successfully',
-//     data: result,
-//   });
-// });
-
 const getAllInterest = catchAsync(async (req: Request, res: Response) => {
-  const { campaignId } = req.query;
-  const result = await InterestService.getAllInterest(campaignId as string);
+  const { userId } = req.params;
+  const { status } = req.query;
+
+  const result = await InterestService.getAllInterest(
+    userId as string,
+    status as string
+  );
 
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: 'Interest retrived successfully',
+    message: 'Interests retrieved successfully',
     data: result,
   });
 });
@@ -39,7 +34,18 @@ const updatedStatus = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getSingleInterest = catchAsync(async (req: Request, res: Response) => {
+  const result = await InterestService.getSingleInterest(req.params.id);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Single Interest retrieved successfully',
+    data: result,
+  });
+});
+
 export const InterestController = {
   getAllInterest,
   updatedStatus,
+  getSingleInterest,
 };

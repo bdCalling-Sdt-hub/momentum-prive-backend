@@ -11,13 +11,21 @@ const notificationSchema = new Schema<INotification, NotificationModel>(
     receiver: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
     },
     read: {
       type: Boolean,
       default: false,
     },
     type: {
+      type: String,
+      required: false,
+    },
+    image: {
+      type: String,
+      required: false,
+    },
+    name: {
       type: String,
       required: false,
     },

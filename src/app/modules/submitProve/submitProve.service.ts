@@ -16,9 +16,9 @@ const submitProveToDB = async (payload: ISubmitProve) => {
 
   const trackStatus = await Track.findById(trackId);
 
-  if (trackStatus?.status !== 'Accepted') {
-    throw new ApiError(StatusCodes.BAD_REQUEST, 'Track is not Accepted yet');
-  }
+  // if (trackStatus?.status !== 'Accepted') {
+  //   throw new ApiError(StatusCodes.BAD_REQUEST, 'Track is not Accepted yet');
+  // }
 
   const isTrack = await Track.findById(trackId);
 
@@ -95,10 +95,38 @@ const getAllSubmitProve = async (influencerId: string) => {
 
   return result;
 };
+const getAllSubmitProveForBrand = async (userId: string) => {
+  // Find the campaigns associated with the user's brand
+  const influencerTracks = await Track.find({
+    brand: new Types.ObjectId(userId),
+  });
+
+  const trackIds = influencerTracks.map(track => track._id);
+
+  // Fetch SubmitProve data filtered by trackIds and populate necessary fields
+  const result = await SubmitProve.find({ track: { $in: trackIds } }).populate({
+    path: 'track',
+    select: 'campaign',
+    populate: {
+      path: 'campaign',
+      populate: {
+        path: 'user',
+        select: 'brand',
+        populate: {
+          path: 'brand',
+          select: 'image owner',
+        },
+      },
+    },
+  });
+
+  return result;
+};
 
 export const SubmitProveService = {
   submitProveToDB,
   getAllSubmitProve,
+  getAllSubmitProveForBrand,
 };
 
 // .populate({

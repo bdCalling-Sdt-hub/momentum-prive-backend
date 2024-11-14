@@ -25,6 +25,11 @@ router.get(
   auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
   CampaignController.getCampaignforBrand
 );
+router.get(
+  '/get-all/:brandId',
+  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),
+  CampaignController.getCampaignforAllData
+);
 
 router.get(
   '/',
@@ -47,10 +52,13 @@ router.patch(
   '/:id',
   auth(USER_ROLES.BRAND),
   fileUploadHandler(),
+  //
   (req: Request, res: Response, next: NextFunction) => {
-    req.body = CampaignValidationZodSchema.campaignUpdatedValidation.parse(
-      JSON.parse(req.body.data)
-    );
+    req.body.data
+      ? (req.body = CampaignValidationZodSchema.campaignUpdatedValidation.parse(
+          JSON.parse(req.body.data)
+        ))
+      : {};
     return CampaignController.updateCampaignToDB(req, res, next);
   }
 );

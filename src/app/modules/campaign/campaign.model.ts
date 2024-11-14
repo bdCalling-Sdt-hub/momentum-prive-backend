@@ -36,6 +36,10 @@ const campaignSchema = new Schema<ICampaign>(
       required: true,
       trim: true,
     },
+    influencerCount: {
+      type: Number,
+      default: 0,
+    },
     requiredDocuments: [
       {
         type: String,

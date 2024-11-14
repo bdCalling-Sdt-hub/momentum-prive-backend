@@ -12,6 +12,8 @@ router.get(
   InterestController.getAllInterest
 );
 
-router.patch('/:id', InterestController.updatedStatus);
+router.get('/:id', auth(USER_ROLES.BRAND), InterestController.getSingle);
+
+router.patch('/:id', auth(USER_ROLES.BRAND), InterestController.updatedStatus);
 
 export const InterestInFluencerRoutes = router;

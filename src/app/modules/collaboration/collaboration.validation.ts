@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 export const createCollaboration = z.object({
-  campaign: z.string().optional(),
   invite: z.string().optional(),
   influencer: z.string(),
   instagram: z.string().optional(),

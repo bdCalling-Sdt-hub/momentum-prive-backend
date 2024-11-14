@@ -69,13 +69,17 @@ const getSingleCmpaign = catchAsync(async (req: Request, res: Response) => {
 });
 
 const updateCampaignToDB = catchAsync(async (req: Request, res: Response) => {
-  let image = getFilePath(req.files, 'images');
-  const value = {
+  let image;
+  if (req.files && 'image' in req.files && req.files.image[0]) {
+    image = `/images/${req.files.image[0].filename}`;
+  }
+
+  const data = {
     image,
     ...req.body,
   };
 
-  const result = await CampaignService.updateCampaignToDB(req.params.id, value);
+  const result = await CampaignService.updateCampaignToDB(req.params.id, data);
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -118,6 +122,19 @@ const getCampaignforBrand = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getCampaignforAllData = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await CampaignService.getCampaignforAllData(
+      req.params.brandId
+    );
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Campaign retrived successfully',
+      data: result,
+    });
+  }
+);
 
 export const CampaignController = {
   createCampaignToDB,
@@ -128,4 +145,5 @@ export const CampaignController = {
   updatedCampaignStatusToDB,
   getCampaignforBrand,
   getAllCampaignsForAdmin,
+  getCampaignforAllData,
 };

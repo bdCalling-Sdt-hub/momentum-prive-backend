@@ -210,6 +210,8 @@ const updateTrackStatus = async (id: string, payload: Partial<ITrack>) => {
     { new: true }
   );
 
+  console.log(updateTrackStatus);
+
   if (!updateTrackStatus) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
   }

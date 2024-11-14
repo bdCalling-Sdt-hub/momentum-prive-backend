@@ -116,8 +116,6 @@ import { Track } from '../track/track.model';
 //   return { result, CampaignInviteCount };
 // };
 
-////////////////////////////////////////////////////////////////
-
 const createInviteToDB = async (payload: Partial<IInvite>) => {
   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
 
@@ -125,9 +123,8 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
   }
 
-  const approveStatus = isCampaignStatus.approvalStatus;
-  const isUsers = isCampaignStatus.user;
-  const collaborationLimit = isCampaignStatus.collaborationLimit as number; // Default to 2 if undefined
+  const approveStatus = isCampaignStatus?.approvalStatus;
+  const isUsers = isCampaignStatus?.user;
 
   if (!isUsers) {
     throw new ApiError(
@@ -138,9 +135,16 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
 
   const isUser: any = await User.findById(isUsers);
 
+  const isBrnad = await Brand.findById(isUser?.brand);
+
+  const isBrnadImage = isBrnad?.image;
+  const isBrnadName = isUser?.fullName;
+
   if (!isUser) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
   }
+
+  // // payload.user = isUser._id;
 
   if (approveStatus === 'Rejected') {
     throw new ApiError(
@@ -153,22 +157,6 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'Campaign not approved yet. Please wait for approval.'
-    );
-  }
-
-  // Check if the campaign has reached its collaboration limit for the month
-  const startOfMonth = dayjs().startOf('month').toDate();
-  const endOfMonth = dayjs().endOf('month').toDate();
-
-  const campaignInviteCount = await Invite.countDocuments({
-    campaign: payload.campaign,
-    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-  });
-
-  if (campaignInviteCount >= collaborationLimit) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      `This campaign can only create up to ${collaborationLimit} invites per month.`
     );
   }
 
@@ -186,20 +174,102 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
 
   const result = await Invite.create(payload);
 
-  const CampaignInviteCount = await Invite.countDocuments({
-    campaign: payload.campaign,
-    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-  });
-
   // Send notification
   const data = {
     text: `${fullName} invited you to join for events`,
     receiver: payload.influencer,
+    name: isBrnadName,
+    image: isBrnadImage,
   };
   await sendNotifications(data);
 
-  return { result, CampaignInviteCount };
+  return result;
 };
+
+////////////////////////////////////////////////////////////////
+
+// const createInviteToDB = async (payload: Partial<IInvite>) => {
+//   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
+
+//   if (!isCampaignStatus) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
+//   }
+
+//   const approveStatus = isCampaignStatus.approvalStatus;
+//   const isUsers = isCampaignStatus.user;
+//   const collaborationLimit = isCampaignStatus.collaborationLimit as number; // Default to 2 if undefined
+
+//   if (!isUsers) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'No user associated with the campaign'
+//     );
+//   }
+
+//   const isUser: any = await User.findById(isUsers);
+
+//   if (!isUser) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+//   }
+
+//   if (approveStatus === 'Rejected') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Sorry, your campaign was rejected. You cannot invite new influencers.'
+//     );
+//   }
+
+//   if (approveStatus !== 'Approved') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Campaign not approved yet. Please wait for approval.'
+//     );
+//   }
+
+//   // Check if the campaign has reached its collaboration limit for the month
+//   const startOfMonth = dayjs().startOf('month').toDate();
+//   const endOfMonth = dayjs().endOf('month').toDate();
+
+//   const campaignInviteCount = await Invite.countDocuments({
+//     campaign: payload.campaign,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   if (campaignInviteCount >= collaborationLimit) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       `This campaign can only create up to ${collaborationLimit} invites per month.`
+//     );
+//   }
+
+//   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
+//     'user',
+//     'fullName'
+//   );
+
+//   if (!isCampaign || !isCampaign.user) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
+//   }
+
+//   //@ts-ignore
+//   const fullName = isCampaign.user.fullName;
+
+//   const result = await Invite.create(payload);
+
+//   const CampaignInviteCount = await Invite.countDocuments({
+//     campaign: payload.campaign,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   // Send notification
+//   const data = {
+//     text: `${fullName} invited you to join for events`,
+//     receiver: payload.influencer,
+//   };
+//   await sendNotifications(data);
+
+//   return { result, CampaignInviteCount };
+// };
 
 const getAllInvites = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;

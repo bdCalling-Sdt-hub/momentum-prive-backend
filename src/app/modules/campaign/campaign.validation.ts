@@ -95,6 +95,8 @@ const campaignValidation = z.object({
   campaignTermAndCondition: z.string({
     required_error: 'CampaignTermAndCondition is required',
   }),
+  rules: z.string().optional(),
+  exchange: z.string().optional(),
   // collaboration: z.number().min(0, 'Collaboration must be a positive number'),
   requiredDocuments: z.array(z.string()).optional(),
 });
