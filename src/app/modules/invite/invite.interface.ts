@@ -10,8 +10,11 @@ type IInviteStatus =
   | 'Accomplish';
 
 export type IInvite = {
-  influencer: Types.ObjectId;
+  influencer?: Types.ObjectId;
   campaign: Types.ObjectId;
   status: IInviteStatus;
   // user: Types.ObjectId;
+  gender: string;
+  country: string;
+  city: string;
 };

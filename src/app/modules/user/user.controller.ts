@@ -123,6 +123,18 @@ const getSingleInflueencer = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+const getAllInfluencerForBrand = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await UserService.getAllInfluencerForBrand(req.query);
+
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'get single Influeencer successfully',
+      data: result,
+    });
+  }
+);
 
 export const UserController = {
   getUserProfile,
@@ -133,4 +145,5 @@ export const UserController = {
   getAllInfluencer,
   updateProfileToDB,
   getSingleInflueencer,
+  getAllInfluencerForBrand,
 };

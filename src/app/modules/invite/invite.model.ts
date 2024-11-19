@@ -7,7 +7,7 @@ const inviteSchema = new Schema<IInvite>(
     influencer: {
       type: Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false,
     },
     campaign: {
       type: Schema.Types.ObjectId,
@@ -19,10 +19,15 @@ const inviteSchema = new Schema<IInvite>(
       enum: Invites,
       default: 'Pending',
     },
-    // user: {
-    //   type: Schema.Types.ObjectId,
-    //   ref: 'User',
-    // },
+    gender: {
+      type: String,
+    },
+    country: {
+      type: String,
+    },
+    city: {
+      type: String,
+    },
   },
   {
     timestamps: true,

@@ -9,9 +9,16 @@ const router = express.Router();
 
 router.post(
   '/create-invite',
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.BRAND),
   validateRequest(InviteValiationZodSchema.createInviteValiation),
   InviteController.createCategoryToDB
+);
+
+router.post(
+  '/send-invite-influencer',
+  auth(USER_ROLES.BRAND),
+  validateRequest(InviteValiationZodSchema.createInviteValiation),
+  InviteController.inviteForSpasificInfluencer
 );
 // router.post(
 //   '/send-invite-influencer',

@@ -9,7 +9,7 @@ export const InfluencerValiation = z.object({
   describe: z.string().optional(),
   followersIG: z.string().optional(),
   followersTK: z.string().optional(),
-  gender: z.enum(['male', 'female', 'other']).optional(),
+  gender: z.enum(['Male', 'Female', 'Other', 'All']).optional(),
   number: z.string().min(4).max(15).optional(),
   instagram: z.string().optional(),
   tiktok: z.string().optional(),

@@ -67,6 +67,7 @@ const globalErrorHandler: ErrorRequestHandler = (error, req, res, next) => {
           {
             path: '',
             message: error.message,
+            data: error.data,
           },
         ]
       : [];

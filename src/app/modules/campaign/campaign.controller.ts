@@ -122,6 +122,7 @@ const getCampaignforBrand = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const getCampaignforAllData = catchAsync(
   async (req: Request, res: Response) => {
     const result = await CampaignService.getCampaignforAllData(

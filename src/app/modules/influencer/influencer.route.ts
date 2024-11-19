@@ -9,18 +9,27 @@ import { USER_ROLES } from '../../../enums/user';
 const router = express.Router();
 
 router.patch(
-  '/:id',
-
+  '/update-influencer',
+  auth(USER_ROLES.INFLUENCER),
   fileUploadHandler(),
   (req: Request, res: Response, next: NextFunction) => {
     const { imagesToDelete, data } = req.body;
 
-    // Parse and validate the data using Zod schema
-    const parsedData = InfluencerValiationZodSchema.InfluencerValiation.parse(
-      JSON.parse(data)
-    );
+    // Check if only images are being updated
+    if (!data && imagesToDelete) {
+      // If only imagesToDelete is provided, pass it directly to the controller
+      req.body = { imagesToDelete };
+      return InfluencerController.updatedInfluencer(req, res, next);
+    }
 
-    req.body = { ...parsedData, imagesToDelete };
+    if (data) {
+      // Parse and validate the data using Zod schema
+      const parsedData = InfluencerValiationZodSchema.InfluencerValiation.parse(
+        JSON.parse(data)
+      );
+
+      req.body = { ...parsedData, imagesToDelete };
+    }
 
     return InfluencerController.updatedInfluencer(req, res, next);
   }
@@ -30,6 +39,12 @@ router.get(
   '/',
   auth(USER_ROLES.INFLUENCER),
   InfluencerController.getAllInfluencer
+);
+
+router.get(
+  '/get-influencer-brand',
+  auth(USER_ROLES.BRAND),
+  InfluencerController.getAllInfluencerBrand
 );
 
 export const InfluencerRoutes = router;

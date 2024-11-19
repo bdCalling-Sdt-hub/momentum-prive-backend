@@ -6,6 +6,8 @@ import { StatusCodes } from 'http-status-codes';
 import getFilePath, { getFilePaths } from '../../../shared/getFilePath';
 
 const updatedInfluencer = catchAsync(async (req: Request, res: Response) => {
+  const userEmail = req.user?.email;
+
   const images = getFilePaths(req.files, 'images');
 
   const value = {
@@ -13,10 +15,7 @@ const updatedInfluencer = catchAsync(async (req: Request, res: Response) => {
     ...req.body,
   };
 
-  const result = await InfluencerService.updateInfluencerToDB(
-    req.params.id,
-    value
-  );
+  const result = await InfluencerService.updateInfluencerToDB(userEmail, value);
 
   sendResponse(res, {
     success: true,
@@ -42,7 +41,20 @@ const getAllInfluencer = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const getAllInfluencerBrand = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await InfluencerService.getAllInfluencerBrand(req.query);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Influencer retrived successfully',
+      data: result,
+    });
+  }
+);
+
 export const InfluencerController = {
   updatedInfluencer,
   getAllInfluencer,
+  getAllInfluencerBrand,
 };

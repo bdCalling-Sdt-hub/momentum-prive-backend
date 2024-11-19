@@ -1,14 +1,15 @@
 import { Model, Types } from 'mongoose';
 
-export type IGender = 'male' | 'female' | 'other';
+export type IGender = 'Male' | 'Female' | 'Other' | 'All';
 
 export type IInfluencer = {
   image: string[];
   instagram: string;
   tiktok?: string;
-  followersIG: string;
-  followersTK: string;
+  followersIG: number;
+  followersTK: number;
   describe: string;
+  email: string;
   gender: IGender;
   number: string;
   whatAppNum: string;
@@ -20,7 +21,7 @@ export type IInfluencer = {
 };
 
 export type UpdateInfluencerPayload = Partial<IInfluencer> & {
-  imagesToDelete?: string[]; // Optional field for images to delete
+  imagesToDelete?: string[];
 };
 
 export type InfluencerModel = Model<IInfluencer>;

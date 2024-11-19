@@ -15,6 +15,8 @@ import { User } from '../user/user.model';
 import dayjs from 'dayjs';
 import { formatCurrentDate } from './dateformat';
 import { Subscribation } from '../subscribtion/subscribtion.model';
+import { Package } from '../package/package.model';
+import { sendNotifications } from '../../../helpers/notificationHelper';
 
 // const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 //   const isCategoryOfBrand = await User.findById(payload.user);
@@ -379,6 +381,8 @@ const updateCampaignToDB = async (id: string, payload: Partial<ICampaign>) => {
     throw new ApiError(StatusCodes.NOT_FOUND, 'campaign not found');
   }
 
+  const campUser = await User.findById(campaign.user);
+
   if (campaign.status !== 'active') {
     throw new ApiError(
       StatusCodes.FORBIDDEN,
@@ -386,10 +390,22 @@ const updateCampaignToDB = async (id: string, payload: Partial<ICampaign>) => {
     );
   }
 
+  payload.approvalStatus = 'Pending';
+
   const result = await Campaign.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
   });
+
+  if (result?.status === 'active') {
+    const bookingData = {
+      text: `Campaign updated plase check all information`,
+      name: campUser?.fullName,
+      type: 'ADMIN',
+    };
+    await sendNotifications(bookingData);
+  }
+
   return result;
 };
 
@@ -440,6 +456,27 @@ const updatedCampaignStatusToDB = async (
 };
 
 const getCampaignforBrand = async (brandId: string) => {
+  // Fetch subscriptions with populated 'packages' including the 'limit' field
+  const subs: any = await Subscribation.find({ user: brandId }).populate({
+    path: 'packages',
+    select: 'limit',
+  });
+
+  if (subs.length === 0) {
+    throw new ApiError(StatusCodes.UNAUTHORIZED, 'Brand not subscribed');
+  }
+
+  // Access the 'limit' field from the populated 'packages'
+  const limit: any = subs[0]?.packages?.limit;
+
+  if (limit === undefined) {
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'Package limit not found'
+    );
+  }
+
+  // Fetch campaigns for the brand
   const campaigns = await Campaign.find({
     user: brandId,
     status: 'active',
@@ -447,7 +484,7 @@ const getCampaignforBrand = async (brandId: string) => {
 
   const count = campaigns.length;
 
-  return { campaigns, count };
+  return { campaigns, count, limit };
 };
 
 const getCampaignforAllData = async (brandId: string) => {

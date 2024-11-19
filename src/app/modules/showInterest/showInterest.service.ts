@@ -189,18 +189,18 @@ const createInviteForIncluencerToDB = async (
   // console.log(isUser);
 
   // Check if the influencer has already shown interest
-  // const isExistInfluencer = await ShowInterest.findOne({
-  //   influencer: payload.influencer,
-  //   campaign: payload.campaign,
-  //   brand: isUser._id,
-  // });
+  const isExistInfluencer = await ShowInterest.findOne({
+    influencer: payload.influencer,
+    campaign: payload.campaign,
+    brand: isUser._id,
+  });
 
-  // if (isExistInfluencer) {
-  //   throw new ApiError(
-  //     StatusCodes.BAD_REQUEST,
-  //     'Influencer already showed interest'
-  //   );
-  // }
+  if (isExistInfluencer) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Influencer already showed interest'
+    );
+  }
 
   // Create a tracking record and invitation
   const isTrack = await Track.create({
@@ -234,7 +234,7 @@ const createInviteForIncluencerToDB = async (
 
   // Send notification
   const data = {
-    text: `${fullName} showed interest in your campaign "${isCampaign.name}"`,
+    text: ` showed interest in your campaign "${isCampaign.name}"`,
     receiver: isUsers,
   };
   await sendNotifications(data);

@@ -1,6 +1,6 @@
 import unlinkFile from '../../../shared/unlinkFile';
 
-export const Gender = ['male', 'female', 'other'];
+export const Gender = ['Male', 'Female', 'Other', 'All'];
 
 export const InfluencerSearchAbleFields = [
   'address',

@@ -8,13 +8,15 @@ import { USER_ROLES } from '../../../enums/user';
 const router = express.Router();
 
 router.patch(
-  '/:id',
+  '/update-brand',
   fileUploadHandler(),
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.BRAND),
   (req: Request, res: Response, next: NextFunction) => {
-    req.body = BrandValiationZodSchema.BrandValiation.parse(
-      JSON.parse(req.body.data)
-    );
+    if (req.body.data) {
+      req.body = BrandValiationZodSchema.BrandValiation.parse(
+        JSON.parse(req.body.data)
+      );
+    }
     return BrandController.updatedBrand(req, res, next);
   }
 );

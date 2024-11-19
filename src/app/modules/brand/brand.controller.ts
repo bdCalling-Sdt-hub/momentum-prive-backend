@@ -4,18 +4,23 @@ import { BrandService } from './brand.service';
 import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
 import getFilePath from '../../../shared/getFilePath';
+import { IBrand } from './brand.interface';
 
 const updatedBrand = catchAsync(async (req: Request, res: Response) => {
-  const brandId = req.params.id;
+  const userEmail = req.user?.email;
 
-  let image = getFilePath(req.files, 'images');
+  let image;
+  if (req.files && 'image' in req.files && req.files.image[0]) {
+    image = `/images/${req.files.image[0].filename}`;
+  }
 
-  const value = {
+  const value: Partial<IBrand> = {
     image,
     ...req.body,
   };
 
-  const result = await BrandService.updateBrandToDB(brandId, value);
+  const result = await BrandService.updateBrandToDB(userEmail, value);
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

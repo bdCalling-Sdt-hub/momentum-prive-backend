@@ -53,7 +53,7 @@ const submitProveToDB = async (payload: ISubmitProve) => {
 
   if (result) {
     const data = {
-      text: `${isInfluencer?.fullName} accepted your invitation`,
+      text: ` accepted your invitation`,
       receiver: isCampaign?.user,
     };
 

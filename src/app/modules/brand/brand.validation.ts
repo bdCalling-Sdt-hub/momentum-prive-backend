@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 export const BrandValiation = z.object({
   // image: z.string({ required_error: 'required image' }),
-  email: z.string({ required_error: 'required email' }).email(),
+  email: z.string({ required_error: 'required email' }).optional(),
   whatAppNum: z
     .string({ required_error: 'required whatApp number' })
     .min(4)

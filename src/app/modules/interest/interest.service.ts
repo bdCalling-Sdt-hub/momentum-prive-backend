@@ -9,6 +9,7 @@ import { User } from '../user/user.model';
 import { IInterestInfo } from './interest.interface';
 import { InterestInfluencer } from './interest.model';
 import { populate } from 'dotenv';
+import mongoose from 'mongoose';
 
 // const getAllInterest = async (campaignId: string) => {
 //   const query = campaignId ? { campaign: campaignId } : {};
@@ -81,121 +82,247 @@ const getAllInterest = async (userId: string, status?: string) => {
     (item: any) => item.campaign && item.campaign._id.toString() === userId
   );
 
-  if (filteredResult.length === 0) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
-  }
+  // if (filteredResult.length === 0) {
+  //   throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  // }
 
   const count = filteredResult.length;
-  if (!count) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
-  }
+  // if (!count) {
+  //   throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  // }
 
   return { result: filteredResult, count };
 };
+
+// const updatedInterestStautsToDb = async (
+//   id: string,
+//   payload: Partial<IInterestInfo>
+// ) => {
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+
+//   try {
+//     const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
+//       id,
+//       {
+//         $set: {
+//           status: payload.status,
+//         },
+//       },
+//       {
+//         new: true,
+//         runValidators: true,
+//       }
+//     );
+
+//     if (!updatedStatus) {
+//       throw new Error('Interest not found');
+//     }
+
+//     const isInsterest = await InterestInfluencer.findById(id);
+//     const isCampaign = await Campaign.findById(isInsterest?.campaign);
+//     const isUser = await User.findById(isCampaign?.user);
+
+//     const collaborationId = updatedStatus.submitProve;
+//     const trackId = updatedStatus.track;
+
+//     // Send notifications
+//     const influencerId = updatedStatus.influencer;
+//     const influencerData = await User.findById(influencerId);
+
+//     let data;
+//     if (updatedStatus.status === 'Completed') {
+//       data = {
+//         text: `${isUser?.fullName} Accept your interest`,
+//         receiver: influencerData,
+//       };
+//       await sendNotifications(data);
+//     } else if (updatedStatus.status === 'Rejected') {
+//       data = {
+//         text: `${isUser?.fullName} Reject your interest`,
+//         receiver: influencerData,
+//       };
+//       await sendNotifications(data);
+//     }
+
+//     // Now, only update collaboration and track based on specific statuses
+//     if (
+//       updatedStatus.status === 'Completed' ||
+//       updatedStatus.status === 'Rejected'
+//     ) {
+//       const statusToUpdate = updatedStatus.status; // 'Completed' or 'Rejected'
+
+//       // Update the collaboration and track status
+//       const updateSubmitProve = await SubmitProve.findByIdAndUpdate(
+//         collaborationId,
+//         {
+//           $set: {
+//             typeStatus: statusToUpdate,
+//           },
+//         },
+//         {
+//           new: true,
+//           runValidators: true,
+//         }
+//       );
+
+//       const updateTrack = await Track.findByIdAndUpdate(
+//         trackId,
+//         {
+//           $set: {
+//             status: statusToUpdate,
+//           },
+//         },
+//         {
+//           new: true,
+//           runValidators: true,
+//         }
+//       );
+
+//       return {
+//         updatedStatus,
+//         updateSubmitProve,
+//         updateTrack,
+//       };
+//     }
+
+//     return updatedStatus;
+//   } catch (error) {
+//     await session.abortTransaction();
+//     throw error;
+//   } finally {
+//     // End session
+//     session.endSession();
+//   }
+// };
 
 const updatedInterestStautsToDb = async (
   id: string,
   payload: Partial<IInterestInfo>
 ) => {
-  const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
-    id,
-    {
-      $set: {
-        status: payload.status,
-      },
-    },
-    {
-      new: true,
-      runValidators: true,
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    // Fetch InterestInfluencer
+    const interest = await InterestInfluencer.findById(id).session(session);
+    if (!interest) {
+      throw new Error('Interest not found');
     }
-  );
 
-  if (!updatedStatus) {
-    throw new Error('Interest not found');
-  }
+    // Check if the status is already updated to the same value
+    if (interest.status === payload.status) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Interest status is already updated'
+      );
+    }
 
-  const isInsterest = await InterestInfluencer.findById(id);
-  const isCampaign = await Campaign.findById(isInsterest?.campaign);
-  const isUser = await User.findById(isCampaign?.user);
+    // Fetch Campaign associated with Interest
+    const campaigns: any = await Campaign.findById(interest.campaign).session(
+      session
+    );
 
-  const collaborationId = updatedStatus.submitProve;
-  const trackId = updatedStatus.track;
+    // Validate collaborationLimit and influencerCount
+    if (campaigns?.influencerCount >= campaigns?.collaborationLimit) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'You have reached the limit of collaborations'
+      );
+    }
 
-  // Send notifications
-  const influencerId = updatedStatus.influencer;
-  const influencerData = await User.findById(influencerId);
-
-  let data;
-  if (updatedStatus.status === 'Completed') {
-    data = {
-      text: `${isUser?.fullName} Accept your interest`,
-      receiver: influencerData,
-    };
-    await sendNotifications(data);
-  } else if (updatedStatus.status === 'Rejected') {
-    data = {
-      text: `${isUser?.fullName} Reject your interest`,
-      receiver: influencerData,
-    };
-    await sendNotifications(data);
-  }
-
-  // Now, only update collaboration and track based on specific statuses
-  if (
-    updatedStatus.status === 'Completed' ||
-    updatedStatus.status === 'Rejected'
-  ) {
-    const statusToUpdate = updatedStatus.status; // 'Completed' or 'Rejected'
-
-    // Update the collaboration and track status
-    const updateSubmitProve = await SubmitProve.findByIdAndUpdate(
-      collaborationId,
+    // Update InterestInfluencer status
+    const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
+      id,
       {
-        $set: {
-          typeStatus: statusToUpdate,
-        },
+        $set: { status: payload.status },
       },
       {
         new: true,
         runValidators: true,
+        session, // Ensure session is used
       }
     );
 
-    const updateTrack = await Track.findByIdAndUpdate(
-      trackId,
-      {
-        $set: {
-          status: statusToUpdate,
-        },
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
-    );
+    if (!updatedStatus) {
+      throw new Error('Interest update failed');
+    }
 
-    const updatedInterst = await ShowInterest.findByIdAndUpdate(
-      influencerId,
-      {
-        $set: {
-          status: statusToUpdate,
-        },
-      },
-      {
-        new: true,
-        runValidators: true,
-      }
+    // Fetch additional related data
+    const isCampaign = await Campaign.findById(updatedStatus.campaign).session(
+      session
     );
+    const isUser = await User.findById(isCampaign?.user).session(session);
+    const influencerData = await User.findById(
+      updatedStatus.influencer
+    ).session(session);
 
-    return {
-      updatedStatus,
-      updateSubmitProve,
-      updateTrack,
-      updatedInterst,
-    };
+    // Send notifications
+    let notificationText;
+    if (updatedStatus.status === 'Completed') {
+      notificationText = ` accepted your interest`;
+    } else if (updatedStatus.status === 'Rejected') {
+      notificationText = ` rejected your interest`;
+    }
+
+    if (notificationText) {
+      const data = { text: notificationText, receiver: influencerData };
+      await sendNotifications(data);
+    }
+
+    // Handle collaboration updates for Completed or Rejected statuses
+    if (['Completed', 'Rejected'].includes(updatedStatus.status)) {
+      const statusToUpdate = updatedStatus.status;
+
+      const updateSubmitProve = await SubmitProve.findByIdAndUpdate(
+        updatedStatus.submitProve,
+        { $set: { typeStatus: statusToUpdate } },
+        {
+          new: true,
+          runValidators: true,
+          session, // Ensure session is used
+        }
+      );
+
+      const updateTrack = await Track.findByIdAndUpdate(
+        updatedStatus.track,
+        { $set: { status: statusToUpdate } },
+        {
+          new: true,
+          runValidators: true,
+          session, // Ensure session is used
+        }
+      );
+
+      // Increment influencerCount if status is Completed
+      if (updatedStatus.status === 'Completed') {
+        await Campaign.findByIdAndUpdate(
+          updatedStatus.campaign,
+          { $inc: { influencerCount: 1 } }, // Increment influencerCount
+          { session }
+        );
+      }
+
+      // Commit transaction
+      await session.commitTransaction();
+      return {
+        updatedStatus,
+        updateSubmitProve,
+        updateTrack,
+      };
+    }
+
+    // Commit transaction for other statuses
+    await session.commitTransaction();
+    return updatedStatus;
+  } catch (error) {
+    // Rollback transaction on error
+    await session.abortTransaction();
+    throw error;
+  } finally {
+    // End session
+    session.endSession();
   }
-
-  return updatedStatus;
 };
 
 const getSingleInterest = async (id: string) => {

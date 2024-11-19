@@ -58,11 +58,22 @@ const updatedInterestStautsToDb = async (
     if (interest.status === payload.status) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        'Interest status is already updated to the same value'
+        'Interest status is already updated'
       );
     }
 
-    const isCampaip = await Campaign.findById(interest.campaign);
+    const campaigns: any = await Campaign.findById({
+      _id: interest.campaign,
+    });
+
+    // Validate collaborationLimit and influencerCount
+
+    if (campaigns?.influencerCount >= campaigns?.collaborationLimit) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'You have reached the limit of collaborations'
+      );
+    }
 
     // Update Interest status
     const updatedStatus = await Interest.findByIdAndUpdate(
@@ -133,6 +144,7 @@ const updatedInterestStautsToDb = async (
       );
 
       // Update Invite status
+
       await Invite.findByIdAndUpdate(
         id,
         { $set: { status: 'Rejected' } },

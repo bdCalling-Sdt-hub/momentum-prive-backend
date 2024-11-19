@@ -80,7 +80,7 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   // Send notification if collaboration is successfully created
   if (result) {
     const data = {
-      text: `${isInfluencer?.fullName} accepted your invitation`,
+      text: ` accepted your invitation`,
       receiver: isCampaign?.user,
       name: isInfluencer?.fullName,
       image: firstImage,

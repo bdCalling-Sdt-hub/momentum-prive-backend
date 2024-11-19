@@ -113,6 +113,7 @@ const creatInfluencerToDB = async (payload: Partial<IUser & IInfluencer>) => {
     const [influencer] = await Influencer.create([{ email: payload.email }], {
       session,
     });
+
     if (!influencer) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
@@ -192,6 +193,9 @@ const createBrandToDB = async (payload: Partial<IUser & IBrand>) => {
     const [brand] = await Brand.create([{ email: payload.email }], {
       session,
     });
+
+    console.log(`object`, brand);
+
     if (!brand) {
       throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create brand');
     }
@@ -419,6 +423,113 @@ const getAllInfluencer = async (query: Record<string, unknown>) => {
     },
   };
 };
+const getAllInfluencerForBrand = async (query: Record<string, unknown>) => {
+  const { searchTerm, page, limit, minFollower, ...filterData } = query;
+  const anyConditions: any[] = [];
+
+  // Extract numeric search term for followers count
+  const followersSearch = !isNaN(Number(searchTerm))
+    ? Number(searchTerm)
+    : null;
+
+  // Build search conditions
+  if (searchTerm) {
+    const searchConditions: any[] = [];
+
+    if (followersSearch !== null) {
+      // Search by followers count if searchTerm is numeric
+      searchConditions.push({ followersIG: followersSearch });
+    } else {
+      // Search by gender or fullName if searchTerm is a string
+      searchConditions.push(
+        { gender: { $regex: searchTerm, $options: 'i' } },
+        { fullName: { $regex: searchTerm, $options: 'i' } }
+      );
+    }
+
+    // Fetch matching influencer IDs
+    const matchedInfluencerIds = await Influencer.find({
+      $or: searchConditions,
+    }).distinct('_id');
+
+    if (matchedInfluencerIds.length > 0) {
+      const userIds = await User.find({
+        influencer: { $in: matchedInfluencerIds },
+        role: 'INFLUENCER',
+      }).distinct('_id');
+
+      if (userIds.length > 0) {
+        anyConditions.push({ _id: { $in: userIds } });
+      }
+    }
+  }
+
+  // Fallback to searching by fullName if no other matches are found
+  if (searchTerm && anyConditions.length === 0) {
+    anyConditions.push({
+      fullName: { $regex: searchTerm, $options: 'i' },
+      role: 'INFLUENCER',
+    });
+  }
+
+  // Filter by minFollower condition
+  if (minFollower !== undefined) {
+    const influencerIds = await Influencer.find({
+      followersIG: { $gte: Number(minFollower) },
+    }).distinct('_id');
+
+    if (influencerIds.length > 0) {
+      const userIds = await User.find({
+        influencer: { $in: influencerIds },
+        role: 'INFLUENCER',
+      }).distinct('_id');
+
+      if (userIds.length > 0) {
+        anyConditions.push({ _id: { $in: userIds } });
+      }
+    }
+  }
+
+  // Apply additional filters
+  if (Object.keys(filterData).length > 0) {
+    const filterConditions = Object.entries(filterData).map(
+      ([field, value]) => ({
+        [field]: value,
+      })
+    );
+    anyConditions.push({ $and: filterConditions });
+  }
+
+  // Ensure only influencers are fetched
+  anyConditions.push({ role: 'INFLUENCER' });
+
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const pages = parseInt(page as string, 10) || 1;
+  const size = parseInt(limit as string, 10) || 10;
+  const skip = (pages - 1) * size;
+
+  // Fetch influencer data
+  const result = await User.find(whereConditions)
+    .populate({ path: 'influencer' })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(size)
+    .lean();
+
+  const count = await User.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: pages,
+      total: count,
+    },
+  };
+};
 
 const getSingleInflueencer = async (id: string) => {
   const result = await User.findById(id).populate('influencer');
@@ -441,4 +552,5 @@ export const UserService = {
   getAllBrand,
   getAllInfluencer,
   getSingleInflueencer,
+  getAllInfluencerForBrand,
 };

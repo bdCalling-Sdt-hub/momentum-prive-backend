@@ -14,6 +14,18 @@ const createCategoryToDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+const inviteForSpasificInfluencer = catchAsync(
+  async (req: Request, res: Response) => {
+    const result = await InviteService.inviteForSpasificInfluencer(req.body);
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Invite send for specific influencer successfully',
+      data: result,
+    });
+  }
+);
+
 const createInviteForInfluencerToDB = catchAsync(
   async (req: Request, res: Response) => {
     const result = await InviteService.createInviteForIncluencerToDB(req.body);
@@ -77,4 +89,5 @@ export const InviteController = {
   updatedInviteToDB,
   getSingleInvite,
   getAllInvitesForInfluencer,
+  inviteForSpasificInfluencer,
 };

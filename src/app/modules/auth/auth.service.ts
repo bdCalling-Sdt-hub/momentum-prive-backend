@@ -1,3 +1,4 @@
+import { Influencer } from './../influencer/influencer.model';
 import bcrypt from 'bcrypt';
 import { StatusCodes } from 'http-status-codes';
 import { JwtPayload, Secret } from 'jsonwebtoken';
@@ -17,12 +18,129 @@ import generateOTP from '../../../util/generateOTP';
 import { ResetToken } from '../resetToken/resetToken.model';
 import { User } from '../user/user.model';
 import jwt from 'jsonwebtoken';
+import { Brand } from '../brand/brand.model';
+
+// const loginUserFromDB = async (payload: ILoginData) => {
+//   const { password } = payload;
+
+//   let isExistUser;
+//   // Check if the user exists by email or phone number
+//   if (payload.email) {
+//     const isExistEmail = await User.findOne({
+//       email: {
+//         $eq: payload.email,
+//         $exists: true,
+//         $ne: undefined,
+//       },
+//       status: 'active',
+//     }).select('+password');
+//     isExistUser = isExistEmail;
+//   } else if (payload.phnNum) {
+//     const isExistPhone = await User.findOne({
+//       phnNum: {
+//         $eq: payload.phnNum,
+//         $exists: true,
+//         $ne: undefined,
+//       },
+//       status: 'active',
+//     }).select('+password');
+//     isExistUser = isExistPhone;
+//   }
+
+//   if (!isExistUser) {
+//     throw new ApiError(StatusCodes.UNAUTHORIZED, "User doesn't exist!");
+//   }
+
+//   const isInfluencer = await Influencer.findById(isExistUser?.influencer);
+
+//   console.log('isInfluencer', isInfluencer);
+
+//   const isBrand = await Brand.findById(isExistUser?.brand);
+
+//   console.log('isBrand', isBrand);
+
+//   if (['INFLUENCER', 'BRAND'].includes(isExistUser.role)) {
+//     if (isExistUser.loginStatus === 'Rejected') {
+//       throw new ApiError(
+//         StatusCodes.NOT_ACCEPTABLE,
+//         'Your account is rejected for approval. You cannot login.'
+//       );
+//     } else if (isExistUser.loginStatus !== 'Approved') {
+//       throw new ApiError(
+//         StatusCodes.NOT_ACCEPTABLE,
+//         'Your account is not yet approved for login. Please wait for approval.'
+//       );
+//     }
+//   }
+
+//   if (
+//     ['INFLUENCER', 'BRAND'].includes(isExistUser.role) &&
+//     isExistUser.loginStatus === 'Rejected'
+//   ) {
+//     throw new ApiError(
+//       StatusCodes.NOT_ACCEPTABLE,
+//       'Your account is rejected. Please contact support.'
+//     );
+//   }
+
+//   if (
+//     isExistUser &&
+//     isExistUser.role === 'INFLUENCER' &&
+//     !isExistUser.verified
+//   ) {
+//     throw new ApiError(
+//       StatusCodes.NOT_ACCEPTABLE,
+//       'Please verify your account, then try to login again'
+//     );
+//   }
+
+//   // Check user status
+//   if (isExistUser && isExistUser.status === 'delete') {
+//     throw new ApiError(
+//       StatusCodes.NOT_ACCEPTABLE,
+//       'You don’t have permission to access this content. It looks like your account has been deactivated.'
+//     );
+//   }
+
+//   // Check password match
+//   if (
+//     password &&
+//     !(await User.isMatchPassword(password, isExistUser.password))
+//   ) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Password is incorrect!');
+//   }
+
+//   // Generate access token
+//   const accessToken = jwtHelper.createToken(
+//     {
+//       id: isExistUser._id,
+//       role: isExistUser.role,
+//       email: isExistUser.email,
+//     },
+//     config.jwt.jwt_secret as Secret,
+//     config.jwt.jwt_expire_in as string
+//   );
+
+//   // Generate refresh token
+//   const refreshToken = jwtHelper.createToken(
+//     {
+//       id: isExistUser._id,
+//       role: isExistUser.role,
+//       email: isExistUser.email,
+//     },
+//     config.jwt.jwt_refresh_secret || ('default_secret' as Secret),
+//     config.jwt.jwt_refresh_expire_in || ('7d' as string)
+//   );
+
+//   await User.updateOne({ _id: isExistUser._id }, { refreshToken });
+
+//   return { accessToken, refreshToken };
+// };
 
 const loginUserFromDB = async (payload: ILoginData) => {
   const { password } = payload;
 
   let isExistUser;
-  // Check if the user exists by email or phone number
   if (payload.email) {
     const isExistEmail = await User.findOne({
       email: {
@@ -49,16 +167,61 @@ const loginUserFromDB = async (payload: ILoginData) => {
     throw new ApiError(StatusCodes.UNAUTHORIZED, "User doesn't exist!");
   }
 
-  // Check if user is INFLUENCER or BRAND and their loginStatus is 'accept'
-  // if (
-  //   ['INFLUENCER', 'BRAND'].includes(isExistUser.role) &&
-  //   isExistUser.loginStatus !== 'Approved'
-  // ) {
-  //   throw new ApiError(
-  //     StatusCodes.NOT_ACCEPTABLE,
-  //     'Your account is not yet approved for login. Please wait for approval.'
-  //   );
-  // }
+  const isInfluencer = await Influencer.findById(isExistUser?.influencer);
+  const isBrand = await Brand.findById(isExistUser?.brand);
+
+  // Generate 10-minute token for `otherName`
+  const tokens = jwtHelper.createToken(
+    {
+      id: isExistUser._id,
+      role: isExistUser.role,
+      email: isExistUser.email,
+    },
+    config.jwt.jwt_secret as Secret,
+    '120m'
+  );
+
+  // Validate Influencer or Brand data
+  if (isExistUser.role === 'INFLUENCER' && isInfluencer) {
+    if (
+      !isInfluencer.image.length ||
+      !isInfluencer.instagram ||
+      !isInfluencer.followersIG ||
+      !isInfluencer.describe ||
+      !isInfluencer.gender ||
+      !isInfluencer.whatAppNum ||
+      !isInfluencer.address ||
+      !isInfluencer.country ||
+      !isInfluencer.city
+    ) {
+      throw new ApiError(
+        407,
+        'Incomplete influencer information. Please update your profile.',
+        { tokens, role: isExistUser?.role }
+      );
+    }
+  }
+
+  if (isExistUser.role === 'BRAND' && isBrand) {
+    if (
+      !isBrand.image ||
+      !isBrand.whatAppNum ||
+      !isBrand.owner ||
+      !isBrand.country ||
+      !isBrand.city ||
+      !isBrand.address ||
+      !isBrand.code ||
+      !isBrand.category ||
+      !isBrand.manager ||
+      !isBrand.instagram
+    ) {
+      throw new ApiError(
+        407,
+        'Incomplete brand information. Please update your profile.',
+        { tokens, role: isExistUser?.role }
+      );
+    }
+  }
 
   if (['INFLUENCER', 'BRAND'].includes(isExistUser.role)) {
     if (isExistUser.loginStatus === 'Rejected') {
@@ -75,16 +238,6 @@ const loginUserFromDB = async (payload: ILoginData) => {
   }
 
   if (
-    ['INFLUENCER', 'BRAND'].includes(isExistUser.role) &&
-    isExistUser.loginStatus === 'Rejected'
-  ) {
-    throw new ApiError(
-      StatusCodes.NOT_ACCEPTABLE,
-      'Your account is rejected. Please contact support.'
-    );
-  }
-
-  if (
     isExistUser &&
     isExistUser.role === 'INFLUENCER' &&
     !isExistUser.verified
@@ -95,7 +248,6 @@ const loginUserFromDB = async (payload: ILoginData) => {
     );
   }
 
-  // Check user status
   if (isExistUser && isExistUser.status === 'delete') {
     throw new ApiError(
       StatusCodes.NOT_ACCEPTABLE,
@@ -103,7 +255,6 @@ const loginUserFromDB = async (payload: ILoginData) => {
     );
   }
 
-  // Check password match
   if (
     password &&
     !(await User.isMatchPassword(password, isExistUser.password))
@@ -135,7 +286,7 @@ const loginUserFromDB = async (payload: ILoginData) => {
 
   await User.updateOne({ _id: isExistUser._id }, { refreshToken });
 
-  return { accessToken, refreshToken };
+  return { accessToken, refreshToken, tokens, role: isExistUser?.role };
 };
 
 // const loginUserFromDB = async (payload: ILoginData) => {
@@ -306,7 +457,17 @@ const verifyEmailToDB = async (payload: IVerifyEmail) => {
       'Verification Successful: Please securely store and utilize this code for reset password';
     data = createToken;
   }
-  return { data, message };
+
+  // generate token
+
+  const tokens = jwtHelper.createToken(
+    { email: isExistUser.email, id: isExistUser._id, role: isExistUser.role },
+    config.jwt.jwt_secret as Secret,
+    '120m'
+  );
+
+  console.log(tokens);
+  return { data, message, tokens };
 };
 
 //forget password

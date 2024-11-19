@@ -34,6 +34,8 @@ const updatedCampaignStatus = async (
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
   }
 
+  console.log(result);
+
   if (isUserBrand?.email) {
     await sendEmail(
       isUserBrand.email,

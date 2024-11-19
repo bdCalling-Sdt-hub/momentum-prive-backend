@@ -8,9 +8,9 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { brandSearchAbleFields } from './brand.constant';
 import { JwtPayload } from 'jsonwebtoken';
 
-const updateBrandToDB = async (id: string, payload: Partial<IBrand>) => {
+const updateBrandToDB = async (email: string, payload: Partial<IBrand>) => {
   payload.status = 'active';
-  const result = await Brand.findByIdAndUpdate(id, payload, {
+  const result = await Brand.findOneAndUpdate({ email }, payload, {
     new: true,
     runValidators: true,
   });

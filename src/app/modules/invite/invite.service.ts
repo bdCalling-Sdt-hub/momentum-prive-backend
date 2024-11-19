@@ -15,107 +15,6 @@ import dayjs from 'dayjs';
 import { Influencer } from '../influencer/influencer.model';
 import { Track } from '../track/track.model';
 
-// const createInviteToDB = async (payload: Partial<IInvite>) => {
-//   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
-
-//   if (!isCampaignStatus) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
-//   }
-//   console.log(isCampaignStatus);
-//   const approveStatus = isCampaignStatus?.approvalStatus;
-//   const isUsers = isCampaignStatus?.user;
-
-//   if (!isUsers) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'No user associated with the campaign'
-//     );
-//   }
-
-//   const isUser: any = await User.findById(isUsers);
-
-//   if (!isUser) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-//   }
-
-//   // payload.user = isUser._id;
-
-//   if (isUser.title === 'Silver' && isUser.subscription === true) {
-//     const startOfMonth = dayjs().startOf('month').toDate();
-//     const endOfMonth = dayjs().endOf('month').toDate();
-
-//     const userInvitationCount = await Invite.countDocuments({
-//       campaign: payload.campaign,
-//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//     });
-
-//     if (userInvitationCount >= 2) {
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'Silver users can only create up to 2 collaborations per month.'
-//       );
-//     }
-//   }
-
-//   if (approveStatus === 'Rejected') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Sorry, your campaign was rejected. You cannot invite new influencers.'
-//     );
-//   }
-
-//   if (approveStatus !== 'Approved') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Campaign not approved yet. Please wait for approval.'
-//     );
-//   }
-
-//   // Check if the campaign has reached its monthly invite limit
-//   const startOfMonth = dayjs().startOf('month').toDate();
-//   const endOfMonth = dayjs().endOf('month').toDate();
-
-//   const campaignInviteCount = await Invite.countDocuments({
-//     campaign: payload.campaign,
-//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//   });
-
-//   if (campaignInviteCount >= 2) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Each campaign can only create up to 2 invites per month.'
-//     );
-//   }
-
-//   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
-//     'user',
-//     'fullName'
-//   );
-
-//   if (!isCampaign || !isCampaign.user) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
-//   }
-
-//   //@ts-ignore
-//   const fullName = isCampaign.user.fullName;
-
-//   const result = await Invite.create(payload);
-
-//   const CampaignInviteCount = await Invite.countDocuments({
-//     campaign: payload.campaign,
-//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//   });
-
-//   // Send notification
-//   const data = {
-//     text: `${fullName} invited you to join for events`,
-//     receiver: payload.influencer,
-//   };
-//   await sendNotifications(data);
-
-//   return { result, CampaignInviteCount };
-// };
-
 const createInviteToDB = async (payload: Partial<IInvite>) => {
   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
 
@@ -176,7 +75,7 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
 
   // Send notification
   const data = {
-    text: `${fullName} invited you to join for events`,
+    text: `invited you to join for events`,
     receiver: payload.influencer,
     name: isBrnadName,
     image: isBrnadImage,
@@ -186,90 +85,88 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
   return result;
 };
 
+///
+
+const inviteForSpasificInfluencer = async (payload: Partial<IInvite>) => {
+  const { campaign, gender, country, city } = payload;
+
+  // Validate required fields
+  if (!campaign || !gender || !country || !city) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'All required fields (campaign, gender, country, city) must be provided.'
+    );
+  }
+
+  // Fetch the campaign
+  const isCampaignStatus = await Campaign.findOne({ _id: campaign });
+  if (!isCampaignStatus) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
+  }
+
+  const approveStatus = isCampaignStatus.approvalStatus;
+
+  if (approveStatus === 'Rejected') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Sorry, your campaign was rejected. You cannot invite new influencers.'
+    );
+  }
+
+  if (approveStatus !== 'Approved') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Campaign not approved yet. Please wait for approval.'
+    );
+  }
+
+  // Find influencers matching criteria
+  const influencers = await Influencer.find({
+    gender,
+    country,
+    city,
+  });
+
+  if (!influencers || influencers.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No matching influencers found');
+  }
+
+  const isCampaign = await Campaign.findById(campaign);
+
+  const users = await User.findById(isCampaign?.user);
+
+  const isBrand = await Brand.findById(users?.brand);
+
+  // Loop through matched influencers and send invites
+  const invites = [];
+  for (const influencer of influencers) {
+    const invitePayload = {
+      campaign,
+      influencer: influencer._id,
+    };
+
+    const result = await Invite.create(invitePayload);
+
+    // Send notification
+    const notificationData = {
+      text: `You have been invited to join the campaign.`,
+      receiver: influencer._id,
+      name: users?.fullName,
+      image: isBrand?.image,
+    };
+
+    await sendNotifications(notificationData);
+    invites.push(result);
+  }
+
+  return {
+    message: 'Invitations sent successfully',
+    totalInvited: invites.length,
+    invites,
+  };
+};
+
 ////////////////////////////////////////////////////////////////
-
-// const createInviteToDB = async (payload: Partial<IInvite>) => {
-//   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
-
-//   if (!isCampaignStatus) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
-//   }
-
-//   const approveStatus = isCampaignStatus.approvalStatus;
-//   const isUsers = isCampaignStatus.user;
-//   const collaborationLimit = isCampaignStatus.collaborationLimit as number; // Default to 2 if undefined
-
-//   if (!isUsers) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'No user associated with the campaign'
-//     );
-//   }
-
-//   const isUser: any = await User.findById(isUsers);
-
-//   if (!isUser) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-//   }
-
-//   if (approveStatus === 'Rejected') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Sorry, your campaign was rejected. You cannot invite new influencers.'
-//     );
-//   }
-
-//   if (approveStatus !== 'Approved') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Campaign not approved yet. Please wait for approval.'
-//     );
-//   }
-
-//   // Check if the campaign has reached its collaboration limit for the month
-//   const startOfMonth = dayjs().startOf('month').toDate();
-//   const endOfMonth = dayjs().endOf('month').toDate();
-
-//   const campaignInviteCount = await Invite.countDocuments({
-//     campaign: payload.campaign,
-//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//   });
-
-//   if (campaignInviteCount >= collaborationLimit) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       `This campaign can only create up to ${collaborationLimit} invites per month.`
-//     );
-//   }
-
-//   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
-//     'user',
-//     'fullName'
-//   );
-
-//   if (!isCampaign || !isCampaign.user) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
-//   }
-
-//   //@ts-ignore
-//   const fullName = isCampaign.user.fullName;
-
-//   const result = await Invite.create(payload);
-
-//   const CampaignInviteCount = await Invite.countDocuments({
-//     campaign: payload.campaign,
-//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//   });
-
-//   // Send notification
-//   const data = {
-//     text: `${fullName} invited you to join for events`,
-//     receiver: payload.influencer,
-//   };
-//   await sendNotifications(data);
-
-//   return { result, CampaignInviteCount };
-// };
 
 const getAllInvites = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
@@ -614,4 +511,5 @@ export const InviteService = {
   getSingleInvite,
   createInviteForIncluencerToDB,
   getAllInvitesForInfluencer,
+  inviteForSpasificInfluencer,
 };
