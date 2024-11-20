@@ -13,6 +13,9 @@ const influencerShema = new Schema<IInfluencer>(
     whatAppNum: {
       type: String,
     },
+    contactEmail: {
+      type: String,
+    },
     city: {
       type: String,
     },
@@ -48,6 +51,12 @@ const influencerShema = new Schema<IInfluencer>(
     },
     tiktok: {
       type: String,
+    },
+    count: {
+      type: String,
+    },
+    rating: {
+      type: Number,
     },
     status: {
       type: String,

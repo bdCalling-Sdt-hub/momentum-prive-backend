@@ -238,7 +238,7 @@ const updatedInterestStautsToDb = async (
 // };
 
 const getSingleInterest = async (id: string) => {
-  const result = await Interest.findById(id);
+  const result = await Interest.findById(id).populate('collaborate');
 
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');

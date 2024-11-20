@@ -6,17 +6,25 @@ export const BrandValiation = z.object({
   whatAppNum: z
     .string({ required_error: 'required whatApp number' })
     .min(4)
-    .max(15),
-  phnNum: z.string({ required_error: 'required phone number' }).min(4).max(15),
-  owner: z.string({ required_error: 'required owner' }),
-  country: z.string({ required_error: 'required country' }),
-  city: z.string({ required_error: 'required city' }),
-  address: z.string({ required_error: 'required address' }),
-  code: z.string({ required_error: 'required code' }),
-  category: z.string({ required_error: 'required category' }),
-  manager: z.string({ required_error: 'required manager' }),
-  instagram: z.string({ required_error: 'required instagram' }),
+    .max(15)
+    .optional(),
+  phnNum: z
+    .string({ required_error: 'required phone number' })
+    .min(4)
+    .max(15)
+    .optional(),
+  owner: z.string({ required_error: 'required owner' }).optional(),
+  country: z.string({ required_error: 'required country' }).optional(),
+  city: z.string({ required_error: 'required city' }).optional(),
+  address: z.string({ required_error: 'required address' }).optional(),
+  code: z.string({ required_error: 'required code' }).optional(),
+  category: z.string({ required_error: 'required category' }).optional(),
+  manager: z.string({ required_error: 'required manager' }).optional(),
+  instagram: z.string({ required_error: 'required instagram' }).optional(),
   tiktok: z.string().optional(),
+  followersIG: z.string().optional(),
+  followersTK: z.string().optional(),
+  contactEmail: z.string().optional(),
 });
 
 export const BrandValiationZodSchema = {

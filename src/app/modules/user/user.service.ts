@@ -284,7 +284,7 @@ const updateProfileToDB = async (
 
 const getAllBrand = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
-  const anyConditions: any[] = [];
+  const anyConditions: any[] = [{ loginStatus: 'Approved' }];
 
   // Add searchTerm condition if present
   if (searchTerm) {
@@ -425,7 +425,7 @@ const getAllInfluencer = async (query: Record<string, unknown>) => {
 };
 const getAllInfluencerForBrand = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, minFollower, ...filterData } = query;
-  const anyConditions: any[] = [];
+  const anyConditions: any[] = [{ loginStatus: 'Approved' }];
 
   // Extract numeric search term for followers count
   const followersSearch = !isNaN(Number(searchTerm))

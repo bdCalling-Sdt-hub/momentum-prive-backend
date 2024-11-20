@@ -128,7 +128,7 @@ const inviteForSpasificInfluencer = async (payload: Partial<IInvite>) => {
   });
 
   if (!influencers || influencers.length === 0) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'No matching influencers found');
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No influencers found');
   }
 
   const isCampaign = await Campaign.findById(campaign);
@@ -465,8 +465,6 @@ const createInviteForIncluencerToDB = async (payload: Partial<IInvite>) => {
   if (!isTrack) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Track not found');
   }
-
-  console.log(isTrack, 'isTrack');
 
   if (campaignInviteCount >= 2) {
     throw new ApiError(

@@ -1,13 +1,51 @@
+import { Influencer } from './../influencer/influencer.model';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { IReview } from './review.interface';
 import { Review } from './review.model';
-import QueryBuilder from '../../builder/QueryBuilder';
-import { reviewSearchAbleFields } from './review.constant';
+
+import { User } from '../user/user.model';
 
 const createReviewToDB = async (payload: Partial<IReview>) => {
   const result = await Review.create(payload);
-  return result;
+
+  const users = await User.findById(payload.influencer);
+
+  // Ensure the influencer ID is valid
+  const infoId = users?.influencer;
+
+  if (!infoId) {
+    throw new Error('Influencer not found or invalid ID');
+  }
+
+  const Influencers = await Influencer.findOne({ _id: infoId });
+
+  if (!Influencers) {
+    throw new Error('Influencer not found or invalid ID');
+  }
+
+  const reviews = await Review.find({ influencer: payload.influencer });
+  const totalRatings = reviews.reduce(
+    (sum, review) => sum + (review.rating || 0),
+    0
+  );
+  const reviewCount = reviews.length;
+
+  // Check if there are reviews to prevent division by zero
+  const averageRating =
+    reviewCount > 0 ? Math.round(totalRatings / reviewCount) : 0;
+
+  const influencer = await Influencer.updateOne(
+    { _id: infoId },
+    {
+      $set: {
+        rating: averageRating,
+        count: reviewCount,
+      },
+    }
+  );
+
+  return { result, influencer };
 };
 
 const getAllReview = async (query: Record<string, unknown>) => {

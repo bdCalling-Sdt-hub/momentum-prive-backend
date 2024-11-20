@@ -14,6 +14,7 @@ export const InfluencerValiation = z.object({
   instagram: z.string().optional(),
   tiktok: z.string().optional(),
   imagesToDelete: z.array(z.string()).optional(),
+  contactEmail: z.string().optional(),
 });
 
 export const InfluencerValiationZodSchema = {

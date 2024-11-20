@@ -16,8 +16,7 @@ const createPackage = catchAsync(async (req, res, next) => {
 });
 
 const getAllPackage = catchAsync(async (req: Request, res: Response) => {
-  const filter = req.body;
-  const result = await PackageService.getAllPackage(filter);
+  const result = await PackageService.getAllPackage(req.query);
 
   sendResponse(res, {
     success: true,

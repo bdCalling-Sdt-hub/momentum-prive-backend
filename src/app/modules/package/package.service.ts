@@ -1,3 +1,5 @@
+import QueryBuilder from '../../builder/QueryBuilder';
+import { packageSearchAbleFields } from './package.constant';
 import { IPackage } from './package.interface';
 import { Package } from './package.model';
 
@@ -7,8 +9,16 @@ const createPackage = async (payload: Partial<IPackage>) => {
   return result;
 };
 
-const getAllPackage = async (filter: Record<string, any>) => {
-  const result = await Package.find(filter);
+const getAllPackage = async (query: Record<string, any>) => {
+  const packageBuilder = new QueryBuilder(Package.find(), query)
+    .search(packageSearchAbleFields)
+    .filter()
+    .sort()
+    .paginate()
+    .fields();
+
+  const result = await packageBuilder.modelQuery;
+
   return result;
 };
 

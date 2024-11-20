@@ -6,6 +6,7 @@ export type IInfluencer = {
   image: string[];
   instagram: string;
   tiktok?: string;
+  contactEmail: string;
   followersIG: number;
   followersTK: number;
   describe: string;
@@ -17,6 +18,8 @@ export type IInfluencer = {
   country: string;
   city: string;
   zip?: string;
+  rating?: number;
+  count?: string;
   status: 'active' | 'delete';
 };
 

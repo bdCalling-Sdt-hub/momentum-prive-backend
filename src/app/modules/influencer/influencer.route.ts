@@ -15,15 +15,12 @@ router.patch(
   (req: Request, res: Response, next: NextFunction) => {
     const { imagesToDelete, data } = req.body;
 
-    // Check if only images are being updated
     if (!data && imagesToDelete) {
-      // If only imagesToDelete is provided, pass it directly to the controller
       req.body = { imagesToDelete };
       return InfluencerController.updatedInfluencer(req, res, next);
     }
 
     if (data) {
-      // Parse and validate the data using Zod schema
       const parsedData = InfluencerValiationZodSchema.InfluencerValiation.parse(
         JSON.parse(data)
       );

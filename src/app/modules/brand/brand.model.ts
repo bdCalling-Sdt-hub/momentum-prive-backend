@@ -13,7 +13,16 @@ const brandSchema = new Schema<IBrand>(
     city: {
       type: String,
     },
+    followersIG: {
+      type: Number,
+    },
+    followersTK: {
+      type: Number,
+    },
     code: {
+      type: String,
+    },
+    contactEmail: {
       type: String,
     },
     country: {

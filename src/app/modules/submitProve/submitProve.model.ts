@@ -7,6 +7,7 @@ const submitProveSchema = new Schema<ISubmitProve>(
     track: {
       type: Schema.Types.ObjectId,
       ref: 'Track',
+      unique: true,
     },
     image: {
       type: [String],

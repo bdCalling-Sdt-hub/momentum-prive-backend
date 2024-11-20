@@ -10,6 +10,10 @@ import { JwtPayload } from 'jsonwebtoken';
 
 const updateBrandToDB = async (email: string, payload: Partial<IBrand>) => {
   payload.status = 'active';
+
+  payload.followersIG = Number(payload.followersIG);
+  payload.followersTK = Number(payload.followersTK);
+
   const result = await Brand.findOneAndUpdate({ email }, payload, {
     new: true,
     runValidators: true,
