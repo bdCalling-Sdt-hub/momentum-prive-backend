@@ -11,7 +11,7 @@ const router = express.Router();
 router.post(
   '/create-collaboration',
   fileUploadHandler(),
-  // auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
+  auth(USER_ROLES.INFLUENCER),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = CollaborationValidation.createCollaboration.parse(
       JSON.parse(req.body.data)

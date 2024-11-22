@@ -867,3 +867,593 @@
 
 //   return { result, CampaignInviteCount };
 // };
+
+// invite
+// const getAllInvitesForInfluencer = async (query: Record<string, unknown>) => {
+//   const { searchTerm, page, influencerId, limit, ...filterData } = query;
+//   const anyConditions: any[] = [];
+
+//   // Step 1: Search for campaigns by category name
+//   if (searchTerm) {
+//     const campaignIds = await Campaign.find({
+//       category: {
+//         $in: await Category.find({
+//           categoryName: { $regex: searchTerm, $options: 'i' },
+//         }).distinct('_id'),
+//       },
+//     }).distinct('_id');
+
+//     if (campaignIds.length > 0) {
+//       anyConditions.push({ campaign: { $in: campaignIds } });
+//     }
+//   }
+
+//   anyConditions.push({ influencer: influencerId });
+
+//   // Step 2: Include other filter data
+//   if (Object.keys(filterData).length > 0) {
+//     const filterConditions = Object.entries(filterData).map(
+//       ([field, value]) => ({
+//         [field]: value,
+//       })
+//     );
+//     anyConditions.push({ $and: filterConditions });
+//   }
+
+//   // Apply filter conditions
+//   const whereConditions =
+//     anyConditions.length > 0 ? { $and: anyConditions } : {};
+//   const pages = parseInt(page as string) || 1;
+//   const size = parseInt(limit as string) || 10;
+//   const skip = (pages - 1) * size;
+
+//   const result = await Invite.find(whereConditions)
+//     .populate({
+//       path: 'campaign',
+//       // select: 'image name startTime endTime category',
+//       populate: {
+//         path: 'category',
+//         select: 'categoryName',
+//       },
+//     })
+//     .populate({
+//       path: 'campaign',
+//       select: 'image name startTime endTime category',
+//       populate: {
+//         path: 'user',
+//         select: 'fullName',
+//         populate: {
+//           path: 'brand',
+//           select: 'owner image',
+//         },
+//       },
+//     })
+//     .populate({
+//       path: 'influencer',
+//       select: 'fullName',
+//     })
+//     .sort({ createdAt: -1 })
+//     .skip(skip)
+//     .limit(size)
+//     .lean();
+
+//   const count = await Invite.countDocuments(whereConditions);
+
+//   const data: any = {
+//     result,
+//     meta: {
+//       page: pages,
+//       total: count,
+//     },
+//   };
+//   return data;
+// };
+
+///track
+// const getAllTracks = async (influencerId: string) => {
+//   const result = await Track.find({ influencer: influencerId }).populate({
+//     path: 'campaign',
+//     select: 'user image name',
+//     populate: {
+//       path: 'user',
+//       select: 'brand',
+//       populate: {
+//         path: 'brand',
+//         select: 'image owner',
+//       },
+//     },
+//   });
+
+//   if (!result) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Track not found');
+//   }
+
+//   return result;
+// };
+
+// track
+// const getAllTrackForBrand = async (userId: string | undefined) => {
+//   if (!userId) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'UserId is required');
+//   }
+
+//   const allResults = await Track.find({})
+//     .populate('influencer', 'fullName')
+//     .populate({
+//       path: 'campaign',
+//       select: 'user image name',
+//       populate: {
+//         path: 'user',
+//         select: 'brand',
+//         populate: {
+//           path: 'brand',
+//           select: 'image owner',
+//         },
+//       },
+//     });
+
+//   const filteredResult = allResults.filter(
+//     (item: any) => item.campaign && item.campaign.user._id.toString() === userId
+//   );
+
+//   if (filteredResult.length === 0) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+//   }
+
+//   const count = filteredResult.length;
+//   if (!count) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+//   }
+
+//   return { result: filteredResult, count };
+// };
+
+//track
+
+// const getAllTrackForBrand = async (
+//   userId: string | undefined,
+//   page: number = 1, // Default to page 1 if not provided
+//   limit: number = 10 // Default to limit 10 if not provided
+// ) => {
+//   if (!userId) {
+//     throw new ApiError(StatusCodes.BAD_REQUEST, 'UserId is required');
+//   }
+
+//   // Calculate skip and limit
+//   const skip = (page - 1) * limit;
+
+//   const allResults = await Track.find({})
+//     .skip(skip) // Skip records for pagination
+//     .limit(limit) // Limit the number of records per page
+//     .populate('influencer', 'fullName')
+//     .populate({
+//       path: 'campaign',
+//       select: 'user image name',
+//       populate: {
+//         path: 'user',
+//         select: 'brand',
+//         populate: {
+//           path: 'brand',
+//           select: 'image owner',
+//         },
+//       },
+//     });
+
+//   // Filter the results based on the userId
+//   const filteredResult = allResults.filter(
+//     (item: any) => item.campaign && item.campaign.user._id.toString() === userId
+//   );
+
+//   if (filteredResult.length === 0) {
+//     return { result: [], count: 0 };
+//   }
+
+//   // Get the total count of matching items for pagination info
+//   const count = filteredResult.length;
+
+//   return { result: filteredResult, count };
+// };
+
+// const getAllTrackForBrand = async (userId: string | undefined) => {
+//   const filter: any = {};
+
+//   const result = await Track.find(filter)
+//     .populate('influencer', 'fullName')
+//     .populate({
+//       path: 'campaign',
+//       select: 'user image name',
+//       populate: {
+//         path: 'user',
+//         select: 'brand',
+//         populate: {
+//           path: 'brand',
+//           select: 'image owner',
+//         },
+//       },
+//     });
+
+//   const filteredResult = result.filter(
+//     (item: any) => item.campaign && item.campaign.user.toString() === userId
+//   );
+
+//   const count = filteredResult.length;
+
+//   if (!filteredResult.length) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+//   }
+
+//   return { result: filteredResult, count };
+// };
+
+//subscriptions
+// const createCustomerAndSubscription = async (
+//   email: string,
+//   priceId: string,
+//   user: string,
+//   packages: string
+// ) => {
+//   try {
+//     // Validate package existence
+//     const packageData = await Package.findById(packages);
+//     if (!packageData) {
+//       throw new ApiError(StatusCodes.NOT_FOUND, 'Package not found');
+//     }
+
+//     // Create customer in Stripe
+//     const customer = await stripe.customers.create({ email });
+
+//     // Create subscription in Stripe
+//     const subscription = await stripe.subscriptions.create({
+//       customer: customer.id,
+//       items: [{ price: priceId }],
+//       payment_behavior: 'default_incomplete',
+//       expand: ['latest_invoice.payment_intent'],
+//     });
+
+//     const priceAmount = subscription.items.data[0]?.price?.unit_amount ?? 0;
+//     const price = priceAmount / 100;
+
+//     const latestInvoice = subscription.latest_invoice;
+//     if (!latestInvoice || typeof latestInvoice === 'string') {
+//       throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid invoice data');
+//     }
+
+//     const paymentIntent = latestInvoice.payment_intent;
+//     if (!paymentIntent || typeof paymentIntent === 'string') {
+//       throw new ApiError(StatusCodes.BAD_REQUEST, 'Invalid payment intent');
+//     }
+
+//     // Save subscription data in DB
+//     const newSubscription = await Subscribation.create({
+//       subscriptionId: subscription.id,
+//       status: subscription.status,
+//       currentPeriodStart: formatDate(
+//         new Date(subscription.current_period_start * 1000)
+//       ),
+//       currentPeriodEnd: formatDate(
+//         new Date(subscription.current_period_end * 1000)
+//       ),
+//       priceAmount: price,
+//       user,
+//       packages,
+//     });
+
+//     // Update user subscription status
+//     const updatedUser = await User.findByIdAndUpdate(
+//       user,
+//       { subscription: true, title: packageData.title },
+//       { new: true }
+//     );
+
+//     if (!updatedUser) {
+//       throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to update user');
+//     }
+
+//     return {
+//       transactionId: paymentIntent.id,
+//       subscriptionId: subscription.id,
+//       clientSecret: paymentIntent.client_secret,
+//       subscription: newSubscription,
+//     };
+//   } catch (error) {
+//     console.error('Error creating subscription:', error);
+//     throw new ApiError(
+//       StatusCodes.INTERNAL_SERVER_ERROR,
+//       'Failed to create subscription'
+//     );
+//   }
+// };
+
+// const getAllSubscriptationForBrand = async (brandId: string) => {
+//   const result = await Subscribation.find({ user: brandId })
+//     .populate({
+//       path: 'user',
+//       populate: {
+//         path: 'brand',
+//       },
+//     })
+//     .populate('packages');
+
+//   const count = Subscribation.countDocuments();
+
+//   return { result, count };
+// };
+
+// const updateustomerAndSubscription = async (
+//   subscriptionId: string,
+//   newPriceId: string
+// ) => {
+//   // Check if the subscriptionId exists in the database
+//   const existingSub = await Subscribation.findOne({ subscriptionId });
+// console.log(existingSub)
+//   if (!existingSub) {
+//     throw new Error('No subscription found with the provided subscriptionId.');
+//   }
+
+//   // Retrieve the subscription from Stripe
+//   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
+
+//   if (!subscription) {
+//     throw new Error('Subscription not found on Stripe.');
+//   }
+
+//   // Update the subscription on Stripe with the new priceId
+//   const updatedSubscription = await stripe.subscriptions.update(
+//     subscriptionId,
+//     {
+//       items: [
+//         {
+//           id: subscription.items.data[0].id, // Use the existing subscription item ID
+//           price: newPriceId, // New plan/price ID
+//         },
+//       ],
+//       proration_behavior: 'create_prorations', // Handles prorating the amount
+//       expand: ['latest_invoice.payment_intent'],
+//     }
+//   );
+
+//   // Retrieve the latest invoice and payment intent
+//   const latestInvoice = updatedSubscription.latest_invoice;
+
+//   if (!latestInvoice || typeof latestInvoice === 'string') {
+//     throw new Error(
+//       'Failed to update subscription; latest_invoice is missing or is invalid.'
+//     );
+//   }
+
+//   const paymentIntent = latestInvoice.payment_intent;
+
+//   if (!paymentIntent || typeof paymentIntent === 'string') {
+//     throw new Error('Failed to retrieve payment intent from latest_invoice.');
+//   }
+
+//   // Update the local database with the new priceId and transaction information
+//   existingSub.priceId = newPriceId; // Update the priceId
+//   existingSub.transactionId = paymentIntent.id; // Update the transactionId
+//   existingSub.clientSecret = paymentIntent.client_secret; // Update the clientSecret
+//   await existingSub.save(); // Save the updated subscription data
+
+//   const createSub = await Subscribation.create({
+//     transactionId: paymentIntent.id,
+//     subscriptionId: subscription.id,
+//     clientSecret: paymentIntent.client_secret,
+//   });
+
+//   return {
+//     transactionId: paymentIntent.id,
+//     subscriptionId: updatedSubscription.id,
+//     clientSecret: paymentIntent.client_secret,
+//   };
+// };
+
+// const renewExpiredSubscriptions = async (
+//   subscriptionId: string,
+//   newPriceId?: string // Make newPriceId optional
+// ) => {
+//   // Find subscription record in the database
+//   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
+
+//   if (!subscriptionRecord) {
+//     throw new ApiError(
+//       StatusCodes.NOT_FOUND,
+//       'Subscription not found in the database.'
+//     );
+//   }
+
+//   // Check if the status is "expired"
+//   if (subscriptionRecord.status !== 'expired') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Subscription is not expired and cannot be renewed.'
+//     );
+//   }
+
+//   // Retrieve the existing subscription from Stripe
+//   const stripeSubscription = await stripe.subscriptions.retrieve(
+//     subscriptionId
+//   );
+
+//   // Check if the subscription is valid
+//   if (!stripeSubscription || stripeSubscription.status !== 'active') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Invalid or inactive subscription.'
+//     );
+//   }
+
+//   // Determine the price to use
+//   const priceIdToUse = newPriceId || stripeSubscription.items.data[0].price.id;
+
+//   // Retrieve the customer payment methods
+//   const customerId =
+//     typeof stripeSubscription.customer === 'string'
+//       ? stripeSubscription.customer
+//       : stripeSubscription.customer.id;
+
+//   const paymentMethods = await stripe.paymentMethods.list({
+//     customer: customerId,
+//     type: 'card', // Adjust if you're using a different type of payment method
+//   });
+
+//   if (paymentMethods.data.length === 0) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'This customer has no attached payment source or default payment method.'
+//     );
+//   }
+
+//   // Use the first payment method or set a default
+//   const paymentMethodId = paymentMethods.data[0].id; // Get the first payment method
+
+//   // Create a new subscription in Stripe
+//   const newSubscription = await stripe.subscriptions.create({
+//     customer: customerId, // Customer ID as a string
+//     items: [{ price: priceIdToUse }],
+//     default_payment_method: paymentMethodId, // Attach the payment method
+//     expand: ['latest_invoice.payment_intent'], // Get the latest invoice details
+//   });
+
+//   // Update the subscription details in the database
+//   const priceAmount = newSubscription.items.data[0]?.price?.unit_amount ?? 0;
+//   const price = priceAmount / 100;
+
+//   console.log(price);
+
+//   // Save the new subscription record in the database
+//   const newSubscriptionRecord = await Subscribation.create({
+//     subscriptionId: newSubscription.id,
+//     status: newSubscription.status,
+//     priceAmount: price,
+//     // Add other relevant fields from your subscription model
+//   });
+
+//   if (!newSubscriptionRecord) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Failed to create new subscription record in the database.'
+//     );
+//   }
+
+//   // Optionally, you might want to update the previous subscription record status to "canceled" or "renewed"
+//   await Subscribation.findOneAndUpdate(
+//     { subscriptionId },
+//     { status: 'canceled' }, // Or however you want to handle the old subscription
+//     { new: true }
+//   );
+
+//   return {
+//     subscriptionId: newSubscription.id,
+//     status: newSubscription.status,
+//     newSubscriptionRecord,
+//   };
+// };
+
+// const renewExpiredSubscriptions = async (
+//   subscriptionId: string,
+//   newPriceId?: string // Make newPriceId optional
+// ) => {
+//   // Find subscription record in the database
+//   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
+
+//   if (!subscriptionRecord) {
+//     throw new ApiError(
+//       StatusCodes.NOT_FOUND,
+//       'Subscription not found in the database.'
+//     );
+//   }
+
+//   // Check if the status is "expired"
+//   if (subscriptionRecord.status !== 'expired') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Subscription is not expired and cannot be renewed.'
+//     );
+//   }
+
+//   // Retrieve the existing subscription from Stripe
+//   const stripeSubscription = await stripe.subscriptions.retrieve(
+//     subscriptionId
+//   );
+
+//   // Check if the subscription is valid
+//   if (!stripeSubscription || stripeSubscription.status !== 'active') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Invalid or inactive subscription.'
+//     );
+//   }
+
+//   // Determine the price to use
+//   const priceIdToUse = newPriceId || stripeSubscription.items.data[0].price.id;
+
+//   // Retrieve the customer payment methods
+//   const customerId =
+//     typeof stripeSubscription.customer === 'string'
+//       ? stripeSubscription.customer
+//       : stripeSubscription.customer.id;
+
+//   const paymentMethods = await stripe.paymentMethods.list({
+//     customer: customerId,
+//     type: 'card', // Adjust if you're using a different type of payment method
+//   });
+
+//   if (paymentMethods.data.length === 0) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'This customer has no attached payment source or default payment method.'
+//     );
+//   }
+
+//   // Use the first payment method
+//   const paymentMethodId = paymentMethods.data[0].id; // Get the first payment method
+
+//   // Update the existing subscription in Stripe
+//   const updatedSubscription = await stripe.subscriptions.update(
+//     subscriptionId,
+//     {
+//       items: [
+//         {
+//           id: stripeSubscription.items.data[0].id, // Existing subscription item ID
+//           price: priceIdToUse, // Use the new price ID or the existing one
+//         },
+//       ],
+//       default_payment_method: paymentMethodId, // Attach the payment method
+//       expand: ['latest_invoice.payment_intent'], // Get the latest invoice details
+//     }
+//   );
+
+//   // Update the subscription details in the database
+//   const priceAmount =
+//     updatedSubscription.items.data[0]?.price?.unit_amount ?? 0;
+//   const price = priceAmount / 100;
+
+//   const updatedSub = await Subscribation.findOneAndUpdate(
+//     { subscriptionId },
+//     {
+//       status: updatedSubscription.status,
+//       priceAmount: price,
+
+//       currentPeriodStart: formatDate(
+//         new Date(updatedSubscription.current_period_start * 1000)
+//       ),
+//       currentPeriodEnd: formatDate(
+//         new Date(updatedSubscription.current_period_end * 1000)
+//       ),
+//       // Add any other fields you want to update
+//     },
+//     { new: true }
+//   );
+
+//   if (!updatedSub) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Failed to update subscription record in the database.'
+//     );
+//   }
+
+//   return {
+//     subscriptionId: updatedSubscription.id,
+//     status: updatedSubscription.status,
+//     updatedSub,
+//   };
+// };

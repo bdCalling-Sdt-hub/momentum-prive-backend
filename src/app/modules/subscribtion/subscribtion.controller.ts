@@ -90,12 +90,28 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
   }
 });
 
+// const updateSubscription = catchAsync(async (req: Request, res: Response) => {
+//   const { subscriptionId, newPriceId } = req.body;
+
+//   const result = await subscriptionService.updateustomerAndSubscription(
+//     newPriceId,
+//     subscriptionId
+//   );
+
+//   sendResponse(res, {
+//     statusCode: StatusCodes.OK,
+//     success: true,
+//     message: 'Subscription updated successfully',
+//     data: result,
+//   });
+// });
+
 const updateSubscription = catchAsync(async (req: Request, res: Response) => {
-  const { subscriptionId, newPriceId } = req.body;
+  const { userId, newPriceId } = req.body;
 
   const result = await subscriptionService.updateustomerAndSubscription(
     newPriceId,
-    subscriptionId
+    userId
   );
 
   sendResponse(res, {
@@ -106,10 +122,23 @@ const updateSubscription = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const CancelSubscription = catchAsync(async (req, res) => {
-  const { subscriptionId } = req.body;
+// const CancelSubscription = catchAsync(async (req, res) => {
+//   const { subscriptionId } = req.body;
 
-  const result = await subscriptionService.cancelSubscription(subscriptionId);
+//   const result = await subscriptionService.cancelSubscription(subscriptionId);
+
+//   sendResponse(res, {
+//     statusCode: StatusCodes.OK,
+//     success: true,
+//     message: 'Subscription canceled successfully',
+//     data: result,
+//   });
+// });
+
+const CancelSubscription = catchAsync(async (req, res) => {
+  const { userId } = req.body;
+
+  const result = await subscriptionService.cancelSubscription(userId);
 
   sendResponse(res, {
     statusCode: StatusCodes.OK,
@@ -119,11 +148,27 @@ const CancelSubscription = catchAsync(async (req, res) => {
   });
 });
 
+// const renewExpiredSubscription = catchAsync(async (req, res) => {
+//   const { subscriptionId, newPriceId } = req.body;
+
+//   const result = await subscriptionService.renewExpiredSubscriptions(
+//     subscriptionId,
+//     newPriceId
+//   );
+
+//   sendResponse(res, {
+//     statusCode: StatusCodes.OK,
+//     success: true,
+//     message: 'Expired subscriptions renewed successfully',
+//     data: result,
+//   });
+// });
+
 const renewExpiredSubscription = catchAsync(async (req, res) => {
-  const { subscriptionId, newPriceId } = req.body;
+  const { userId, newPriceId } = req.body;
 
   const result = await subscriptionService.renewExpiredSubscriptions(
-    subscriptionId,
+    userId,
     newPriceId
   );
 

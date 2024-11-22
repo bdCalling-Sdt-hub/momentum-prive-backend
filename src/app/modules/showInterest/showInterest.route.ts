@@ -10,7 +10,7 @@ const router = express.Router();
 
 router.post(
   '/send-interest',
-  // auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.INFLUENCER),
   ShowInterestController.createInviteForInfluencerToDB
 );
 

@@ -19,7 +19,7 @@ router.get(
 
 router.patch(
   '/:id',
-  auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
+  // auth(USER_ROLES.SUPER_ADMIN, USER_ROLES.ADMIN),
   PermissionController.updatedUserLoginStatus
 );
 

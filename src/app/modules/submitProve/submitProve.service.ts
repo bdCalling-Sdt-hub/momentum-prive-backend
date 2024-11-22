@@ -64,16 +64,17 @@ import { populate } from 'dotenv';
 
 //   if (result) {
 //     const data = {
-//       text: ` accepted your invitation`,
+//       text: `accepted your invitation`,
 //       receiver: isCampaign?.user,
+//       name: isInfluencer?.fullName,
 //     };
 
 //     await sendNotifications(data);
 
 //     const bookingData = {
-//       text: `${isInfluencer?.fullName} Submit new Prove`,
-//       receiver: isCampaign?.user,
+//       text: `Submit new Prove`,
 //       type: 'ADMIN',
+//       name: isInfluencer?.fullName,
 //     };
 
 //     await sendNotifications(bookingData);
@@ -123,12 +124,13 @@ const submitProveToDB = async (payload: ISubmitProve) => {
   const [createInterestInfluencer] = await Promise.all([
     InterestInfluencer.create(interestInfluencerData),
     sendNotifications({
-      text: `accepted your invitation`,
+      text: `Accepted your invitation`,
+      name: influencer?.fullName,
       receiver: campaign?.user,
     }),
     sendNotifications({
       text: `${influencer?.fullName} Submit new Prove`,
-      receiver: campaign?.user,
+
       type: 'ADMIN',
     }),
   ]);
@@ -143,14 +145,48 @@ const submitProveToDB = async (payload: ISubmitProve) => {
   return result;
 };
 
-const getAllSubmitProve = async (influencerId: string) => {
+// const getAllSubmitProve = async (influencerId: string, typeStatus?: string) => {
+//   const influencerTracks = await Track.find({
+//     influencer: new Types.ObjectId(influencerId),
+//   });
+
+//   const trackIds = influencerTracks.map(track => track._id);
+
+//   const result = await SubmitProve.find({ track: { $in: trackIds } }).populate({
+//     path: 'track',
+//     select: 'campaign',
+//     populate: {
+//       path: 'campaign',
+//       populate: {
+//         path: 'user',
+//         select: 'brand',
+//         populate: {
+//           path: 'brand',
+//           select: 'image owner',
+//         },
+//       },
+//     },
+//   });
+
+//   return result;
+// };
+
+const getAllSubmitProve = async (influencerId: string, typeStatus?: string) => {
+  // Retrieve all tracks for the influencer
   const influencerTracks = await Track.find({
     influencer: new Types.ObjectId(influencerId),
   });
 
   const trackIds = influencerTracks.map(track => track._id);
 
-  const result = await SubmitProve.find({ track: { $in: trackIds } }).populate({
+  // Build the query with optional typeStatus filter
+  const query: any = { track: { $in: trackIds } };
+  if (typeStatus) {
+    query.typeStatus = typeStatus; // Add typeStatus to the query if provided
+  }
+
+  // Fetch data with the built query
+  const result = await SubmitProve.find(query).populate({
     path: 'track',
     select: 'campaign',
     populate: {
@@ -160,7 +196,7 @@ const getAllSubmitProve = async (influencerId: string) => {
         select: 'brand',
         populate: {
           path: 'brand',
-          select: 'image owner',
+          select: 'image owner name',
         },
       },
     },
@@ -168,6 +204,7 @@ const getAllSubmitProve = async (influencerId: string) => {
 
   return result;
 };
+
 const getAllSubmitProveForBrand = async (userId: string) => {
   // Find the campaigns associated with the user's brand
   const influencerTracks = await Track.find({
@@ -187,7 +224,7 @@ const getAllSubmitProveForBrand = async (userId: string) => {
         select: 'brand',
         populate: {
           path: 'brand',
-          select: 'image owner',
+          select: 'image owner name',
         },
       },
     },

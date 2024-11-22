@@ -39,16 +39,36 @@ const getAllCollaborations = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
+// const getAllCollaborationForInfluencer = catchAsync(
+//   async (req: Request, res: Response) => {
+//     const result = await CollaborationService.getAllCollaborationForInfluencer(
+//       req.params.id
+//     );
+
+//     sendResponse(res, {
+//       success: true,
+//       statusCode: StatusCodes.OK,
+//       message: 'Collaboration for influencer retirived  successfully',
+//       data: result,
+//     });
+//   }
+// );
+
 const getAllCollaborationForInfluencer = catchAsync(
   async (req: Request, res: Response) => {
+    const { id: influencerId } = req.params;
+    const { typeStatus } = req.query; // Extract typeStatus from the query
+
     const result = await CollaborationService.getAllCollaborationForInfluencer(
-      req.params.id
+      influencerId,
+      typeStatus as string
     );
 
     sendResponse(res, {
       success: true,
       statusCode: StatusCodes.OK,
-      message: 'Collaboration for influencer retirived  successfully',
+      message: 'Collaboration for influencer retrieved successfully',
       data: result,
     });
   }

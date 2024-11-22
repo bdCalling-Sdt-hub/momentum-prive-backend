@@ -38,6 +38,11 @@ router.get(
   auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
   InviteController.getAllInvitesForInfluencer
 );
+router.get(
+  '/get-invites-brnad/:campaignId',
+  auth(USER_ROLES.BRAND),
+  InviteController.getAllInvitesForBrand
+);
 
 router.get(
   '/:id',
@@ -47,7 +52,7 @@ router.get(
 
 router.patch(
   '/:id',
-  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
+  auth(USER_ROLES.BRAND),
   InviteController.updatedInviteToDB
 );
 

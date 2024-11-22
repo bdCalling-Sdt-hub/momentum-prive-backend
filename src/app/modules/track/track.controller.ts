@@ -13,52 +13,66 @@ const getAlllTrackToDB = async (req: Request, res: Response) => {
     data: result,
   });
 };
-
 const getAllTrackForBrandToDB = async (req: Request, res: Response) => {
-  // const result = await TrackService.getAllTrackForBrand(req.params.userId);
-
   const { userId } = req.params;
-  const { page = 1, limit = 10 } = req.query; // Get pagination from query parameters
-
-  // Ensure pagination values are integers
-  const pageNum = parseInt(page as string, 10);
-  const limitNum = parseInt(limit as string, 10);
 
   const result = await TrackService.getAllTrackForBrand(
-    userId,
-    pageNum,
-    limitNum
+    req.params.userId,
+    req.query
   );
-
-  if (result.result.length === 0) {
-    return sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: 'No data found for the requested page',
-      data: result.result,
-      pagination: {
-        page: pageNum,
-        limit: limitNum,
-        total: 0, // Set total to 0 since there are no records
-        totalPage: 0, // Use 'totalPage' instead of 'totalPages'
-      },
-    });
-  }
-
-  res.status(StatusCodes.OK).json({
+  sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
-    message: 'Track retrived successfully',
+    message: 'Track retrived for brand successfully',
     data: result,
-
-    pagination: {
-      page: pageNum,
-      limit: limitNum,
-      totalCount: result.count,
-      totalPages: Math.ceil(result.count / limitNum),
-    },
   });
 };
+
+// const getAllTrackForBrandToDB = async (req: Request, res: Response) => {
+//   // const result = await TrackService.getAllTrackForBrand(req.params.userId);
+
+//   const { userId } = req.params;
+//   const { page = 1, limit = 10 } = req.query; // Get pagination from query parameters
+
+//   // Ensure pagination values are integers
+//   const pageNum = parseInt(page as string, 10);
+//   const limitNum = parseInt(limit as string, 10);
+
+//   const result = await TrackService.getAllTrackForBrand(
+//     userId,
+//     pageNum,
+//     limitNum
+//   );
+
+//   if (result.result.length === 0) {
+//     return sendResponse(res, {
+//       success: true,
+//       statusCode: StatusCodes.OK,
+//       message: 'No data found for the requested page',
+//       data: result.result,
+//       pagination: {
+//         page: pageNum,
+//         limit: limitNum,
+//         total: 0, // Set total to 0 since there are no records
+//         totalPage: 0, // Use 'totalPage' instead of 'totalPages'
+//       },
+//     });
+//   }
+
+//   res.status(StatusCodes.OK).json({
+//     success: true,
+//     statusCode: StatusCodes.OK,
+//     message: 'Track retrived successfully',
+//     data: result,
+
+//     pagination: {
+//       page: pageNum,
+//       limit: limitNum,
+//       totalCount: result.count,
+//       totalPages: Math.ceil(result.count / limitNum),
+//     },
+//   });
+// };
 
 const updateTrackStatus = catchAsync(async (req: Request, res: Response) => {
   const result = await TrackService.updateTrackStatus(req.params.id, req.body);

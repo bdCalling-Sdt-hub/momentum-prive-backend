@@ -1,1 +1,1 @@
-export const Invites = ['Pending', 'Accepted', 'Rejected'];
+export const Invites = ['Pending', 'Accepted', 'Rejected', 'Completed'];

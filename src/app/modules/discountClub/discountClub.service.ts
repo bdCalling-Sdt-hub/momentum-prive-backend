@@ -183,7 +183,6 @@ const getSingleDiscount = async (id: string) => {
       select: 'brand',
       populate: {
         path: 'brand',
-        select: 'image owner',
       },
     });
   return result;

@@ -142,19 +142,19 @@ const createInviteForIncluencerToDB = async (
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
   }
 
-  if (payload.influencer) {
-    const isExistInfluencer = await ShowInterest.findOne({
-      influencer: payload.influencer,
-      campaign: payload.campaign,
-    });
+  // if (payload.influencer) {
+  //   const isExistInfluencer = await ShowInterest.findOne({
+  //     influencer: payload.influencer,
+  //     campaign: payload.campaign,
+  //   });
 
-    if (isExistInfluencer) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'Influencer already showed interest'
-      );
-    }
-  }
+  //   if (isExistInfluencer) {
+  //     throw new ApiError(
+  //       StatusCodes.BAD_REQUEST,
+  //       'Influencer already showed interest'
+  //     );
+  //   }
+  // }
 
   const approveStatus = isCampaignStatus.approvalStatus;
   const isUsers = isCampaignStatus.user;

@@ -124,6 +124,15 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
   });
 
+  if (campaign) {
+    const bookingData = {
+      text: `Campaign created plase check all information`,
+      name: isSubs?.user?.firstName,
+      type: 'ADMIN',
+    };
+    await sendNotifications(bookingData);
+  }
+
   return { campaign, CampaignsCount };
 };
 

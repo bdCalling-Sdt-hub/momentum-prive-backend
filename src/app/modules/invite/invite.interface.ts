@@ -5,6 +5,7 @@ type IInviteStatus =
   | 'Pending'
   | 'Accepted'
   | 'Rejected'
+  | 'Cancel'
   | 'Review'
   | 'Completed'
   | 'Accomplish';

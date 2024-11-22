@@ -5,7 +5,7 @@ const inviteSchema = new Schema<ITrack>(
   {
     status: {
       type: String,
-      enum: ['Pending', 'Accepted', 'Rejected', 'Completed'],
+      enum: ['Pending', 'Accepted', 'Rejected', 'Completed', 'Cancel'],
       default: 'Pending',
     },
     campaign: {

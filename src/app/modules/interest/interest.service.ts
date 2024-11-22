@@ -101,12 +101,14 @@ const getAllInterest = async (userId: string, status?: string) => {
 //   const session = await mongoose.startSession();
 //   session.startTransaction();
 
+//   const Status = payload.status === 'Accepted' ? 'Completed' : 'Rejected';
+
 //   try {
 //     const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
 //       id,
 //       {
 //         $set: {
-//           status: payload.status,
+//           status: Status,
 //         },
 //       },
 //       {
@@ -166,23 +168,23 @@ const getAllInterest = async (userId: string, status?: string) => {
 //         }
 //       );
 
-//       const updateTrack = await Track.findByIdAndUpdate(
-//         trackId,
-//         {
-//           $set: {
-//             status: statusToUpdate,
-//           },
-//         },
-//         {
-//           new: true,
-//           runValidators: true,
-//         }
-//       );
+//       // const updateTrack = await Track.findByIdAndUpdate(
+//       //   trackId,
+//       //   {
+//       //     $set: {
+//       //       status: statusToUpdate,
+//       //     },
+//       //   },
+//       //   {
+//       //     new: true,
+//       //     runValidators: true,
+//       //   }
+//       // );
 
 //       return {
 //         updatedStatus,
 //         updateSubmitProve,
-//         updateTrack,
+//         // updateTrack,
 //       };
 //     }
 
@@ -211,7 +213,7 @@ const updatedInterestStautsToDb = async (
     }
 
     // Check if the status is already updated to the same value
-    if (interest.status === payload.status) {
+    if (interest.status === 'Completed' || interest.status === 'Rejected') {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
         'Interest status is already updated'
@@ -224,18 +226,22 @@ const updatedInterestStautsToDb = async (
     );
 
     // Validate collaborationLimit and influencerCount
-    if (campaigns?.influencerCount >= campaigns?.collaborationLimit) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'You have reached the limit of collaborations'
-      );
+    if (payload.status === 'Accepted') {
+      if (campaigns?.influencerCount >= campaigns?.collaborationLimit) {
+        throw new ApiError(
+          StatusCodes.BAD_REQUEST,
+          'You have reached the limit of collaborations'
+        );
+      }
     }
+
+    const Status = payload.status === 'Accepted' ? 'Completed' : 'Rejected';
 
     // Update InterestInfluencer status
     const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
       id,
       {
-        $set: { status: payload.status },
+        $set: { status: Status },
       },
       {
         new: true,
@@ -259,7 +265,7 @@ const updatedInterestStautsToDb = async (
 
     // Send notifications
     let notificationText;
-    if (updatedStatus.status === 'Completed') {
+    if (updatedStatus.status === 'Accepted') {
       notificationText = ` accepted your interest`;
     } else if (updatedStatus.status === 'Rejected') {
       notificationText = ` rejected your interest`;
@@ -284,17 +290,18 @@ const updatedInterestStautsToDb = async (
         }
       );
 
-      const updateTrack = await Track.findByIdAndUpdate(
-        updatedStatus.track,
-        { $set: { status: statusToUpdate } },
-        {
-          new: true,
-          runValidators: true,
-          session, // Ensure session is used
-        }
-      );
+      // const updateTrack = await Track.findByIdAndUpdate(
+      //   updatedStatus.track,
+      //   { $set: { status: statusToUpdate } },
+      //   {
+      //     new: true,
+      //     runValidators: true,
+      //     session, // Ensure session is used
+      //   }
+      // );
 
       // Increment influencerCount if status is Completed
+
       if (updatedStatus.status === 'Completed') {
         await Campaign.findByIdAndUpdate(
           updatedStatus.campaign,
@@ -308,7 +315,6 @@ const updatedInterestStautsToDb = async (
       return {
         updatedStatus,
         updateSubmitProve,
-        updateTrack,
       };
     }
 

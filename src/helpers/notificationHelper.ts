@@ -7,9 +7,15 @@ export const sendNotifications = async (data: any): Promise<INotification> => {
   //@ts-ignore
   const socketIo = global.io;
 
-  if (socketIo) {
+  if (data?.type === 'ADMIN') {
+    socketIo.emit(`get-notification::${data?.type}`, result);
+  } else {
     socketIo.emit(`get-notification::${data?.receiver}`, result);
   }
+
+  // if (socketIo) {
+  //   socketIo.emit(`get-notification::${data?.receiver}`, result);
+  // }
 
   return result;
 };

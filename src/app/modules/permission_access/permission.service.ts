@@ -3,6 +3,9 @@ import ApiError from '../../../errors/ApiError';
 import { sendEmail } from '../../../helpers/sendMail';
 import { IUser } from '../user/user.interface';
 import { User } from '../user/user.model';
+import { sendNotifications } from '../../../helpers/notificationHelper';
+import { Brand } from '../brand/brand.model';
+import { Influencer } from '../influencer/influencer.model';
 
 const getAllBrandUser = async () => {
   const result = await User.find({
@@ -34,6 +37,22 @@ const updatedUserLoginStatus = async (id: string, payload: Partial<IUser>) => {
 
   if (!result) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  }
+
+  const brands: any = await User.findById(id);
+
+  const influencer = await Influencer.findById(brands?.influencer);
+
+  const firstImage = influencer?.image?.[0];
+
+  if (result.loginStatus === 'Approved') {
+    const data = {
+      text: `Your account has been ${result?.loginStatus}`,
+      receiver: result?._id,
+      name: result?.fullName,
+      image: firstImage,
+    };
+    sendNotifications(data);
   }
 
   if (result?.email) {

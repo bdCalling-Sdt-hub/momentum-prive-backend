@@ -13,6 +13,7 @@ import { User } from '../user/user.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Invite } from '../invite/invite.model';
 import { Influencer } from '../influencer/influencer.model';
+import { populate } from 'dotenv';
 
 // const createCollaborationToDB = async (payload: ICollaboration) => {
 //   const isInvite: any = await Invite.findById(payload.invite);
@@ -107,6 +108,17 @@ import { Influencer } from '../influencer/influencer.model';
 // };
 
 const createCollaborationToDB = async (payload: ICollaboration) => {
+  const invited = await Invite.findById(payload.invite);
+  if (!invited) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Invite not found');
+  }
+  if (invited.status === 'Cancel' || invited.status === 'Pending') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      `Invite is ${invited.status} you cannot collaborate`
+    );
+  }
+
   // Fetch necessary data in parallel to reduce query time
   const [isInvite, isInfluencer] = await Promise.all([
     Invite.findById(payload.invite),
@@ -237,11 +249,41 @@ const getAllCollaborations = async (
 
   return result;
 };
-const getAllCollaborationForInfluencer = async (influencerId: string) => {
-  const result = await Collaborate.find({ influencer: influencerId }).populate({
+// const getAllCollaborationForInfluencer = async (influencerId: string) => {
+//   const result = await Collaborate.find({ influencer: influencerId }).populate({
+//     path: 'invite',
+//     populate: {
+//       path: 'campaign',
+//     },
+//   });
+
+//   const count = result.length;
+
+//   return { result, count };
+// };
+
+const getAllCollaborationForInfluencer = async (
+  influencerId: string,
+  typeStatus?: string
+) => {
+  const filter: Record<string, any> = { influencer: influencerId };
+
+  // Add typeStatus to the filter if it is provided
+  if (typeStatus) {
+    filter.typeStatus = typeStatus;
+  }
+
+  const result = await Collaborate.find(filter).populate({
     path: 'invite',
     populate: {
       path: 'campaign',
+      populate: {
+        path: 'user',
+        select: 'brand fullName',
+        populate: {
+          path: 'brand',
+        },
+      },
     },
   });
 
@@ -267,14 +309,5 @@ export const CollaborationService = {
   createCollaborationToDB,
   getAllCollaborations,
   updatedCollaborationToDB,
-
   getAllCollaborationForInfluencer,
 };
-
-// const [isInvite,inviteData,isCampaign,isInfluencer,isUser] =await Promise.all([
-//   Invite.findById(payload.invite),
-//   Campaign.findById(payload.invite),
-//   User.findById(payload.influencer),
-//   User.findById(payload.campaign),
-//   User.findById(payload.user)
-// ])

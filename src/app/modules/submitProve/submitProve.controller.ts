@@ -24,8 +24,25 @@ const submitProveToDB = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
+// const getAllSubmitProve = catchAsync(async (req: Request, res: Response) => {
+//   const result = await SubmitProveService.getAllSubmitProve(req.params.id);
+//   sendResponse(res, {
+//     success: true,
+//     statusCode: StatusCodes.OK,
+//     message: 'Submit prove retrieved successfully',
+//     data: result,
+//   });
+// });
+
 const getAllSubmitProve = catchAsync(async (req: Request, res: Response) => {
-  const result = await SubmitProveService.getAllSubmitProve(req.params.id);
+  const { id } = req.params; // Extract influencer ID
+  const { typeStatus } = req.query; // Extract typeStatus from query parameters
+
+  const result = await SubmitProveService.getAllSubmitProve(
+    id,
+    typeStatus as string
+  );
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,
@@ -33,6 +50,7 @@ const getAllSubmitProve = catchAsync(async (req: Request, res: Response) => {
     data: result,
   });
 });
+
 const getAllSubmitProveForBrand = catchAsync(
   async (req: Request, res: Response) => {
     // Calling the service method to fetch data for the given brand

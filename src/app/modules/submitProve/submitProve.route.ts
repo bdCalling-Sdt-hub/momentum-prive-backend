@@ -13,7 +13,7 @@ const router = express.Router();
 router.post(
   '/create-submit-prove',
   fileUploadHandler(),
-  // auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
+  auth(USER_ROLES.INFLUENCER, USER_ROLES.BRAND),
   (req: Request, res: Response, next: NextFunction) => {
     req.body = SubmitProveValidation.createSubmitProve.parse(
       JSON.parse(req.body.data)
