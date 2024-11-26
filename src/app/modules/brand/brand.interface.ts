@@ -13,6 +13,7 @@ export type IBrand = {
   city: string;
   address: string;
   code?: string;
+  name?: string;
   category: Types.ObjectId;
   manager: string;
   instagram: string;

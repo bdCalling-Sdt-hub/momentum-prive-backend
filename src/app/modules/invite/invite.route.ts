@@ -9,7 +9,7 @@ const router = express.Router();
 
 router.post(
   '/create-invite',
-  auth(USER_ROLES.BRAND),
+  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
   validateRequest(InviteValiationZodSchema.createInviteValiation),
   InviteController.createCategoryToDB
 );

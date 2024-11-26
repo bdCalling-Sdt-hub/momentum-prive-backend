@@ -40,7 +40,8 @@ router.get(
 );
 
 router.post(
-  '/allHooks',
+  '/webhook',
+  auth(USER_ROLES.BRAND),
   express.raw({ type: 'application/json' }),
   SubscriptionController.webhookHandler
 );

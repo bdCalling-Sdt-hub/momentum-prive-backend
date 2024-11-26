@@ -15,6 +15,7 @@ export type IInvite = {
   campaign: Types.ObjectId;
   status: IInviteStatus;
   // user: Types.ObjectId;
+  completeStatus: 'Completed' | 'NotCompleted';
   gender: string;
   country: string;
   city: string;

@@ -36,6 +36,13 @@ router.get(
   auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
   CampaignController.getAllCampaigns
 );
+
+router.get(
+  '/influencer',
+  auth(USER_ROLES.INFLUENCER),
+  CampaignController.getAllCampaignForInfluencer
+);
+
 router.get(
   '/admin',
   auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),

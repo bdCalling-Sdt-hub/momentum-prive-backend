@@ -8,11 +8,11 @@ const router = express.Router();
 
 router.post(
   '/create-package',
-  auth(USER_ROLES.BRAND),
+  // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   PackageController.createPackage
 );
+router.get('/get-all', PackageController.getAllPackage);
 
 router.patch('/:id', PackageController.updatePackage);
-router.get('/', PackageController.getAllPackage);
 
 export const PackageRoutes = router;

@@ -108,6 +108,10 @@ import { populate } from 'dotenv';
 // };
 
 const createCollaborationToDB = async (payload: ICollaboration) => {
+  const inviteCompleteSatus: any = await Invite.findById(payload.invite);
+
+  console.log(inviteCompleteSatus);
+
   const invited = await Invite.findById(payload.invite);
   if (!invited) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Invite not found');
@@ -128,12 +132,12 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   const isExistSubmitProve = await Collaborate.findOne({
     invite: payload.invite,
   });
-  if (isExistSubmitProve) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'You have already submitted prove for this collaboration'
-    );
-  }
+  // if (isExistSubmitProve) {
+  //   throw new ApiError(
+  //     StatusCodes.BAD_REQUEST,
+  //     'You have already submitted prove for this collaboration'
+  //   );
+  // }
 
   if (!isInvite) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Invite not found');
@@ -187,6 +191,13 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
     );
   }
 
+  if (collaboration?.typeStatus === 'Review') {
+    await Invite.findOneAndUpdate(
+      { _id: payload.invite },
+      { completeStatus: 'Completed' },
+      { new: true }
+    );
+  }
   const interest = await Interest.create({
     campaign: isCampaign._id,
     influencer: payload.influencer,

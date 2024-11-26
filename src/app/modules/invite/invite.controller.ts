@@ -63,13 +63,30 @@ const getAllInvitesForInfluencer = catchAsync(
   }
 );
 
+// const getAllInvitesForBrand = catchAsync(
+//   async (req: Request, res: Response) => {
+//     const { campaignId } = req.params; // Extract brandId from URL params
+//     const query = { ...req.query, campaignId }; // Merge brandId into query object
+
+//     // Fetch invites using the InviteService
+//     const result = await InviteService.getAllInvitesForBrand(query);
+
+//     // Send response back to client
+//     sendResponse(res, {
+//       success: true,
+//       statusCode: StatusCodes.OK,
+//       message: 'Invites retrieved for brand successfully',
+//       data: result,
+//     });
+//   }
+// );
+
 const getAllInvitesForBrand = catchAsync(
   async (req: Request, res: Response) => {
-    const { campaignId } = req.params; // Extract brandId from URL params
-    const query = { ...req.query, campaignId }; // Merge brandId into query object
-
-    // Fetch invites using the InviteService
-    const result = await InviteService.getAllInvitesForBrand(query);
+    const result = await InviteService.getAllInvitesForBrand(
+      req.params.campaignId,
+      req.query
+    );
 
     // Send response back to client
     sendResponse(res, {
@@ -80,6 +97,7 @@ const getAllInvitesForBrand = catchAsync(
     });
   }
 );
+
 const updatedInviteToDB = catchAsync(async (req: Request, res: Response) => {
   const result = await InviteService.updatedInviteToDB(req.params.id, req.body);
   sendResponse(res, {

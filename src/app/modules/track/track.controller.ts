@@ -20,6 +20,7 @@ const getAllTrackForBrandToDB = async (req: Request, res: Response) => {
     req.params.userId,
     req.query
   );
+
   sendResponse(res, {
     success: true,
     statusCode: StatusCodes.OK,

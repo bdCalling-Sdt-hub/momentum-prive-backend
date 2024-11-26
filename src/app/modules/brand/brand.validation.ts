@@ -22,9 +22,20 @@ export const BrandValiation = z.object({
   manager: z.string({ required_error: 'required manager' }).optional(),
   instagram: z.string({ required_error: 'required instagram' }).optional(),
   tiktok: z.string().optional(),
-  followersIG: z.string().optional(),
-  followersTK: z.string().optional(),
+  followersIG: z
+    .string()
+    .refine(val => !isNaN(Number(val)), {
+      message: 'followersIG must be a valid number',
+    })
+    .optional(),
+  followersTK: z
+    .string()
+    .refine(val => !isNaN(Number(val)), {
+      message: 'followersTK must be a valid number',
+    })
+    .optional(),
   contactEmail: z.string().optional(),
+  name: z.string().optional(),
 });
 
 export const BrandValiationZodSchema = {

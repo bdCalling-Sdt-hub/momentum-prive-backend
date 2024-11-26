@@ -238,9 +238,8 @@ const loginUserFromDB = async (payload: ILoginData) => {
   }
 
   if (
-    isExistUser &&
-    isExistUser.role === 'INFLUENCER' &&
-    !isExistUser.verified
+    (isExistUser.role === 'INFLUENCER' && !isExistUser.verified) ||
+    (isExistUser.role === 'BRAND' && !isExistUser.verified)
   ) {
     throw new ApiError(
       StatusCodes.NOT_ACCEPTABLE,

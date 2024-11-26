@@ -28,6 +28,10 @@ const inviteSchema = new Schema<IInvite>(
     city: {
       type: String,
     },
+    completeStatus: {
+      type: String,
+      enum: ['Completed', 'NotCompleted'],
+    },
   },
   {
     timestamps: true,

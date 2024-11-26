@@ -11,8 +11,15 @@ import { JwtPayload } from 'jsonwebtoken';
 const updateBrandToDB = async (email: string, payload: Partial<IBrand>) => {
   payload.status = 'active';
 
-  payload.followersIG = Number(payload.followersIG);
-  payload.followersTK = Number(payload.followersTK);
+  console.log(payload);
+
+  // Validate and convert followers fields to numbers
+  payload.followersIG = isNaN(Number(payload.followersIG))
+    ? 0
+    : Number(payload.followersIG);
+  payload.followersTK = isNaN(Number(payload.followersTK))
+    ? 0
+    : Number(payload.followersTK);
 
   const result = await Brand.findOneAndUpdate({ email }, payload, {
     new: true,

@@ -9,6 +9,7 @@ import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Campaign } from '../campaign/campaign.model';
 import { Invite } from '../invite/invite.model';
 import mongoose from 'mongoose';
+import { InterestInfluencer } from '../interest/interest.model';
 
 const getAllInterest = async (userId: string, status?: string) => {
   // Base filter conditions
@@ -199,12 +200,10 @@ const updatedInterestStautsToDb = async (
       }
     }
 
-    // Validate the status transition
-
-    if (interest.status === 'Completed') {
+    if (interest.status === 'Completed' || interest.status === 'Rejected') {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        'The status is already updated'
+        `Interest status is already ${interest.status}`
       );
     }
 
@@ -388,41 +387,19 @@ const updatedInterestStautsToDb = async (
 //   return { result, showProve };
 // };
 const getSingleInterest = async (id: string) => {
-  const result = await Interest.aggregate([
-    {
-      $match: { _id: new mongoose.Types.ObjectId(id) },
+  const result = await Interest.findById(id).populate({
+    path: 'influencer',
+    select: 'influencer fullName',
+    populate: {
+      path: 'influencer',
     },
-    {
-      $lookup: {
-        from: 'collaborations',
-        localField: 'collaborate',
-        foreignField: '_id',
-        as: 'proved',
-      },
-    },
-    {
-      $lookup: {
-        from: 'campaigns',
-        localField: 'campaign',
-        foreignField: '_id',
-        as: 'campaings',
-      },
-    },
-    {
-      $unwind: {
-        path: '$proved',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-    {
-      $unwind: {
-        path: '$campaings',
-        preserveNullAndEmptyArrays: true,
-      },
-    },
-  ]);
+  });
 
-  return result[0] || null;
+  const submitprove = await Collaborate.findById(result?.collaborate).select(
+    'typeStatus image instagram tiktok'
+  );
+
+  return { result, submitprove };
 };
 
 export const InterestService = {

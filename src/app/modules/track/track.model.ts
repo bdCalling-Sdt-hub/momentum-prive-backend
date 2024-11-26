@@ -20,6 +20,9 @@ const inviteSchema = new Schema<ITrack>(
       type: Schema.Types.ObjectId,
       ref: 'User',
     },
+    completeStatus: {
+      enum: ['Completed', 'NotCompleted'],
+    },
   },
   {
     timestamps: true,

@@ -1,22 +1,18 @@
-import { populate } from 'dotenv';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
-import QueryBuilder from '../../builder/QueryBuilder';
-import { CampaignSearchAbleFields } from './campaign.contant';
-import { ICampaign, IICampaignFilters } from './campaign.interface';
+import { ICampaign } from './campaign.interface';
 import { Campaign } from './campaign.model';
 import { Collaborate } from '../collaboration/collaboration.model';
-import { IPaginationOptions } from '../../../types/pagination';
-import { paginationHelpers } from '../../../helpers/paginationHelper';
-import { SortOrder, Types } from 'mongoose';
 import { Brand } from '../brand/brand.model';
 import { Category } from '../category/category.model';
 import { User } from '../user/user.model';
 import dayjs from 'dayjs';
-import { formatCurrentDate } from './dateformat';
+
 import { Subscribation } from '../subscribtion/subscribtion.model';
 import { Package } from '../package/package.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
+import { Influencer } from '../influencer/influencer.model';
+import { buildDateFilter } from '../../../helpers/timeHelper';
 
 // const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 //   const isCategoryOfBrand = await User.findById(payload.user);
@@ -96,7 +92,7 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
   if (isSubs?.packages?.limit) {
     if (isCamps >= Number(isSubs.packages.limit)) {
       throw new ApiError(
-        StatusCodes.UNAUTHORIZED,
+        StatusCodes.BAD_REQUEST,
         `Silver users can only create up to ${Number(
           isSubs.packages.limit
         )} campaigns per month.`
@@ -217,7 +213,7 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
 // };
 
 const getAllCampaigns = async (query: Record<string, unknown>) => {
-  const { searchTerm, page, limit, ...filterData } = query;
+  const { searchTerm, name, page, limit, ...filterData } = query;
   const anyConditions: any[] = [
     { status: 'active' },
     { approvalStatus: 'Approved' },
@@ -233,6 +229,12 @@ const getAllCampaigns = async (query: Record<string, unknown>) => {
     }
   }
 
+  if (name) {
+    anyConditions.push({
+      $or: [{ name: { $regex: name, $options: 'i' } }],
+    });
+  }
+
   // Filter by additional filterData fields
   if (Object.keys(filterData).length > 0) {
     const filterConditions = Object.entries(filterData).map(
@@ -242,18 +244,45 @@ const getAllCampaigns = async (query: Record<string, unknown>) => {
   }
 
   // Filter by `endTime` from current date to specified endTime
+  // if (filterData.endTime) {
+  //   const specifiedEndTime = new Date(filterData.endTime as string);
+
+  //   const endTimeFormatted = specifiedEndTime.toISOString().split('T')[0];
+
+  //   const currentDate = new Date();
+  //   currentDate.setHours(0, 0, 0, 0);
+  //   const currentDateFormatted = currentDate.toISOString().split('T')[0];
+  //   console.log(currentDateFormatted);
+  //   console.log(endTimeFormatted);
+  //   // Filter by `endTime` from current date to specified endTime
+  //   anyConditions.push({
+  //     endTime: { $gte: currentDateFormatted, $lte: endTimeFormatted },
+  //   });
+  // }
+
   if (filterData.endTime) {
-    const specifiedEndTime = new Date(filterData.endTime as string);
+    const specifiedDate = new Date(filterData.endTime as string); // Parse the provided date
+    const startOfDay = new Date(
+      specifiedDate.getFullYear(),
+      specifiedDate.getMonth(),
+      specifiedDate.getDate()
+    ); // Start of the specified day (midnight)
+    const endOfDay = new Date(
+      specifiedDate.getFullYear(),
+      specifiedDate.getMonth(),
+      specifiedDate.getDate(),
+      23,
+      59,
+      59,
+      999
+    ); // End of the specified day (11:59:59 PM)
 
-    const endTimeFormatted = specifiedEndTime.toISOString().split('T')[0];
-
-    const currentDate = new Date();
-    currentDate.setHours(0, 0, 0, 0);
-    const currentDateFormatted = currentDate.toISOString().split('T')[0];
-
-    // Filter by `endTime` from current date to specified endTime
+    // Add condition to filter campaigns where endTime is within the day
     anyConditions.push({
-      endTime: { $gte: currentDateFormatted, $lte: endTimeFormatted },
+      endTime: {
+        $gte: startOfDay.toISOString(), // Start of the day
+        $lte: endOfDay.toISOString(), // End of the day
+      },
     });
   }
 
@@ -508,6 +537,238 @@ const getCampaignforAllData = async (brandId: string) => {
   return { campaigns, count };
 };
 
+// const getAllCampaignForInfluencer = async (
+//   query: Record<string, unknown>,
+//   userGender: string
+// ) => {
+//   const users = await User.findById(userGender);
+
+//   const influencers = await Influencer.findById(users?.influencer);
+
+//   const gender = influencers?.gender;
+
+//   const { searchTerm, name, page, limit, ...filterData } = query;
+//   const anyConditions: any[] = [
+//     { status: 'active' },
+//     { approvalStatus: 'Approved' },
+//     { gender: gender },
+//   ];
+
+//   // Filter by searchTerm in categories if provided
+//   if (searchTerm) {
+//     const categoriesIds = await Category.find({
+//       $or: [{ categoryName: { $regex: searchTerm, $options: 'i' } }],
+//     }).distinct('_id');
+//     if (categoriesIds.length > 0) {
+//       anyConditions.push({ category: { $in: categoriesIds } });
+//     }
+//   }
+
+//   if (name) {
+//     anyConditions.push({
+//       $or: [{ name: { $regex: name, $options: 'i' } }],
+//     });
+//   }
+
+//   // Filter by additional filterData fields
+//   if (Object.keys(filterData).length > 0) {
+//     const filterConditions = Object.entries(filterData).map(
+//       ([field, value]) => ({ [field]: value })
+//     );
+//     anyConditions.push({ $and: filterConditions });
+//   }
+
+//   // if (filterData.endTime) {
+//   //   const specifiedDate = new Date(filterData.endTime as string); // Parse the provided date
+//   //   const startOfDay = new Date(
+//   //     specifiedDate.getFullYear(),
+//   //     specifiedDate.getMonth(),
+//   //     specifiedDate.getDate()
+//   //   ); // Start of the specified day (midnight)
+//   //   const endOfDay = new Date(
+//   //     specifiedDate.getFullYear(),
+//   //     specifiedDate.getMonth(),
+//   //     specifiedDate.getDate(),
+//   //     23,
+//   //     59,
+//   //     59,
+//   //     999
+//   //   ); // End of the specified day (11:59:59 PM)
+
+//   //   // Add condition to filter campaigns where endTime is within the day
+//   //   anyConditions.push({
+//   //     endTime: {
+//   //       $gte: startOfDay.toISOString(), // Start of the day
+//   //       $lte: endOfDay.toISOString(), // End of the day
+//   //     },
+//   //   });
+//   // }
+
+//   if (filterData.endTime) {
+//     const specifiedDate = new Date(filterData.endTime as string); // Parse the date
+//     if (!isNaN(specifiedDate.getTime())) {
+//       // Check if date is valid
+//       const startOfDay = new Date(
+//         specifiedDate.getFullYear(),
+//         specifiedDate.getMonth(),
+//         specifiedDate.getDate()
+//       );
+
+//       const endOfDay = new Date(
+//         specifiedDate.getFullYear(),
+//         specifiedDate.getMonth(),
+//         specifiedDate.getDate(),
+//         23,
+//         59,
+//         59,
+//         999
+//       );
+
+//       // Add condition to the query
+//       anyConditions.push({
+//         endTime: {
+//           $gte: startOfDay.toISOString(),
+//           $lte: endOfDay.toISOString(),
+//         },
+//       });
+//     }
+//   }
+
+//   // Combine all conditions
+//   const whereConditions =
+//     anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+//   // Pagination setup
+//   const pages = parseInt(page as string) || 1;
+//   const size = parseInt(limit as string) || 10;
+//   const skip = (pages - 1) * size;
+
+//   // Fetch campaigns
+//   const result = await Campaign.find(whereConditions)
+//     .populate('category', 'categoryName')
+//     .populate({
+//       path: 'user',
+//       select: 'brand ',
+//       populate: {
+//         path: 'brand',
+//         select: 'image owner',
+//       },
+//     })
+//     .sort({ createdAt: -1 })
+//     .skip(skip)
+//     .limit(size)
+//     .lean();
+
+//   const count = await Campaign.countDocuments(whereConditions);
+
+//   return {
+//     result,
+//     meta: {
+//       page: pages,
+//       total: count,
+//     },
+//   };
+// };
+
+const getAllCampaignForInfluencer = async (
+  query: Record<string, unknown>,
+  userGender: string
+) => {
+  const users = await User.findById(userGender);
+  if (!users || !users.influencer) {
+    throw new Error('User or influencer data not found.');
+  }
+
+  const influencers = await Influencer.findById(users.influencer);
+  const gender = influencers?.gender;
+  if (!gender) {
+    throw new Error('Gender information for the influencer is missing.');
+  }
+
+  const {
+    searchTerm = '',
+    name = '',
+    page = 1,
+    limit = 10,
+    ...filterData
+  } = query;
+  const anyConditions: any[] = [
+    { status: 'active' },
+    { approvalStatus: 'Approved' },
+  ];
+
+  console.log(anyConditions);
+
+  // Search by category name
+  if (searchTerm) {
+    const categoriesIds = await Category.find({
+      categoryName: { $regex: searchTerm, $options: 'i' },
+    }).distinct('_id');
+
+    if (categoriesIds.length > 0) {
+      anyConditions.push({ category: { $in: categoriesIds } });
+    }
+  }
+
+  // Add gender filter logic
+  if (gender === 'Male') {
+    anyConditions.push({ gender: { $in: ['Male', 'All'] } });
+  } else if (gender === 'Female') {
+    anyConditions.push({ gender: { $in: ['Female', 'All'] } });
+  } else if (gender === 'Other') {
+    anyConditions.push({ gender: { $in: ['Other', 'All'] } });
+  }
+
+  // Search by campaign name
+  if (name) {
+    anyConditions.push({ name: { $regex: name, $options: 'i' } });
+  }
+
+  // Filter additional fields
+  Object.entries(filterData).forEach(([field, value]) => {
+    anyConditions.push({ [field]: value });
+  });
+
+  // Filter by endTime
+  const dateFilter = buildDateFilter(filterData.endTime as string);
+  if (dateFilter) {
+    anyConditions.push(dateFilter);
+  }
+  console.log(anyConditions);
+  // Combine all conditions
+  const whereConditions =
+    anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  // Pagination setup
+  const skip = (Number(page) - 1) * Number(limit);
+
+  // Fetch campaigns
+  const result = await Campaign.find(whereConditions)
+    .populate('category', 'categoryName')
+    .populate({
+      path: 'user',
+      select: 'brand',
+      populate: {
+        path: 'brand',
+        select: 'image owner',
+      },
+    })
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(Number(limit))
+    .lean();
+
+  const count = await Campaign.countDocuments(whereConditions);
+
+  return {
+    result,
+    meta: {
+      page: Number(page),
+      total: count,
+    },
+  };
+};
+
 export const CampaignService = {
   createCampaignToDB,
   getAllCampaigns,
@@ -517,5 +778,6 @@ export const CampaignService = {
   updatedCampaignStatusToDB,
   getCampaignforBrand,
   getAllCampaignsForAdmin,
+  getAllCampaignForInfluencer,
   getCampaignforAllData,
 };

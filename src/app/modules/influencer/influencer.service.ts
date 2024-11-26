@@ -31,8 +31,13 @@ const updateInfluencerToDB = async (
     ? [...isExistInfluencer.image, ...payload.image]
     : isExistInfluencer.image;
 
-  payload.followersIG = Number(payload.followersIG);
-  payload.followersTK = Number(payload.followersTK);
+  // Validate and convert followers fields to numbers
+  payload.followersIG = isNaN(Number(payload.followersIG))
+    ? 0
+    : Number(payload.followersIG);
+  payload.followersTK = isNaN(Number(payload.followersTK))
+    ? 0
+    : Number(payload.followersTK);
 
   const updateData = {
     ...payload,

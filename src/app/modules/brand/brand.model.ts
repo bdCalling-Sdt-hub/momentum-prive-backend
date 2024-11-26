@@ -25,6 +25,9 @@ const brandSchema = new Schema<IBrand>(
     contactEmail: {
       type: String,
     },
+    name: {
+      type: String,
+    },
     country: {
       type: String,
     },

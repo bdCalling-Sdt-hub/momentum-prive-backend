@@ -1,3 +1,4 @@
+import { populate } from 'dotenv';
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { Track } from './track.model';
@@ -29,6 +30,8 @@ const getAllTracks = async (
 
   const whereConditions =
     anyConditions.length > 0 ? { $and: anyConditions } : {};
+
+  anyConditions.push({ completeStatus: { $ne: 'Completed' } });
 
   // Pagination setup
   const pages = parseInt(page as string) || 1;
@@ -97,7 +100,13 @@ const getAllTrackForBrand = async (
 
   // Fetch DiscountClub data
   const result = await Track.find(whereConditions)
-    .populate('influencer', 'fullName')
+    .populate({
+      path: 'influencer',
+      select: 'fullName influencer',
+      populate: {
+        path: 'influencer',
+      },
+    })
     .populate({
       path: 'campaign',
       // select: 'user image name',
@@ -145,8 +154,6 @@ const updateTrackStatus = async (id: string, payload: Partial<ITrack>) => {
     { status: payload.status },
     { new: true }
   );
-
-  console.log(updateTrackStatus);
 
   if (!updateTrackStatus) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');

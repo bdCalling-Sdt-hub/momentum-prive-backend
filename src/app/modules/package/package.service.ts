@@ -9,16 +9,28 @@ const createPackage = async (payload: Partial<IPackage>) => {
   return result;
 };
 
-const getAllPackage = async (query: Record<string, any>) => {
-  const packageBuilder = new QueryBuilder(Package.find(), query)
+// const getAllStudent = async (query: Record<string, any>) => {
+//   const packageBuilder = new QueryBuilder(Package.find(query), query)
+//     .search(packageSearchAbleFields)
+//     .filter()
+//     .sort()
+//     .paginate()
+//     .fields();
+
+//   const result = await packageBuilder.modelQuery;
+
+//   return result;
+// };
+
+const getAllPackage = async (query: Record<string, unknown>) => {
+  const studentQuery = new QueryBuilder(Package.find(), query)
     .search(packageSearchAbleFields)
     .filter()
     .sort()
     .paginate()
     .fields();
 
-  const result = await packageBuilder.modelQuery;
-
+  const result = await studentQuery.modelQuery;
   return result;
 };
 

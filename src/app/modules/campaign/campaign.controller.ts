@@ -137,6 +137,23 @@ const getCampaignforAllData = catchAsync(
   }
 );
 
+const getAllCampaignForInfluencer = catchAsync(
+  async (req: Request, res: Response) => {
+    const userGender = req.user?.id;
+
+    const result = await CampaignService.getAllCampaignForInfluencer(
+      req.query,
+      userGender
+    );
+    sendResponse(res, {
+      success: true,
+      statusCode: StatusCodes.OK,
+      message: 'Campaign retrived for influencer successfully',
+      data: result,
+    });
+  }
+);
+
 export const CampaignController = {
   createCampaignToDB,
   getAllCampaigns,
@@ -147,4 +164,5 @@ export const CampaignController = {
   getCampaignforBrand,
   getAllCampaignsForAdmin,
   getCampaignforAllData,
+  getAllCampaignForInfluencer,
 };

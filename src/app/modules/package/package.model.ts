@@ -21,6 +21,10 @@ const packageSchema = new Schema<IPackage>(
     limit: {
       type: String,
     },
+    productId: {
+      type: String,
+      required: true,
+    },
     price: {
       type: String,
       required: true,

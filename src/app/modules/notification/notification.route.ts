@@ -12,7 +12,7 @@ router.get(
 );
 router.get(
   '/admin',
-  auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
+  // auth(USER_ROLES.ADMIN, USER_ROLES.SUPER_ADMIN),
   NotificationController.adminNotificationFromDB
 );
 router.patch(

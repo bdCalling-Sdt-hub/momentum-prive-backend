@@ -70,7 +70,7 @@ const getAllInterest = async (userId: string, status?: string) => {
       select: 'user image name',
       populate: {
         path: 'user',
-        select: 'brand',
+        select: 'brand fullName',
         populate: {
           path: 'brand',
           select: 'image owner',
@@ -344,9 +344,6 @@ const getSingleInterest = async (id: string) => {
         path: 'influencer',
         // select: 'fullName followersIG',
       },
-    })
-    .populate({
-      path: 'campaign',
     });
 
   if (!result) {

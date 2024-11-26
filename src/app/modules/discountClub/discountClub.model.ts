@@ -1,6 +1,5 @@
 import { model, Schema } from 'mongoose';
-import { StatusCodes } from 'http-status-codes';
-import ApiError from '../../../errors/ApiError';
+
 import { IDiscountClub } from './discountClub.interface';
 
 const discountClubSchema = new Schema<IDiscountClub>(
@@ -25,6 +24,7 @@ const discountClubSchema = new Schema<IDiscountClub>(
       type: String,
       required: true,
     },
+
     startTime: {
       type: String,
       required: true,

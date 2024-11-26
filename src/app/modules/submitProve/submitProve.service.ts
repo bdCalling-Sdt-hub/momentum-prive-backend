@@ -10,6 +10,7 @@ import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Track } from '../track/track.model';
 import { Types } from 'mongoose';
 import { populate } from 'dotenv';
+import { Influencer } from '../influencer/influencer.model';
 
 // const submitProveToDB = async (payload: ISubmitProve) => {
 //   const trackId = payload.track;
@@ -87,18 +88,20 @@ const submitProveToDB = async (payload: ISubmitProve) => {
 
   // Fetch track details and validate status
   const track = await Track.findById(trackId);
+
   if (!track || track.status !== 'Accepted') {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'Track is not Accepted yet');
   }
 
   // Check if a submission already exists for the track
   const isExistSubmitProve = await SubmitProve.findOne({ track: trackId });
-  if (isExistSubmitProve) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'You have already submitted prove for this track'
-    );
-  }
+
+  // if (isExistSubmitProve) {
+  //   throw new ApiError(
+  //     StatusCodes.BAD_REQUEST,
+  //     'You have already submitted prove for this track'
+  //   );
+  // }
 
   // Fetch required data concurrently
   const [campaign, influencer, category] = await Promise.all([
@@ -108,10 +111,23 @@ const submitProveToDB = async (payload: ISubmitProve) => {
   ]);
 
   const categoryName = category?.categoryName;
+  // Fetch influencer image data
+  const influencerImage = await Influencer.findById(
+    influencer?.influencer
+  ).lean();
+  const firstImage = influencerImage?.image?.[0] || null;
 
   // Create the SubmitProve document
   const submitProveData = { categoryName, ...payload };
   const result = await SubmitProve.create(submitProveData);
+
+  if (result?.typeStatus === 'Review') {
+    await Track.findOneAndUpdate(
+      { _id: payload.track },
+      { completeStatus: 'Completed' },
+      { new: true }
+    );
+  }
 
   // Create InterestInfluencer document
   const interestInfluencerData = {
@@ -127,10 +143,10 @@ const submitProveToDB = async (payload: ISubmitProve) => {
       text: `Accepted your invitation`,
       name: influencer?.fullName,
       receiver: campaign?.user,
+      image: firstImage,
     }),
     sendNotifications({
       text: `${influencer?.fullName} Submit new Prove`,
-
       type: 'ADMIN',
     }),
   ]);

@@ -10,6 +10,8 @@ import { StatusCodes } from 'http-status-codes';
 import { formatDate } from './timeFormat';
 import { User } from '../user/user.model';
 import { Package } from '../package/package.model';
+import { Request, Response } from 'express';
+import { subscriptionServicessss } from '../../../util/subscribationHelpar/more';
 
 export const stripe = new Stripe(config.stripe_secret_key as string, {
   apiVersion: '2024-09-30.acacia',
@@ -85,14 +87,72 @@ const handleWebhook = async (event: any) => {
   }
 };
 
-// subscription.service.ts
+// const handleWebhook = async (payload: any, signature: string) => {
+//   try {
+//     const webhookSecret = config.webhook_secret;
+
+//     if (!webhookSecret) {
+//       throw new Error('Webhook secret is not configured');
+//     }
+
+//     // Verify the webhook signature
+//     const event = stripe.webhooks.constructEvent(
+//       payload,
+//       signature,
+//       webhookSecret
+//     );
+
+//     // Handle the event
+//     switch (event.type) {
+//       case 'customer.subscription.created':
+//         return await subscriptionServicessss.handleSubscriptionCreated(
+//           event.data.object as Stripe.Subscription
+//         );
+
+//       case 'customer.subscription.updated':
+//         return await subscriptionServicessss.handleSubscriptionUpdated(
+//           event.data.object as Stripe.Subscription
+//         );
+
+//       case 'customer.subscription.deleted':
+//         return await subscriptionServicessss.handleSubscriptionDeleted(
+//           event.data.object as Stripe.Subscription
+//         );
+
+//       case 'invoice.payment_succeeded':
+//         return await subscriptionServicessss.handleInvoicePaid(
+//           event.data.object as Stripe.Invoice
+//         );
+
+//       case 'invoice.payment_failed':
+//         return await subscriptionServicessss.handleInvoicePaymentFailed(
+//           event.data.object as Stripe.Invoice
+//         );
+
+//       default:
+//         console.log(`Unhandled event type ${event.type}`);
+//         return { message: `Unhandled event type ${event.type}` };
+//     }
+//   } catch (err: any) {
+//     console.error('Webhook error:', err);
+//     throw new Error(`Webhook Error: ${err.message}`);
+//   }
+// };
 
 const createCustomerAndSubscription = async (
-  email: string,
-  priceId: string,
+  // email: string,
+  // priceId: string,
   user: string,
   packages: string
 ) => {
+  const pack = await Package.findById(packages);
+
+  const priceId = pack?.productId;
+
+  const users = await User.findById(user);
+
+  const email = users?.email;
+
   // Create customer
   const customer = await stripe.customers.create({
     email,
@@ -114,8 +174,9 @@ const createCustomerAndSubscription = async (
   const latestInvoice = subscription.latest_invoice;
 
   if (!latestInvoice || typeof latestInvoice === 'string') {
-    throw new Error(
-      'Failed to create subscription; latest_invoice is missing or is invalid.'
+    throw new ApiError(
+      StatusCodes.INTERNAL_SERVER_ERROR,
+      'Invalid latest invoice format.'
     );
   }
 
@@ -126,8 +187,14 @@ const createCustomerAndSubscription = async (
     throw new Error('Failed to retrieve payment intent from latest_invoice.');
   }
 
-  const createSub = await Subscribation.create({
+  const allSubscriptationValue = {
     transactionId: paymentIntent.id,
+    subscriptionId: subscription.id,
+    clientSecret: paymentIntent.client_secret,
+  };
+
+  const createSub = await Subscribation.create({
+    // transactionId: paymentIntent.id,
     subscriptionId: subscription.id,
     status: subscription.status,
     // clientSecret: paymentIntent.client_secret,
@@ -172,9 +239,7 @@ const createCustomerAndSubscription = async (
   }
 
   return {
-    transactionId: paymentIntent.id,
-    subscriptionId: subscription.id,
-    clientSecret: paymentIntent.client_secret,
+    allSubscriptationValue,
     createSub,
   };
 };
@@ -200,8 +265,6 @@ const getAllSubscriptationForBrand = async (query: Record<string, unknown>) => {
   if (userId) {
     anyConditions.push({ user: userId });
   }
-
-  console.log(userId);
 
   // Filter by additional filterData fields
   if (Object.keys(filterData).length > 0) {
@@ -245,103 +308,15 @@ const getAllSubscriptationForBrand = async (query: Record<string, unknown>) => {
   };
 };
 
-// const updateustomerAndSubscription = async (
-//   newPriceId: string,
-//   subscriptionId: string
-// ) => {
-//   // Check if the subscription exists in the database
-//   const isExistSubId = await Subscribation.findOne({ subscriptionId });
-
-//   if (!isExistSubId) {
-//     throw new ApiError(
-//       StatusCodes.NOT_FOUND,
-//       'Subscription not found in the database.'
-//     );
-//   }
-
-//   // Retrieve the existing subscription from Stripe
-//   const subscription = await stripe.subscriptions.retrieve(subscriptionId);
-
-//   if (!subscription) {
-//     throw new ApiError(
-//       StatusCodes.NOT_FOUND,
-//       'Subscription not found in Stripe.'
-//     );
-//   }
-
-//   if (subscription.status === 'incomplete') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Cannot update subscription in incomplete status. Finalize the payment first.'
-//     );
-//   }
-
-//   // Update the subscription in Stripe with the new priceId
-//   const updatedSubscription = await stripe.subscriptions.update(
-//     subscriptionId,
-//     {
-//       items: [
-//         {
-//           id: subscription.items.data[0].id,
-//           price: newPriceId,
-//         },
-//       ],
-//       expand: ['latest_invoice.payment_intent'],
-//     }
-//   );
-
-//   // Check if the latest_invoice and payment_intent exist in the updated subscription
-//   const latestInvoice = updatedSubscription.latest_invoice;
-//   if (!latestInvoice || typeof latestInvoice === 'string') {
-//     throw new Error(
-//       'Failed to update subscription; latest_invoice is missing or is invalid.'
-//     );
-//   }
-
-//   const paymentIntent = latestInvoice.payment_intent;
-//   if (!paymentIntent || typeof paymentIntent === 'string') {
-//     throw new Error('Failed to retrieve payment intent from latest_invoice.');
-//   }
-
-//   // Update the subscription details in the database
-//   const updatedSub = await Subscribation.findOneAndUpdate(
-//     { subscriptionId },
-//     {
-//       // priceId: newPriceId, // Update to the new price ID
-
-//       status: updatedSubscription.status,
-
-//       currentPeriodEnd: formatDate(
-//         new Date(updatedSubscription.current_period_end * 1000)
-//       ),
-//       currentPeriodStart: formatDate(
-//         new Date(updatedSubscription.current_period_start * 1000)
-//       ),
-//     },
-//     { new: true } // Return the updated document
-//   );
-
-//   if (!updatedSub) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Failed to update subscription record in the database.'
-//     );
-//   }
-
-//   return {
-//     subscriptionId: updatedSubscription.id,
-//     transactionId: paymentIntent.id,
-//     clientSecret: paymentIntent.client_secret,
-//     status: updatedSubscription.status,
-//     updatedSub,
-//   };
-// };
-
 const updateustomerAndSubscription = async (
-  newPriceId: string,
+  packages: string,
   userId: string
 ) => {
   const subs = await Subscribation.findOne({ user: userId });
+
+  const pack = await Package.findById(packages);
+
+  const newPriceId = pack?.productId;
 
   const subsId: any = subs?.subscriptionId;
 
@@ -430,55 +405,6 @@ const updateustomerAndSubscription = async (
   };
 };
 
-// const cancelSubscription = async (subscriptionId: string) => {
-//   // Check if the subscription exists in the database
-//   const isExistSubId = await Subscribation.findOne({ subscriptionId });
-
-//   if (!isExistSubId) {
-//     throw new ApiError(
-//       StatusCodes.NOT_FOUND,
-//       'Subscription not found in the database.'
-//     );
-//   }
-
-//   // Update the subscription to cancel at the end of the period
-//   const updatedSubscription = await stripe.subscriptions.update(
-//     subscriptionId,
-//     {
-//       cancel_at_period_end: true,
-//     }
-//   );
-
-//   // Update the subscription details in the database
-//   const updatedSub = await Subscribation.findOneAndUpdate(
-//     { subscriptionId },
-//     {
-//       status: updatedSubscription.cancellation_details?.reason,
-
-//       currentPeriodStart: formatDate(
-//         new Date(updatedSubscription.current_period_start * 1000)
-//       ),
-//       currentPeriodEnd: formatDate(
-//         new Date(updatedSubscription.current_period_end * 1000)
-//       ),
-//     },
-//     { new: true }
-//   );
-
-//   if (!updatedSub) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Failed to update subscription record in the database.'
-//     );
-//   }
-
-//   return {
-//     subscriptionId: updatedSubscription.id,
-//     status: updatedSubscription.status,
-//     updatedSub,
-//   };
-// };
-
 const cancelSubscription = async (userId: string) => {
   const subs = await Subscribation.findOne({ user: userId });
 
@@ -529,157 +455,14 @@ const cancelSubscription = async (userId: string) => {
   };
 };
 
-// const renewExpiredSubscriptions = async (
-//   subscriptionId: string,
-//   newPriceId?: string // Make newPriceId optional
-// ) => {
-//   // Find subscription record in the database
-//   const subscriptionRecord = await Subscribation.findOne({ subscriptionId });
-
-//   if (!subscriptionRecord) {
-//     throw new ApiError(
-//       StatusCodes.NOT_FOUND,
-//       'Subscription not found in the database.'
-//     );
-//   }
-
-//   // Check if the status is "expired"
-//   if (subscriptionRecord.status !== 'expired') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Subscription is not expired and cannot be renewed.'
-//     );
-//   }
-
-//   // Retrieve the existing subscription from Stripe
-//   const stripeSubscription = await stripe.subscriptions.retrieve(
-//     subscriptionId
-//   );
-
-//   // Check if the subscription is valid
-//   if (!stripeSubscription || stripeSubscription.status !== 'active') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Invalid or inactive subscription.'
-//     );
-//   }
-
-//   // Prepare the customer ID
-//   const customerId =
-//     typeof stripeSubscription.customer === 'string'
-//       ? stripeSubscription.customer
-//       : stripeSubscription.customer?.id;
-
-//   // Ensure a customer ID is available
-//   if (!customerId) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'No valid customer found for the subscription.'
-//     );
-//   }
-
-//   let amountToCharge: number;
-//   let currency: string;
-
-//   if (newPriceId) {
-//     // If a new price ID is provided, retrieve the new price details
-//     const newPrice = await stripe.prices.retrieve(newPriceId);
-
-//     // Ensure newPrice and its unit_amount are valid
-//     if (!newPrice || newPrice.unit_amount === null) {
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'Invalid new price ID or unit amount is null.'
-//       );
-//     }
-
-//     amountToCharge = newPrice.unit_amount;
-//     currency = newPrice.currency;
-//   } else {
-//     // If no new price ID, use the existing invoice
-//     const latestInvoice = stripeSubscription.latest_invoice;
-//     if (!latestInvoice || typeof latestInvoice === 'string') {
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'No latest invoice found for the subscription.'
-//       );
-//     }
-
-//     if (latestInvoice.amount_due === null) {
-//       throw new ApiError(
-//         StatusCodes.BAD_REQUEST,
-//         'Latest invoice amount_due is null.'
-//       );
-//     }
-
-//     amountToCharge = latestInvoice.amount_due;
-//     currency = latestInvoice.currency;
-//   }
-
-//   // Retrieve the default payment method
-//   const paymentMethodId =
-//     typeof stripeSubscription.default_payment_method === 'string'
-//       ? stripeSubscription.default_payment_method
-//       : undefined;
-
-//   // Ensure paymentMethodId is valid
-//   if (!paymentMethodId) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'No valid payment method found for the subscription.'
-//     );
-//   }
-
-//   // Create the payment intent
-//   const paymentIntent = await stripe.paymentIntents.create({
-//     amount: amountToCharge,
-//     currency: currency,
-//     customer: customerId,
-//     // payment_method: 'Subscription creation',
-//     payment_method: paymentMethodId,
-//     off_session: true,
-//     confirm: true,
-//   });
-
-//   // Check if the payment was successful
-//   if (paymentIntent.status !== 'succeeded') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Payment failed. Please try again.'
-//     );
-//   }
-
-//   const updatedSub = await Subscribation.findOneAndUpdate(
-//     { subscriptionId },
-//     {
-//       status: 'active',
-//       priceAmount: amountToCharge / 100,
-//       currentPeriodStart: formatDate(new Date()),
-//       currentPeriodEnd: formatDate(
-//         new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
-//       ),
-//     },
-//     { new: true }
-//   );
-
-//   if (!updatedSub) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Failed to update subscription record in the database.'
-//     );
-//   }
-
-//   return {
-//     paymentIntentId: paymentIntent.id,
-//     status: paymentIntent.status,
-//     updatedSub,
-//   };
-// };
-
 const renewExpiredSubscriptions = async (
   userId: string,
-  newPriceId?: string // Make newPriceId optional
+  packages?: string // Make newPriceId optional
 ) => {
+  const pack = await Package.findById(packages);
+
+  const newPriceId = pack?.productId;
+
   const subs = await Subscribation.findOne({ user: userId });
 
   const subsId: any = subs?.subscriptionId;

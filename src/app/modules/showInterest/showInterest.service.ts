@@ -142,19 +142,21 @@ const createInviteForIncluencerToDB = async (
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
   }
 
-  // if (payload.influencer) {
-  //   const isExistInfluencer = await ShowInterest.findOne({
-  //     influencer: payload.influencer,
-  //     campaign: payload.campaign,
-  //   });
+  if (payload.influencer) {
+    const isExistInfluencer = await ShowInterest.findOne({
+      influencer: payload.influencer,
+      campaign: payload.campaign,
+    });
 
-  //   if (isExistInfluencer) {
-  //     throw new ApiError(
-  //       StatusCodes.BAD_REQUEST,
-  //       'Influencer already showed interest'
-  //     );
-  //   }
-  // }
+    if (isExistInfluencer) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Influencer already showed interest'
+      );
+    }
+  }
+
+  // 67346c9e4530c5e292b6bfa3
 
   const approveStatus = isCampaignStatus.approvalStatus;
   const isUsers = isCampaignStatus.user;
@@ -166,12 +168,12 @@ const createInviteForIncluencerToDB = async (
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
   });
 
-  if (campaignInviteCount >= collaborationLimit) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      `Sorry, you cannot send an invite. The campaign has reached its limit of ${collaborationLimit} invites for the month.`
-    );
-  }
+  // if (campaignInviteCount >= collaborationLimit) {
+  //   throw new ApiError(
+  //     StatusCodes.BAD_REQUEST,
+  //     `Sorry, you cannot send an invite. The campaign has reached its limit of ${collaborationLimit} invites for the month.`
+  //   );
+  // }
 
   if (!isUsers) {
     throw new ApiError(
