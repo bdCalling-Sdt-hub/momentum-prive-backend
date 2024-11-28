@@ -685,6 +685,8 @@ const getAllCampaignForInfluencer = async (
     throw new Error('Gender information for the influencer is missing.');
   }
 
+  console.log(gender, 'sdsdsds');
+
   const {
     searchTerm = '',
     name = '',
@@ -695,9 +697,8 @@ const getAllCampaignForInfluencer = async (
   const anyConditions: any[] = [
     { status: 'active' },
     { approvalStatus: 'Approved' },
+    { $expr: { $ne: ['$influencerCount', '$collaborationLimit'] } },
   ];
-
-  console.log(anyConditions);
 
   // Search by category name
   if (searchTerm) {
@@ -734,7 +735,7 @@ const getAllCampaignForInfluencer = async (
   if (dateFilter) {
     anyConditions.push(dateFilter);
   }
-  console.log(anyConditions);
+
   // Combine all conditions
   const whereConditions =
     anyConditions.length > 0 ? { $and: anyConditions } : {};

@@ -10,8 +10,6 @@ import { StatusCodes } from 'http-status-codes';
 import { formatDate } from './timeFormat';
 import { User } from '../user/user.model';
 import { Package } from '../package/package.model';
-import { Request, Response } from 'express';
-import { subscriptionServicessss } from '../../../util/subscribationHelpar/more';
 
 export const stripe = new Stripe(config.stripe_secret_key as string, {
   apiVersion: '2024-09-30.acacia',
@@ -209,39 +207,84 @@ const createCustomerAndSubscription = async (
     packages,
   });
 
-  const isPackageExist = await Package.findOne({ _id: packages });
+  // const isPackageExist = await Package.findOne({ _id: packages });
 
-  const isPackage = isPackageExist?.title;
+  // const isPackage = isPackageExist?.title;
 
-  if (createSub?.status === 'active') {
-    if (createSub) {
-      // Find and update the user based on the id
-      const updateUserSubs = await User.findByIdAndUpdate(
-        user,
-        { $set: { subscription: true, title: isPackage } },
-        { new: true }
-      );
+  // if (createSub) {
+  //   // Find and update the user based on the id
+  //   const updateUserSubs = await User.findByIdAndUpdate(
+  //     user,
+  //     { $set: { subscription: true, title: isPackage } },
+  //     { new: true }
+  //   );
 
-      if (!updateUserSubs) {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
-          'Failed to update user subscription.'
-        );
-      }
+  //   if (!updateUserSubs) {
+  //     throw new ApiError(
+  //       StatusCodes.BAD_REQUEST,
+  //       'Failed to update user subscription.'
+  //     );
+  //   }
 
-      if (!createSub) {
-        throw new ApiError(
-          StatusCodes.BAD_REQUEST,
-          'Failed to create subscription.'
-        );
-      }
-    }
-  }
+  //   if (!createSub) {
+  //     throw new ApiError(
+  //       StatusCodes.BAD_REQUEST,
+  //       'Failed to create subscription.'
+  //     );
+  //   }
+  // }
 
   return {
     allSubscriptationValue,
     createSub,
   };
+};
+
+const handlePaymentSuccess = async (userId: string, subscriptionId: string) => {
+  // Retrieve the PaymentIntent from Stripe
+
+  // Update the subscription status to 'active' in your Subscribation model
+  const updatedSub = await Subscribation.updateOne(
+    { user: userId },
+    { status: 'active' } // Mark as 'active' after successful payment
+  );
+
+  const issubs = await Subscribation.findOne({
+    user: userId,
+  });
+
+  const packages = issubs?.packages;
+
+  const isPackageExist = await Package.findOne({ _id: packages });
+
+  const isPackage = isPackageExist?.title;
+
+  console.log(isPackage);
+
+  if (updatedSub) {
+    // Find and update the user based on the id
+    const updateUserSubs = await User.findByIdAndUpdate(
+      userId,
+      { $set: { subscription: true, title: isPackage } },
+      { new: true }
+    );
+
+    if (!updateUserSubs) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Failed to update user subscription.'
+      );
+    }
+
+    if (!updatedSub) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Failed to create subscription.'
+      );
+    }
+  }
+
+  return updatedSub;
 };
 
 const getAllSubscriptation = async () => {
@@ -394,6 +437,33 @@ const updateustomerAndSubscription = async (
       StatusCodes.BAD_REQUEST,
       'Failed to update subscription record in the database.'
     );
+  }
+
+  const isPackageExist = await Package.findOne({ _id: packages });
+
+  const isPackage = isPackageExist?.title;
+
+  if (updatedSub) {
+    // Find and update the user based on the id
+    const updateUserSubs = await User.findByIdAndUpdate(
+      userId,
+      { $set: { subscription: true, title: isPackage } },
+      { new: true }
+    );
+
+    if (!updateUserSubs) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Failed to update user subscription.'
+      );
+    }
+
+    if (!updateUserSubs) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Failed to create subscription.'
+      );
+    }
   }
 
   return {
@@ -619,4 +689,5 @@ export const subscriptionService = {
   renewExpiredSubscriptions,
   getAllSubscriptation,
   getAllSubscriptationForBrand,
+  handlePaymentSuccess,
 };

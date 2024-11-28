@@ -2,11 +2,10 @@ import { Types } from 'mongoose';
 export type ISubscribtion = {
   customerId: string;
   plan: string;
-  status: 'expired' | 'active' | 'incomplete' | 'cancellation_requested';
+  status: string;
   priceAmount: number;
   user: Types.ObjectId;
   packages: Types.ObjectId;
-
   priceId: string | null;
   transactionId: string | null;
   subscriptionId: string | null;
@@ -14,3 +13,12 @@ export type ISubscribtion = {
   currentPeriodEnd: Date | null;
   currentPeriodStart: Date | null;
 };
+
+// status:
+// | 'expired'
+// | 'active'
+// | 'incomplete'
+// | 'cancellation_requested'
+// | 'canceled'
+// | 'unpaid'
+// | 'successful';

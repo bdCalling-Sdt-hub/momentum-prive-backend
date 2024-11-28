@@ -13,6 +13,12 @@ router.post(
   SubscriptionController.createSubscription
 );
 router.post(
+  '/payment-success',
+  // auth(USER_ROLES.BRAND),
+  SubscriptionController.handlePaymentSuccess
+);
+
+router.post(
   '/renew',
   auth(USER_ROLES.BRAND),
   SubscriptionController.renewExpiredSubscription
@@ -46,11 +52,7 @@ router.post(
   SubscriptionController.webhookHandler
 );
 
-router.get(
-  '/subscribe',
-
-  SubscriptionController.createSession
-);
+router.get('/subscribe', SubscriptionController.createSession);
 router.get('/success', SubscriptionController.Success);
 router.get('/customers/:id', SubscriptionController.customerPortal);
 

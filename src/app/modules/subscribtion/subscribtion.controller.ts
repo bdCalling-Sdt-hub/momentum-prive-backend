@@ -66,7 +66,7 @@ const webhookHandler = catchAsync(async (req: Request, res: Response) => {
 // subscribtion.controller.ts
 
 const createSubscription = catchAsync(async (req: Request, res: Response) => {
-  const { user, packages } = req.body;
+  const { packages, user } = req.body;
 
   try {
     const result = await subscriptionService.createCustomerAndSubscription(
@@ -78,6 +78,26 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
       statusCode: StatusCodes.OK,
       success: true,
       message: 'Subscription created successfully',
+      data: result,
+    });
+  } catch (error) {
+    return res.status(500);
+  }
+});
+
+const handlePaymentSuccess = catchAsync(async (req: Request, res: Response) => {
+  const { userId, subscriptionId } = req.body;
+
+  try {
+    const result = await subscriptionService.handlePaymentSuccess(
+      userId,
+      subscriptionId
+    );
+
+    sendResponse(res, {
+      statusCode: StatusCodes.OK,
+      success: true,
+      message: 'payment successfully',
       data: result,
     });
   } catch (error) {
@@ -102,7 +122,9 @@ const createSubscription = catchAsync(async (req: Request, res: Response) => {
 // });
 
 const updateSubscription = catchAsync(async (req: Request, res: Response) => {
-  const { userId, packages } = req.body;
+  // const userId = req.user.id;
+
+  const { packages, userId } = req.body;
 
   const result = await subscriptionService.updateustomerAndSubscription(
     packages,
@@ -160,7 +182,9 @@ const CancelSubscription = catchAsync(async (req, res) => {
 // });
 
 const renewExpiredSubscription = catchAsync(async (req, res) => {
-  const { userId, packages } = req.body;
+  // const userId = req.user.id;
+
+  const { packages, userId } = req.body;
 
   const result = await subscriptionService.renewExpiredSubscriptions(
     userId,
@@ -189,8 +213,6 @@ const getAllSubscriptation = catchAsync(async (req, res) => {
 const getAllSubscriptationForBrand = catchAsync(async (req, res) => {
   const { userId } = req.params;
 
-  console.log(userId);
-
   const query = { ...req.query, userId };
 
   const result = await subscriptionService.getAllSubscriptationForBrand(query);
@@ -214,4 +236,5 @@ export const SubscriptionController = {
   renewExpiredSubscription,
   getAllSubscriptation,
   getAllSubscriptationForBrand,
+  handlePaymentSuccess,
 };

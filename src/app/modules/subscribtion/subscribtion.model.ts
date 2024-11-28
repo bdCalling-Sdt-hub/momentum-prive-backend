@@ -5,7 +5,7 @@ const subscribationSchema = new Schema<ISubscribtion>(
   {
     status: {
       type: String,
-      enum: ['expired', 'active', 'incomplete', 'cancellation_requested'],
+      // enum: ['expired', 'active', 'incomplete', 'cancellation_requested'],
     },
     customerId: {
       type: String,
