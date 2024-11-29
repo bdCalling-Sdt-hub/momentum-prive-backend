@@ -256,7 +256,7 @@ const getUserProfileFromDB = async (
   if (!isExistUser) {
     throw new ApiError(StatusCodes.UNAUTHORIZED, "User doesn't exist!");
   }
-  console.log(isExistUser);
+
   return isExistUser;
 };
 

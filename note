@@ -1746,3 +1746,229 @@
 //     updatedSub,
 //   };
 // };
+
+// show interst
+// const createInviteForIncluencerToDB = async (
+//   payload: Partial<IShowInterest>
+// ) => {
+//   // Check if the campaign has reached its monthly invite limit first
+//   const startOfMonth = dayjs().startOf('month').toDate();
+//   const endOfMonth = dayjs().endOf('month').toDate();
+
+//   const campaignInviteCount = await ShowInterest.countDocuments({
+//     campaign: payload.campaign,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   if (campaignInviteCount >= 2) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Sorry, you cannot send invite. The campaign limit is full!'
+//     );
+//   }
+
+//   // Now check if the influencer has already shown interest
+//   const isExistInfluencer = await ShowInterest.findOne({
+//     influencer: payload.influencer,
+//     campaign: payload.campaign,
+//   });
+
+//   if (isExistInfluencer) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Influencer already showed interest'
+//     );
+//   }
+
+//   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
+
+//   if (!isCampaignStatus) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
+//   }
+
+//   const approveStatus = isCampaignStatus?.approvalStatus;
+//   const isUsers = isCampaignStatus?.user;
+
+//   if (!isUsers) {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'No user associated with the campaign'
+//     );
+//   }
+
+//   const isUser: any = await User.findById(isUsers);
+
+//   if (!isUser) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+//   }
+
+//   if (isUser.title === 'Silver' && isUser.subscription === true) {
+//     const userInvitationCount = await ShowInterest.countDocuments({
+//       campaign: payload.campaign,
+//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//     });
+
+//     if (userInvitationCount >= 2) {
+//       throw new ApiError(
+//         StatusCodes.BAD_REQUEST,
+//         'Sorry, you cannot send invite. The campaign limit is full!'
+//       );
+//     }
+//   }
+
+//   if (approveStatus === 'Rejected') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Sorry, your campaign was rejected. You cannot invite new brands.'
+//     );
+//   }
+
+//   if (approveStatus !== 'Approved') {
+//     throw new ApiError(
+//       StatusCodes.BAD_REQUEST,
+//       'Campaign not approved yet. Please wait for approval.'
+//     );
+//   }
+
+//   const isTrack = await Track.create({
+//     influencer: payload.influencer,
+//     campaign: payload.campaign,
+//   });
+
+//   if (!isTrack) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Track not found');
+//   }
+
+//   const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
+//     'user',
+//     'fullName'
+//   );
+
+//   if (!isCampaign || !isCampaign.user) {
+//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
+//   }
+
+//   //@ts-ignore
+//   const fullName = isCampaign.user.fullName;
+
+//   const result = await ShowInterest.create(payload);
+
+//   const showInterestCount = await ShowInterest.countDocuments({
+//     campaign: payload.campaign,
+//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
+//   });
+
+//   // Send notification
+//   const data = {
+//     text: `${fullName} show interested in your campaign "${isCampaign.name}"`,
+//     receiver: isUsers,
+//   };
+//   await sendNotifications(data);
+
+//   return { result, showInterestCount };
+// };
+
+// interst
+// const updatedInterestStautsToDb = async (
+//   id: string,
+//   payload: Partial<IInterestInfo>
+// ) => {
+//   const session = await mongoose.startSession();
+//   session.startTransaction();
+
+//   const Status = payload.status === 'Accepted' ? 'Completed' : 'Rejected';
+
+//   try {
+//     const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
+//       id,
+//       {
+//         $set: {
+//           status: Status,
+//         },
+//       },
+//       {
+//         new: true,
+//         runValidators: true,
+//       }
+//     );
+
+//     if (!updatedStatus) {
+//       throw new Error('Interest not found');
+//     }
+
+//     const isInsterest = await InterestInfluencer.findById(id);
+//     const isCampaign = await Campaign.findById(isInsterest?.campaign);
+//     const isUser = await User.findById(isCampaign?.user);
+
+//     const collaborationId = updatedStatus.submitProve;
+//     const trackId = updatedStatus.track;
+
+//     // Send notifications
+//     const influencerId = updatedStatus.influencer;
+//     const influencerData = await User.findById(influencerId);
+
+//     let data;
+//     if (updatedStatus.status === 'Completed') {
+//       data = {
+//         text: `${isUser?.fullName} Accept your interest`,
+//         receiver: influencerData,
+//       };
+//       await sendNotifications(data);
+//     } else if (updatedStatus.status === 'Rejected') {
+//       data = {
+//         text: `${isUser?.fullName} Reject your interest`,
+//         receiver: influencerData,
+//       };
+//       await sendNotifications(data);
+//     }
+
+//     // Now, only update collaboration and track based on specific statuses
+//     if (
+//       updatedStatus.status === 'Completed' ||
+//       updatedStatus.status === 'Rejected'
+//     ) {
+//       const statusToUpdate = updatedStatus.status; // 'Completed' or 'Rejected'
+
+//       // Update the collaboration and track status
+//       const updateSubmitProve = await SubmitProve.findByIdAndUpdate(
+//         collaborationId,
+//         {
+//           $set: {
+//             typeStatus: statusToUpdate,
+//           },
+//         },
+//         {
+//           new: true,
+//           runValidators: true,
+//         }
+//       );
+
+//       // const updateTrack = await Track.findByIdAndUpdate(
+//       //   trackId,
+//       //   {
+//       //     $set: {
+//       //       status: statusToUpdate,
+//       //     },
+//       //   },
+//       //   {
+//       //     new: true,
+//       //     runValidators: true,
+//       //   }
+//       // );
+
+//       return {
+//         updatedStatus,
+//         updateSubmitProve,
+//         // updateTrack,
+//       };
+//     }
+
+//     return updatedStatus;
+//   } catch (error) {
+//     await session.abortTransaction();
+//     throw error;
+//   } finally {
+//     // End session
+//     session.endSession();
+//   }
+// };

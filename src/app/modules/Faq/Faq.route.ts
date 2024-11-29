@@ -14,17 +14,9 @@ router.post(
   FaqController.createFaqToDB
 );
 
-router.get(
-  '/',
+router.get('/', FaqController.getAllFaq);
 
-  FaqController.getAllFaq
-);
-
-router.get(
-  '/:id',
-
-  FaqController.getSingleFaq
-);
+router.get('/:id', FaqController.getSingleFaq);
 
 router.patch(
   '/:id',

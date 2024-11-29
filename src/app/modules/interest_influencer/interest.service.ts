@@ -10,6 +10,7 @@ import { Campaign } from '../campaign/campaign.model';
 import { Invite } from '../invite/invite.model';
 import mongoose from 'mongoose';
 import { InterestInfluencer } from '../interest/interest.model';
+import { Brand } from '../brand/brand.model';
 
 const getAllInterest = async (userId: string, status?: string) => {
   // Base filter conditions
@@ -237,12 +238,24 @@ const updatedInterestStautsToDb = async (
     const influencerId = refetchedStatus.influencer;
     const influencerData = await User.findById(influencerId).session(session);
 
+    const isBrand = await Brand.findById(isUser?.brand);
     // Send notifications
-    const notificationText = `${isUser?.fullName} ${
-      refetchedStatus.status === 'Accepted' ? 'Completed' : 'Rejected'
-    } your interest`;
-    const data = { text: notificationText, receiver: influencerData };
-    await sendNotifications(data);
+    let notificationText;
+    if (updatedStatus.status === 'Completed') {
+      notificationText = `Accepted your interest`;
+    } else if (updatedStatus.status === 'Rejected') {
+      notificationText = `Rejected your interest`;
+    }
+
+    if (notificationText) {
+      const data = {
+        text: notificationText,
+        receiver: influencerData?.influencer,
+        image: isBrand?.image,
+        name: isUser?.fullName,
+      };
+      await sendNotifications(data);
+    }
     // Check for valid status transitions
 
     // Handle Accepted or Rejected status

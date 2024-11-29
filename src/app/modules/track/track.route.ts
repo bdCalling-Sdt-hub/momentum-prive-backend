@@ -19,7 +19,7 @@ router.get(
 
 router.patch(
   '/:id',
-  auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
+  // auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
   TrackController.updateTrackStatus
 );
 

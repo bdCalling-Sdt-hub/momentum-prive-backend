@@ -52,7 +52,7 @@ router.get(
 
 router.patch(
   '/:id',
-  auth(USER_ROLES.BRAND),
+  // auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
   InviteController.updatedInviteToDB
 );
 

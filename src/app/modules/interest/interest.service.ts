@@ -10,6 +10,8 @@ import { IInterestInfo } from './interest.interface';
 import { InterestInfluencer } from './interest.model';
 import { populate } from 'dotenv';
 import mongoose from 'mongoose';
+import { Influencer } from '../influencer/influencer.model';
+import { Brand } from '../brand/brand.model';
 
 // const getAllInterest = async (campaignId: string) => {
 //   const query = campaignId ? { campaign: campaignId } : {};
@@ -94,110 +96,6 @@ const getAllInterest = async (userId: string, status?: string) => {
   return { result: filteredResult, count };
 };
 
-// const updatedInterestStautsToDb = async (
-//   id: string,
-//   payload: Partial<IInterestInfo>
-// ) => {
-//   const session = await mongoose.startSession();
-//   session.startTransaction();
-
-//   const Status = payload.status === 'Accepted' ? 'Completed' : 'Rejected';
-
-//   try {
-//     const updatedStatus = await InterestInfluencer.findByIdAndUpdate(
-//       id,
-//       {
-//         $set: {
-//           status: Status,
-//         },
-//       },
-//       {
-//         new: true,
-//         runValidators: true,
-//       }
-//     );
-
-//     if (!updatedStatus) {
-//       throw new Error('Interest not found');
-//     }
-
-//     const isInsterest = await InterestInfluencer.findById(id);
-//     const isCampaign = await Campaign.findById(isInsterest?.campaign);
-//     const isUser = await User.findById(isCampaign?.user);
-
-//     const collaborationId = updatedStatus.submitProve;
-//     const trackId = updatedStatus.track;
-
-//     // Send notifications
-//     const influencerId = updatedStatus.influencer;
-//     const influencerData = await User.findById(influencerId);
-
-//     let data;
-//     if (updatedStatus.status === 'Completed') {
-//       data = {
-//         text: `${isUser?.fullName} Accept your interest`,
-//         receiver: influencerData,
-//       };
-//       await sendNotifications(data);
-//     } else if (updatedStatus.status === 'Rejected') {
-//       data = {
-//         text: `${isUser?.fullName} Reject your interest`,
-//         receiver: influencerData,
-//       };
-//       await sendNotifications(data);
-//     }
-
-//     // Now, only update collaboration and track based on specific statuses
-//     if (
-//       updatedStatus.status === 'Completed' ||
-//       updatedStatus.status === 'Rejected'
-//     ) {
-//       const statusToUpdate = updatedStatus.status; // 'Completed' or 'Rejected'
-
-//       // Update the collaboration and track status
-//       const updateSubmitProve = await SubmitProve.findByIdAndUpdate(
-//         collaborationId,
-//         {
-//           $set: {
-//             typeStatus: statusToUpdate,
-//           },
-//         },
-//         {
-//           new: true,
-//           runValidators: true,
-//         }
-//       );
-
-//       // const updateTrack = await Track.findByIdAndUpdate(
-//       //   trackId,
-//       //   {
-//       //     $set: {
-//       //       status: statusToUpdate,
-//       //     },
-//       //   },
-//       //   {
-//       //     new: true,
-//       //     runValidators: true,
-//       //   }
-//       // );
-
-//       return {
-//         updatedStatus,
-//         updateSubmitProve,
-//         // updateTrack,
-//       };
-//     }
-
-//     return updatedStatus;
-//   } catch (error) {
-//     await session.abortTransaction();
-//     throw error;
-//   } finally {
-//     // End session
-//     session.endSession();
-//   }
-// };
-
 const updatedInterestStautsToDb = async (
   id: string,
   payload: Partial<IInterestInfo>
@@ -263,16 +161,23 @@ const updatedInterestStautsToDb = async (
       updatedStatus.influencer
     ).session(session);
 
+    const isBrand = await Brand.findById(isUser?.brand);
+
     // Send notifications
     let notificationText;
-    if (updatedStatus.status === 'Accepted') {
-      notificationText = ` accepted your interest`;
+    if (updatedStatus.status === 'Completed') {
+      notificationText = `Accepted your interest`;
     } else if (updatedStatus.status === 'Rejected') {
-      notificationText = ` rejected your interest`;
+      notificationText = `Rejected your interest`;
     }
 
     if (notificationText) {
-      const data = { text: notificationText, receiver: influencerData };
+      const data = {
+        text: notificationText,
+        receiver: influencerData?.influencer,
+        image: isBrand?.image,
+        name: isUser?.fullName,
+      };
       await sendNotifications(data);
     }
 

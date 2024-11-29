@@ -3,7 +3,9 @@ import { JwtPayload } from 'jsonwebtoken';
 import { Notification } from './notification.model';
 
 const getNotificationToDb = async (user: JwtPayload) => {
-  const result = await Notification.find({ receiver: user.id });
+  const result = await Notification.find({ receiver: user.id }).sort({
+    createdAt: -1,
+  });
 
   const unredCount = await Notification.countDocuments({
     receiver: user.id,
