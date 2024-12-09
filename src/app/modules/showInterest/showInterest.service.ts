@@ -133,9 +133,11 @@ const createInviteForIncluencerToDB = async (
     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
   });
 
+  console.log(images);
+
   // Send notification
   const data = {
-    text: `Showed interest in your campaign ${isCampaign.name}`,
+    text: `Showed interest in your campaign`,
     receiver: isUsers,
     image: images,
     name: isInflu?.fullName,

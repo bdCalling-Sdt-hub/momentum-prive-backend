@@ -11,9 +11,6 @@ import { JwtPayload } from 'jsonwebtoken';
 const updateBrandToDB = async (email: string, payload: Partial<IBrand>) => {
   payload.status = 'active';
 
-  console.log(payload);
-
-  // Validate and convert followers fields to numbers
   payload.followersIG = isNaN(Number(payload.followersIG))
     ? 0
     : Number(payload.followersIG);
@@ -28,19 +25,6 @@ const updateBrandToDB = async (email: string, payload: Partial<IBrand>) => {
 
   return result;
 };
-
-// const getAllBrands = async (query: Record<string, unknown>) => {
-//   const brandQuery = new QueryBuilder(Brand.find().populate('category'), query)
-//     .search(brandSearchAbleFields)
-//     .filter()
-//     .sort()
-//     .paginate()
-//     .fields();
-
-//   const result = await brandQuery.modelQuery;
-
-//   return result;
-// };
 
 const getAllBrands = async (country?: string, city?: string) => {
   const filter: any = {};

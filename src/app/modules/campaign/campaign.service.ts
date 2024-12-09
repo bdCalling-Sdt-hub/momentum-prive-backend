@@ -14,64 +14,6 @@ import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Influencer } from '../influencer/influencer.model';
 import { buildDateFilter } from '../../../helpers/timeHelper';
 
-// const createCampaignToDB = async (payload: Partial<ICampaign>) => {
-//   const isCategoryOfBrand = await User.findById(payload.user);
-
-//   // Check if the user has the "Silver" title and an active subscription
-//   if (
-//     isCategoryOfBrand?.title === 'Silver' &&
-//     isCategoryOfBrand.subscription === true
-//   ) {
-//     // Calculate the start and end dates for the current month
-//     const startOfMonth = dayjs().startOf('month').toDate();
-//     const endOfMonth = dayjs().endOf('month').toDate();
-
-//     // Count campaigns created by the user within the current month
-//     const monthlyCampaignCount = await Campaign.countDocuments({
-//       user: payload.user,
-//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//     });
-
-//     if (monthlyCampaignCount >= 10) {
-//       throw new ApiError(
-//         StatusCodes.UNAUTHORIZED,
-//         'Silver users can only create up to 10 campaigns per month.'
-//       );
-//     }
-//   }
-
-//   if (
-//     isCategoryOfBrand?.title === 'Silver' &&
-//     isCategoryOfBrand.subscription === true
-//   ) {
-//     if (payload.collaborationLimit && payload.collaborationLimit > 2) {
-//       throw new ApiError(
-//         StatusCodes.UNAUTHORIZED,
-//         'Silver users can only set a collaboration limit of up to 2.'
-//       );
-//     }
-//   }
-
-//   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
-//   const isCategoryName = isBrandOfCat?.category;
-
-//   // Create the campaign with the associated category
-//   const campaign = await Campaign.create({
-//     ...payload,
-//     category: isCategoryName,
-//   });
-
-//   // Get the updated count of campaigns after the new creation
-//   const startOfMonth = dayjs().startOf('month').toDate();
-//   const endOfMonth = dayjs().endOf('month').toDate();
-//   const CampaignsCount = await Campaign.countDocuments({
-//     user: payload.user,
-//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//   });
-
-//   return { campaign, CampaignsCount };
-// };
-
 const createCampaignToDB = async (payload: Partial<ICampaign>) => {
   const isCategoryOfBrand = await User.findById(payload.user);
 
@@ -93,7 +35,7 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
     if (isCamps >= Number(isSubs.packages.limit)) {
       throw new ApiError(
         StatusCodes.BAD_REQUEST,
-        `Silver users can only create up to ${Number(
+        `${isCategoryOfBrand?.title} users can only create up to ${Number(
           isSubs.packages.limit
         )} campaigns per month.`
       );
@@ -132,86 +74,6 @@ const createCampaignToDB = async (payload: Partial<ICampaign>) => {
   return { campaign, CampaignsCount };
 };
 
-// const createCampaignToDB = async (payload: Partial<ICampaign>) => {
-//   const isCategoryOfBrand = await User.findById(payload.user);
-
-//   const isSubs: any = await Subscribation.findOne({
-//     user: payload.user,
-//   }).populate('packages', 'limit');
-
-//   const isCamps = await Campaign.countDocuments({ user: payload.user });
-
-//   if (isSubs?.packages?.limit) {
-//     if (isCamps >= Number(isSubs.packages.limit)) {
-//       throw new ApiError(
-//         StatusCodes.UNAUTHORIZED,
-//         `Silver users can only create up to ${Number(
-//           isSubs.packages.limit
-//         )} campaigns per month.`
-//       );
-//     }
-//   }
-
-//   // Convert collaborationLimit to a number, with a default value of 0 if undefined or invalid
-//   const collaborationLimit = Number(payload.collaborationLimit) || 0;
-
-//   // Check if the user has the "Silver" title and an active subscription
-//   if (
-//     isCategoryOfBrand?.title === 'Silver' &&
-//     isCategoryOfBrand.subscription === true
-//   ) {
-//     // Calculate the start and end dates for the current month
-//     const startOfMonth = dayjs().startOf('month').toDate();
-//     const endOfMonth = dayjs().endOf('month').toDate();
-
-//     // Count campaigns created by the user within the current month
-//     const monthlyCampaignCount = await Campaign.countDocuments({
-//       user: payload.user,
-//       createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//     });
-
-//     if (monthlyCampaignCount >= 10) {
-//       throw new ApiError(
-//         StatusCodes.UNAUTHORIZED,
-//         'Silver users can only create up to 10 campaigns per month.'
-//       );
-//     }
-//   }
-
-//   if (
-//     isCategoryOfBrand?.title === 'Silver' &&
-//     isCategoryOfBrand.subscription === true
-//   ) {
-//     if (collaborationLimit > 2) {
-//       throw new ApiError(
-//         StatusCodes.UNAUTHORIZED,
-//         'Silver users can only set a collaboration limit of up to 2.'
-//       );
-//     }
-//   }
-
-//   const isBrandOfCat = await Brand.findById(isCategoryOfBrand?.brand);
-//   const isCategoryName = isBrandOfCat?.category;
-
-//   payload.collaborationLimit = collaborationLimit;
-
-//   // Create the campaign with the associated category
-//   const campaign = await Campaign.create({
-//     ...payload,
-//     category: isCategoryName,
-//   });
-
-//   // Get the updated count of campaigns after the new creation
-//   const startOfMonth = dayjs().startOf('month').toDate();
-//   const endOfMonth = dayjs().endOf('month').toDate();
-//   const CampaignsCount = await Campaign.countDocuments({
-//     user: payload.user,
-//     createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-//   });
-
-//   return { campaign, CampaignsCount };
-// };
-
 const getAllCampaigns = async (query: Record<string, unknown>) => {
   const { searchTerm, name, page, limit, ...filterData } = query;
   const anyConditions: any[] = [
@@ -243,25 +105,8 @@ const getAllCampaigns = async (query: Record<string, unknown>) => {
     anyConditions.push({ $and: filterConditions });
   }
 
-  // Filter by `endTime` from current date to specified endTime
-  // if (filterData.endTime) {
-  //   const specifiedEndTime = new Date(filterData.endTime as string);
-
-  //   const endTimeFormatted = specifiedEndTime.toISOString().split('T')[0];
-
-  //   const currentDate = new Date();
-  //   currentDate.setHours(0, 0, 0, 0);
-  //   const currentDateFormatted = currentDate.toISOString().split('T')[0];
-  //   console.log(currentDateFormatted);
-  //   console.log(endTimeFormatted);
-  //   // Filter by `endTime` from current date to specified endTime
-  //   anyConditions.push({
-  //     endTime: { $gte: currentDateFormatted, $lte: endTimeFormatted },
-  //   });
-  // }
-
   if (filterData.endTime) {
-    const specifiedDate = new Date(filterData.endTime as string); // Parse the provided date
+    const specifiedDate = new Date(filterData.endTime as string);
     const startOfDay = new Date(
       specifiedDate.getFullYear(),
       specifiedDate.getMonth(),
@@ -277,7 +122,6 @@ const getAllCampaigns = async (query: Record<string, unknown>) => {
       999
     ); // End of the specified day (11:59:59 PM)
 
-    // Add condition to filter campaigns where endTime is within the day
     anyConditions.push({
       endTime: {
         $gte: startOfDay.toISOString(), // Start of the day
@@ -536,139 +380,6 @@ const getCampaignforAllData = async (brandId: string) => {
 
   return { campaigns, count };
 };
-
-// const getAllCampaignForInfluencer = async (
-//   query: Record<string, unknown>,
-//   userGender: string
-// ) => {
-//   const users = await User.findById(userGender);
-
-//   const influencers = await Influencer.findById(users?.influencer);
-
-//   const gender = influencers?.gender;
-
-//   const { searchTerm, name, page, limit, ...filterData } = query;
-//   const anyConditions: any[] = [
-//     { status: 'active' },
-//     { approvalStatus: 'Approved' },
-//     { gender: gender },
-//   ];
-
-//   // Filter by searchTerm in categories if provided
-//   if (searchTerm) {
-//     const categoriesIds = await Category.find({
-//       $or: [{ categoryName: { $regex: searchTerm, $options: 'i' } }],
-//     }).distinct('_id');
-//     if (categoriesIds.length > 0) {
-//       anyConditions.push({ category: { $in: categoriesIds } });
-//     }
-//   }
-
-//   if (name) {
-//     anyConditions.push({
-//       $or: [{ name: { $regex: name, $options: 'i' } }],
-//     });
-//   }
-
-//   // Filter by additional filterData fields
-//   if (Object.keys(filterData).length > 0) {
-//     const filterConditions = Object.entries(filterData).map(
-//       ([field, value]) => ({ [field]: value })
-//     );
-//     anyConditions.push({ $and: filterConditions });
-//   }
-
-//   // if (filterData.endTime) {
-//   //   const specifiedDate = new Date(filterData.endTime as string); // Parse the provided date
-//   //   const startOfDay = new Date(
-//   //     specifiedDate.getFullYear(),
-//   //     specifiedDate.getMonth(),
-//   //     specifiedDate.getDate()
-//   //   ); // Start of the specified day (midnight)
-//   //   const endOfDay = new Date(
-//   //     specifiedDate.getFullYear(),
-//   //     specifiedDate.getMonth(),
-//   //     specifiedDate.getDate(),
-//   //     23,
-//   //     59,
-//   //     59,
-//   //     999
-//   //   ); // End of the specified day (11:59:59 PM)
-
-//   //   // Add condition to filter campaigns where endTime is within the day
-//   //   anyConditions.push({
-//   //     endTime: {
-//   //       $gte: startOfDay.toISOString(), // Start of the day
-//   //       $lte: endOfDay.toISOString(), // End of the day
-//   //     },
-//   //   });
-//   // }
-
-//   if (filterData.endTime) {
-//     const specifiedDate = new Date(filterData.endTime as string); // Parse the date
-//     if (!isNaN(specifiedDate.getTime())) {
-//       // Check if date is valid
-//       const startOfDay = new Date(
-//         specifiedDate.getFullYear(),
-//         specifiedDate.getMonth(),
-//         specifiedDate.getDate()
-//       );
-
-//       const endOfDay = new Date(
-//         specifiedDate.getFullYear(),
-//         specifiedDate.getMonth(),
-//         specifiedDate.getDate(),
-//         23,
-//         59,
-//         59,
-//         999
-//       );
-
-//       // Add condition to the query
-//       anyConditions.push({
-//         endTime: {
-//           $gte: startOfDay.toISOString(),
-//           $lte: endOfDay.toISOString(),
-//         },
-//       });
-//     }
-//   }
-
-//   // Combine all conditions
-//   const whereConditions =
-//     anyConditions.length > 0 ? { $and: anyConditions } : {};
-
-//   // Pagination setup
-//   const pages = parseInt(page as string) || 1;
-//   const size = parseInt(limit as string) || 10;
-//   const skip = (pages - 1) * size;
-
-//   // Fetch campaigns
-//   const result = await Campaign.find(whereConditions)
-//     .populate('category', 'categoryName')
-//     .populate({
-//       path: 'user',
-//       select: 'brand ',
-//       populate: {
-//         path: 'brand',
-//         select: 'image owner',
-//       },
-//     })
-//     .sort({ createdAt: -1 })
-//     .skip(skip)
-//     .limit(size)
-//     .lean();
-
-//   const count = await Campaign.countDocuments(whereConditions);
-
-//   return {
-//     result,
-//     meta: {
-//       page: pages,
-//       total: count,
-//     },
-//   };
-// };
 
 const getAllCampaignForInfluencer = async (
   query: Record<string, unknown>,

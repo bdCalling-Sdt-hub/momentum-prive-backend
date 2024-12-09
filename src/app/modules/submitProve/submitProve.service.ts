@@ -12,77 +12,6 @@ import { Types } from 'mongoose';
 import { populate } from 'dotenv';
 import { Influencer } from '../influencer/influencer.model';
 
-// const submitProveToDB = async (payload: ISubmitProve) => {
-//   const trackId = payload.track;
-
-//   const trackStatus = await Track.findById(trackId);
-
-//   if (trackStatus?.status !== 'Accepted') {
-//     throw new ApiError(StatusCodes.BAD_REQUEST, 'Track is not Accepted yet');
-//   }
-
-//   const isExistSubmitProve = await SubmitProve.findOne({
-//     track: trackId,
-//   });
-
-//   if (isExistSubmitProve) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'You have already submitted prove for this track'
-//     );
-//   }
-
-//   const isTrack = await Track.findById(trackId);
-
-//   const isCampaign = await Campaign.findById(isTrack?.campaign);
-
-//   const isInfluencer = await User.findById(isTrack?.influencer);
-
-//   const isCategory = await Category.findById(isCampaign?.category);
-
-//   const category = isCategory?.categoryName;
-
-//   const value = {
-//     categoryName: category,
-//     ...payload,
-//   };
-
-//   const result = await SubmitProve.create(value);
-
-//   const createInterestInfluencer = await InterestInfluencer.create({
-//     campaign: isCampaign,
-//     influencer: isInfluencer,
-//     submitProve: result._id,
-//     track: payload.track,
-//   });
-
-//   if (!createInterestInfluencer) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Failed to create interestInfluencer with SubmitProve details'
-//     );
-//   }
-
-//   if (result) {
-//     const data = {
-//       text: `accepted your invitation`,
-//       receiver: isCampaign?.user,
-//       name: isInfluencer?.fullName,
-//     };
-
-//     await sendNotifications(data);
-
-//     const bookingData = {
-//       text: `Submit new Prove`,
-//       type: 'ADMIN',
-//       name: isInfluencer?.fullName,
-//     };
-
-//     await sendNotifications(bookingData);
-//   }
-//   return result;
-// };
-
 const submitProveToDB = async (payload: ISubmitProve) => {
   const { track: trackId } = payload;
 
@@ -96,12 +25,12 @@ const submitProveToDB = async (payload: ISubmitProve) => {
   // Check if a submission already exists for the track
   const isExistSubmitProve = await SubmitProve.findOne({ track: trackId });
 
-  // if (isExistSubmitProve) {
-  //   throw new ApiError(
-  //     StatusCodes.BAD_REQUEST,
-  //     'You have already submitted prove for this track'
-  //   );
-  // }
+  if (isExistSubmitProve) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'You have already submitted prove for this track'
+    );
+  }
 
   // Fetch required data concurrently
   const [campaign, influencer, category] = await Promise.all([
@@ -146,8 +75,9 @@ const submitProveToDB = async (payload: ISubmitProve) => {
       image: firstImage,
     }),
     sendNotifications({
-      text: `${influencer?.fullName} Submit new Prove`,
+      text: `${influencer?.fullName} booking a new service`,
       type: 'ADMIN',
+      name: influencer?.fullName,
     }),
   ]);
 

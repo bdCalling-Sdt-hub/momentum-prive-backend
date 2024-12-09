@@ -85,7 +85,7 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
 
   // Send notification
   const data = {
-    text: `invited you to join for events`,
+    text: `Invited you to join for campaign`,
     receiver: payload.influencer,
     name: isBrnadName,
     image: isBrnadImage,

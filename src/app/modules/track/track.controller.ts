@@ -14,8 +14,6 @@ const getAlllTrackToDB = async (req: Request, res: Response) => {
   });
 };
 const getAllTrackForBrandToDB = async (req: Request, res: Response) => {
-  const { userId } = req.params;
-
   const result = await TrackService.getAllTrackForBrand(
     req.params.userId,
     req.query

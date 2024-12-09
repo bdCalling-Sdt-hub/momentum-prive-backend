@@ -132,12 +132,12 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   const isExistSubmitProve = await Collaborate.findOne({
     invite: payload.invite,
   });
-  // if (isExistSubmitProve) {
-  //   throw new ApiError(
-  //     StatusCodes.BAD_REQUEST,
-  //     'You have already submitted prove for this collaboration'
-  //   );
-  // }
+  if (isExistSubmitProve) {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'You have already submitted prove for this collaboration'
+    );
+  }
 
   if (!isInvite) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Invite not found');
@@ -214,13 +214,13 @@ const createCollaborationToDB = async (payload: ICollaboration) => {
   // Send notifications if collaboration creation is successful
   const notifications = [
     {
-      text: `accepted your invitation`,
+      text: `Accepted your invitation`,
       receiver: isCampaign.user,
       name: isInfluencer?.fullName,
       image: firstImage,
     },
     {
-      text: `${isInfluencer?.fullName} booked a new Collaboration`,
+      text: `${isInfluencer?.fullName} booking a new service`,
       name: isInfluencer?.fullName,
       type: 'ADMIN',
     },
