@@ -7,23 +7,13 @@ import { CategorySearchAbleFields } from './category.constant';
 
 const createCategiryToDB = async (payload: Partial<ICategory>) => {
   const result = await Category.create(payload);
+
+  if (!result) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create category');
+  }
+
   return result;
 };
-
-// const getAllCategory = async (query: Record<string, unknown>) => {
-//   const categoryBuilder = new QueryBuilder(Category.find(), query)
-//     .search(CategorySearchAbleFields)
-//     .filter()
-//     .sort()
-//     .paginate()
-//     .fields();
-
-//   const result = await categoryBuilder.modelQuery;
-
-//   const count: number = await Category.countDocuments();
-
-//   return { result, count };
-// };
 
 const getAllCategory = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
@@ -108,6 +98,11 @@ const deleteCategoryToDB = async (id: string) => {
     new: true,
     runValidators: true,
   });
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Category not found');
+  }
+
   return result;
 };
 

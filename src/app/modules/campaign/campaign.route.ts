@@ -70,12 +70,6 @@ router.patch(
   }
 );
 
-router.put(
-  '/:userId',
-  auth(USER_ROLES.BRAND, USER_ROLES.ADMIN, USER_ROLES.INFLUENCER),
-  CampaignController.updatedCampaignStatusToDB
-);
-
 router.delete(
   '/:id',
   auth(USER_ROLES.BRAND, USER_ROLES.ADMIN),

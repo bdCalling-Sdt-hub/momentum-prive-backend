@@ -15,103 +15,7 @@ import { Invite } from '../invite/invite.model';
 import { Influencer } from '../influencer/influencer.model';
 import { populate } from 'dotenv';
 
-// const createCollaborationToDB = async (payload: ICollaboration) => {
-//   const isInvite: any = await Invite.findById(payload.invite);
-//   const inviteData = isInvite?.campaign;
-//   const isCampaign = await Campaign.findById(inviteData);
-//   const isInfluencer: any = await User.findById(payload.influencer);
-//   const isUser = await User.findById(isCampaign?.user);
-//   const isBrand = await Brand.findById(isUser?.brand).lean();
-//   const isCateory = await Category.findById(isBrand?.category);
-
-//   // const collaborationLimits = isCampaign?.collaborationLimit ?? 0;
-
-//   if (!isCampaign) {
-//     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
-//   }
-
-//   if (!isCateory || !isBrand || !isCampaign) {
-//     throw new ApiError(
-//       StatusCodes.NOT_FOUND,
-//       `${isBrand} ${isCampaign} ${isCateory} not found`
-//     );
-//   }
-
-//   try {
-//     // Ensure the campaign ID exists and is valid
-//     if (!isCampaign._id) {
-//       throw new Error('Campaign ID is missing');
-//     }
-
-//     // Get the count of collaborations for this specific campaign
-//   } catch (error) {
-//     throw new ApiError(
-//       StatusCodes.INTERNAL_SERVER_ERROR,
-//       'Could not retrieve collaboration count'
-//     );
-//   }
-
-//   if (isInvite.status === 'Rejected' || isInvite.status === 'Pending') {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       `Invite is ${isInvite.status} you cannot collaborate`
-//     );
-//   }
-
-//   const isCategoryName = isCateory?.categoryName;
-//   const value = {
-//     categoryName: isCategoryName,
-//     ...payload,
-//   };
-
-//   // Fetch influencer image data
-//   const influenceerImage = await Influencer.findById(isInfluencer?.influencer);
-
-//   // Map image array and take the first image if available
-//   const firstImage = influenceerImage?.image?.[0] || null;
-
-//   // Uncomment to create collaboration and interest records
-
-//   const result = await Collaborate.create(value);
-//   const createInterestInfluencer = await Interest.create({
-//     campaign: isCampaign,
-//     influencer: result.influencer,
-//     collaborate: result._id,
-//   });
-
-//   if (!createInterestInfluencer) {
-//     throw new ApiError(
-//       StatusCodes.BAD_REQUEST,
-//       'Failed to create interest with collaboration details'
-//     );
-//   }
-
-//   // Send notification if collaboration is successfully created
-//   if (result) {
-//     const data = {
-//       text: ` accepted your invitation`,
-//       receiver: isCampaign?.user,
-//       name: isInfluencer?.fullName,
-//       image: firstImage,
-//     };
-//     await sendNotifications(data);
-
-//     const bookingData = {
-//       text: `${isInfluencer?.fullName} booked a new Collaboration`,
-//       name: isInfluencer?.fullName,
-//       type: 'ADMIN',
-//     };
-//     await sendNotifications(bookingData);
-//   }
-
-//   return result;
-// };
-
 const createCollaborationToDB = async (payload: ICollaboration) => {
-  const inviteCompleteSatus: any = await Invite.findById(payload.invite);
-
-  console.log(inviteCompleteSatus);
-
   const invited = await Invite.findById(payload.invite);
   if (!invited) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Invite not found');
@@ -260,18 +164,6 @@ const getAllCollaborations = async (
 
   return result;
 };
-// const getAllCollaborationForInfluencer = async (influencerId: string) => {
-//   const result = await Collaborate.find({ influencer: influencerId }).populate({
-//     path: 'invite',
-//     populate: {
-//       path: 'campaign',
-//     },
-//   });
-
-//   const count = result.length;
-
-//   return { result, count };
-// };
 
 const getAllCollaborationForInfluencer = async (
   influencerId: string,
