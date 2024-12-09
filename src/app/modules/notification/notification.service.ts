@@ -28,11 +28,6 @@ const readNotification = async (user: JwtPayload) => {
   return result;
 };
 
-// const adminNotification = async (query: Record<string, unknown>) => {
-//   const result = await Notification.find({ type: 'ADMIN' });
-//   return result;
-// };
-
 const adminNotification = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
   const anyConditions: any[] = [{ type: 'ADMIN' }];

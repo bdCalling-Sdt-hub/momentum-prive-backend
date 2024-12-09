@@ -3,7 +3,7 @@ import catchAsync from '../../../shared/catchAsync';
 import { InfluencerService } from './influencer.service';
 import sendResponse from '../../../shared/sendResponse';
 import { StatusCodes } from 'http-status-codes';
-import getFilePath, { getFilePaths } from '../../../shared/getFilePath';
+import { getFilePaths } from '../../../shared/getFilePath';
 
 const updatedInfluencer = catchAsync(async (req: Request, res: Response) => {
   const userEmail = req.user?.email;
@@ -41,20 +41,7 @@ const getAllInfluencer = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-const getAllInfluencerBrand = catchAsync(
-  async (req: Request, res: Response) => {
-    const result = await InfluencerService.getAllInfluencerBrand(req.query);
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: 'Influencer retrived successfully',
-      data: result,
-    });
-  }
-);
-
 export const InfluencerController = {
   updatedInfluencer,
   getAllInfluencer,
-  getAllInfluencerBrand,
 };

@@ -6,15 +6,12 @@ import QueryBuilder from '../../builder/QueryBuilder';
 import { faqSearchAbleFields } from './Faq.constant';
 
 const createFaqToDB = async (payload: Partial<IFaq>) => {
-  // const isFaqExist = await Faq.findOne({
-  //   question: payload.question,
-  // });
-
-  // if (isFaqExist) {
-  //   throw new ApiError(StatusCodes.BAD_REQUEST, 'Faq already exist');
-  // }
-
   const result = await Faq.create(payload);
+
+  if (!result) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create faq');
+  }
+
   return result;
 };
 
@@ -33,25 +30,24 @@ const getAllFaq = async (query: Record<string, unknown>) => {
 
 const getSingleFaq = async (id: string) => {
   const result = await Faq.findById(id);
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Faq not found');
+  }
+
   return result;
 };
 
 const updateFaq = async (id: string, payload: Partial<IFaq>) => {
-  // const isFaqExist = await Faq.findOne({
-  //   question: payload.question,
-  // });
-
-  // if (isFaqExist) {
-  //   throw new ApiError(
-  //     StatusCodes.BAD_REQUEST,
-  //     'Faq already exist please then update'
-  //   );
-  // }
-
   const result = await Faq.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,
   });
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Faq not found');
+  }
+
   return result;
 };
 

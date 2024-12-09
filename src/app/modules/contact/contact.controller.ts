@@ -5,30 +5,22 @@ import { StatusCodes } from 'http-status-codes';
 import { getFilePaths } from '../../../shared/getFilePath';
 import catchAsync from '../../../shared/catchAsync';
 
-const createContactToDB = async (
-  req: Request,
-  res: Response,
-  next: NextFunction
-) => {
-  try {
-    let image = getFilePaths(req.files, 'images');
+const createContactToDB = catchAsync(async (req: Request, res: Response) => {
+  let image = getFilePaths(req.files, 'images');
 
-    const value = {
-      image,
-      ...req.body,
-    };
+  const value = {
+    image,
+    ...req.body,
+  };
 
-    const result = await ContactService.createContactToDB(value);
-    sendResponse(res, {
-      success: true,
-      statusCode: StatusCodes.OK,
-      message: 'Contact created successfully',
-      data: result,
-    });
-  } catch (error) {
-    next(error); // Pass the error to the next middleware (error handler)
-  }
-};
+  const result = await ContactService.createContactToDB(value);
+  sendResponse(res, {
+    success: true,
+    statusCode: StatusCodes.OK,
+    message: 'Contact created successfully',
+    data: result,
+  });
+});
 
 const getAllContacts = catchAsync(async (req: Request, res: Response) => {
   const result = await ContactService.getContactFromDB();

@@ -11,7 +11,6 @@ const createReviewToDB = async (payload: Partial<IReview>) => {
 
   const users = await User.findById(payload.influencer);
 
-  // Ensure the influencer ID is valid
   const infoId = users?.influencer;
 
   if (!infoId) {
@@ -102,34 +101,6 @@ const getAllReview = async (query: Record<string, unknown>) => {
     },
   };
 };
-
-// const getAllReview = async (query: Record<string, unknown>) => {
-//   const reviewBuilder = new QueryBuilder(
-//     Review.find()
-//       .populate({
-//         path: 'brand',
-//         populate: {
-//           path: 'brand',
-//         },
-//       })
-//       .populate({
-//         path: 'influencer',
-//         populate: {
-//           path: 'influencer',
-//         },
-//       }),
-//     query
-//   )
-//     .search(reviewSearchAbleFields)
-//     .filter()
-//     .sort()
-//     .paginate()
-//     .fields();
-
-//   const result = await reviewBuilder.modelQuery;
-
-//   return result;
-// };
 
 const getSingleReview = async (id: string) => {
   const result = await Review.findOne({ _id: id, status: 'active' })

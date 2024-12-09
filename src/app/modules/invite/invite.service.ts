@@ -1,21 +1,15 @@
-import { IUser } from './../user/user.interface';
 import { sendNotifications } from '../../../helpers/notificationHelper';
-import QueryBuilder from '../../builder/QueryBuilder';
 import { Brand } from '../brand/brand.model';
 import { Campaign } from '../campaign/campaign.model';
-import { IInfluencer } from '../influencer/influencer.interface';
 import { IInvite } from './invite.interface';
 import { Invite } from './invite.model';
 import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Category } from '../category/category.model';
-import { populate } from 'dotenv';
 import { User } from '../user/user.model';
 import dayjs from 'dayjs';
 import { Influencer } from '../influencer/influencer.model';
 import { Track } from '../track/track.model';
-import mongoose from 'mongoose';
-import { any } from 'zod';
 
 const createInviteToDB = async (payload: Partial<IInvite>) => {
   const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
@@ -95,8 +89,6 @@ const createInviteToDB = async (payload: Partial<IInvite>) => {
   return result;
 };
 
-///
-
 const inviteForSpasificInfluencer = async (payload: Partial<IInvite>) => {
   const { campaign, gender, country, city } = payload;
 
@@ -108,66 +100,72 @@ const inviteForSpasificInfluencer = async (payload: Partial<IInvite>) => {
     );
   }
 
-  // Fetch the campaign
-  const isCampaignStatus = await Campaign.findOne({ _id: campaign });
+  // Fetch the campaign once
+  const isCampaignStatus = await Campaign.findOne({ _id: campaign }).select(
+    'approvalStatus user'
+  );
   if (!isCampaignStatus) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
   }
 
-  const approveStatus = isCampaignStatus.approvalStatus;
+  const { approvalStatus, user } = isCampaignStatus;
 
-  if (approveStatus === 'Rejected') {
+  // Handle campaign status validation
+  if (approvalStatus === 'Rejected') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'Sorry, your campaign was rejected. You cannot invite new influencers.'
     );
   }
 
-  if (approveStatus !== 'Approved') {
+  if (approvalStatus !== 'Approved') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'Campaign not approved yet. Please wait for approval.'
     );
   }
 
-  // Find influencers matching criteria
-  const influencers = await Influencer.find({
-    gender,
-    country,
-    city,
-  });
-
-  if (!influencers || influencers.length === 0) {
+  // Find influencers matching criteria in one query
+  const influencers = await Influencer.find({ gender, country, city }).select(
+    '_id'
+  );
+  if (!influencers.length) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'No influencers found');
   }
 
-  const isCampaign = await Campaign.findById(campaign);
+  // Fetch user data, including brand information
+  const userData = await User.findById(user).select('fullName brand');
+  if (!userData) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
+  }
 
-  const users = await User.findById(isCampaign?.user);
+  // Fetch brand image if a brand is associated
+  let brandImage = null;
+  if (userData.brand) {
+    const brandData = await Brand.findById(userData.brand).select('image');
+    brandImage = brandData?.image;
+  }
 
-  const isBrand = await Brand.findById(users?.brand);
+  // Create bulk invites
+  const invitePayloads = influencers?.map(influencer => ({
+    campaign,
+    influencer: influencer._id,
+  }));
 
-  // Loop through matched influencers and send invites
-  const invites = [];
-  for (const influencer of influencers) {
-    const invitePayload = {
-      campaign,
-      influencer: influencer._id,
-    };
+  const invites = await Invite.insertMany(invitePayloads);
 
-    const result = await Invite.create(invitePayload);
-
-    // Send notification
+  // Send notifications for all influencers in parallel
+  const notificationPromises = influencers.map(influencer => {
     const notificationData = {
       text: `You have been invited to join the campaign.`,
       receiver: influencer._id,
-      name: users?.fullName,
-      image: isBrand?.image,
+      name: userData?.fullName,
+      image: brandImage,
     };
+    return sendNotifications(notificationData);
+  });
 
-    await sendNotifications(notificationData);
-    invites.push(result);
-  }
+  await Promise.all(notificationPromises);
 
   return {
     message: 'Invitations sent successfully',
@@ -175,8 +173,6 @@ const inviteForSpasificInfluencer = async (payload: Partial<IInvite>) => {
     invites,
   };
 };
-
-////////////////////////////////////////////////////////////////
 
 const getAllInvites = async (query: Record<string, unknown>) => {
   const { searchTerm, page, limit, ...filterData } = query;
@@ -354,235 +350,12 @@ const getAllInvitesForInfluencer = async (query: Record<string, unknown>) => {
   return data;
 };
 
-// const getAllInvitesForBrand = async (query: Record<string, unknown>) => {
-//   // Destructure query parameters
-//   const { searchTerm, page, brandId, limit, user, ...filterData } = query;
-
-//   // Pagination setup
-//   const pages = parseInt(page as string, 10) || 1;
-//   const size = parseInt(limit as string, 10) || 10;
-//   const skip = (pages - 1) * size;
-
-//   // Initialize the aggregation pipeline
-//   const pipeline: any[] = [];
-
-//   // Step 1: Lookup campaigns
-//   pipeline.push({
-//     $lookup: {
-//       from: 'campaigns', // Collection name for Campaigns
-//       localField: 'campaign',
-//       foreignField: '_id',
-//       as: 'campaign',
-//     },
-//   });
-
-//   // Step 2: Unwind the campaign array
-//   pipeline.push({ $unwind: '$campaign' });
-
-//   // Step 3: Lookup categories for campaigns
-//   pipeline.push({
-//     $lookup: {
-//       from: 'categories', // Collection name for Categories
-//       localField: 'campaign.category',
-//       foreignField: '_id',
-//       as: 'campaign.category',
-//     },
-//   });
-
-//   // Step 4: Unwind the category array (optional, preserve null/empty values)
-//   pipeline.push({
-//     $unwind: { path: '$campaign.category', preserveNullAndEmptyArrays: true },
-//   });
-
-//   // Step 5: Filter by brandId
-//   if (brandId && mongoose.Types.ObjectId.isValid(brandId as string)) {
-//     pipeline.push({
-//       $match: {
-//         'campaign.user': new mongoose.Types.ObjectId(brandId as string),
-//       },
-//     });
-//   } else if (brandId) {
-//     throw new Error('Invalid brandId provided');
-//   }
-
-//   // Step 6: Filter by user (if provided)
-//   if (user && mongoose.Types.ObjectId.isValid(user as string)) {
-//     pipeline.push({
-//       $match: {
-//         'campaign.user': new mongoose.Types.ObjectId(user as string),
-//       },
-//     });
-//   } else if (user) {
-//     throw new Error('Invalid user ID provided');
-//   }
-
-//   if (searchTerm) {
-//     pipeline.push({
-//       $match: {
-//         $or: [{ status: { $regex: searchTerm, $options: 'i' } }],
-//       },
-//     });
-//   }
-
-//   // Step 8: Apply additional filters (if any)
-//   if (Object.keys(filterData).length > 0) {
-//     const additionalFilters = Object.entries(filterData).reduce(
-//       (acc, [key, value]) => ({ ...acc, [key]: value }),
-//       {}
-//     );
-//     pipeline.push({ $match: additionalFilters });
-//   }
-
-//   // Step 9: Sorting and pagination
-//   pipeline.push({ $sort: { createdAt: -1 } });
-//   pipeline.push({ $skip: skip });
-//   pipeline.push({ $limit: size });
-
-//   // Step 10: Execute the aggregation pipeline
-//   const result = await Invite.aggregate(pipeline);
-
-//   // Step 11: Count total documents (exclude pagination steps)
-//   const countPipeline = pipeline.slice(0, -2); // Remove $skip and $limit
-//   countPipeline.push({ $count: 'total' });
-//   const countResult = await Invite.aggregate(countPipeline);
-//   const total = countResult[0]?.total || 0;
-
-//   // Return the results with metadata
-//   return {
-//     result,
-//     meta: {
-//       page: pages,
-//       limit: size,
-//       total,
-//     },
-//   };
-// };
-
-// const getAllInvitesForBrand = async (query: Record<string, unknown>) => {
-//   // Destructure query parameters
-//   const { searchTerm, page, campaignId, limit, user, ...filterData } = query;
-
-//   // Pagination setup
-//   const pages = parseInt(page as string, 10) || 1;
-//   const size = parseInt(limit as string, 10) || 10;
-//   const skip = (pages - 1) * size;
-
-//   // Initialize the aggregation pipeline
-//   const pipeline: any[] = [];
-
-//   // Step 1: Lookup campaigns
-//   pipeline.push({
-//     $lookup: {
-//       from: 'campaigns', // Collection name for Campaigns
-//       localField: 'campaign',
-//       foreignField: '_id',
-//       as: 'campaign',
-//     },
-//   });
-
-//   // Step 2: Unwind the campaign array
-//   pipeline.push({ $unwind: '$campaign' });
-
-//   // Step 3: Lookup categories for campaigns
-//   pipeline.push({
-//     $lookup: {
-//       from: 'categories', // Collection name for Categories
-//       localField: 'campaign.category',
-//       foreignField: '_id',
-//       as: 'campaign.category',
-//     },
-//   });
-
-//   // Step 4: Unwind the category array (optional, preserve null/empty values)
-//   pipeline.push({
-//     $unwind: { path: '$campaign.category', preserveNullAndEmptyArrays: true },
-//   });
-
-//   pipeline.push({
-//     $lookup: {
-//       from: 'users', // Collection for influencers
-//       localField: 'influencer',
-//       foreignField: '_id',
-//       as: 'influencer',
-//     },
-//   });
-
-//   // Step 6: Unwind influencer
-//   pipeline.push({
-//     $unwind: { path: '$influencer', preserveNullAndEmptyArrays: true },
-//   });
-
-//   // Step 5: Filter by campaignId
-//   if (campaignId && mongoose.Types.ObjectId.isValid(campaignId as string)) {
-//     pipeline.push({
-//       $match: {
-//         'campaign._id': new mongoose.Types.ObjectId(campaignId as string), // Match nested _id
-//       },
-//     });
-//   } else if (campaignId) {
-//     throw new Error('Invalid campaignId provided');
-//   }
-
-//   // Step 6: Filter by user (if provided)
-//   if (user && mongoose.Types.ObjectId.isValid(user as string)) {
-//     pipeline.push({
-//       $match: {
-//         'campaign.user': new mongoose.Types.ObjectId(user as string), // Match nested user
-//       },
-//     });
-//   } else if (user) {
-//     throw new Error('Invalid user ID provided');
-//   }
-
-//   // Step 7: Filter by searchTerm (if provided)
-//   if (searchTerm) {
-//     pipeline.push({
-//       $match: {
-//         $or: [{ status: { $regex: searchTerm, $options: 'i' } }],
-//       },
-//     });
-//   }
-
-//   // Step 8: Apply additional filters (if any)
-//   if (Object.keys(filterData).length > 0) {
-//     const additionalFilters = Object.entries(filterData).reduce(
-//       (acc, [key, value]) => ({ ...acc, [key]: value }),
-//       {}
-//     );
-//     pipeline.push({ $match: additionalFilters });
-//   }
-
-//   // Step 9: Sorting and pagination
-//   pipeline.push({ $sort: { createdAt: -1 } });
-//   pipeline.push({ $skip: skip });
-//   pipeline.push({ $limit: size });
-
-//   // Step 10: Execute the aggregation pipeline
-//   const result = await Invite.aggregate(pipeline);
-
-//   // Step 11: Count total documents (exclude pagination steps)
-//   const countPipeline = pipeline.slice(0, -2); // Remove $skip and $limit
-//   countPipeline.push({ $count: 'total' });
-//   const countResult = await Invite.aggregate(countPipeline);
-//   const total = countResult[0]?.total || 0;
-
-//   // Return the results with metadata
-//   return {
-//     result,
-//     meta: {
-//       page: pages,
-//       limit: size,
-//       total,
-//     },
-//   };
-// };
-
 const getSingleInvite = async (id: string) => {
   const result = await Invite.findById(id)
 
     .populate({
       path: 'campaign',
-      // select: 'image name startTime endTime category',
+
       populate: {
         path: 'category',
         select: 'categoryName',
@@ -590,13 +363,12 @@ const getSingleInvite = async (id: string) => {
     })
     .populate({
       path: 'campaign',
-      // select: 'image name startTime endTime category',
+
       populate: {
         path: 'user',
         select: 'fullName',
         populate: {
           path: 'brand',
-          // select: 'owner image',
         },
       },
     })
@@ -619,7 +391,6 @@ const updatedInviteToDB = async (id: string, payload: Partial<IInvite>) => {
     throw new Error(`Invite with ID ${id} not found`);
   }
 
-  // Check if the status is 'Accepted' and modify it to 'Accomplish'
   const updatedStatus = payload.status === 'Accepted' ? 'Accepted' : 'Cancel';
 
   const result = await Invite.findByIdAndUpdate(
@@ -832,113 +603,3 @@ export const InviteService = {
   inviteForSpasificInfluencer,
   getAllInvitesForBrand,
 };
-
-// const getAllInvitesForBrand = async (query: Record<string, unknown>) => {
-//   const { searchTerm, page, campaignId, limit, user, ...filterData } = query;
-
-//   const pages = parseInt(page as string, 10) || 1;
-//   const size = parseInt(limit as string, 10) || 10;
-//   const skip = (pages - 1) * size;
-
-//   const pipeline: any[] = [];
-
-//   // Lookup campaigns
-//   pipeline.push({
-//     $lookup: {
-//       from: 'campaigns',
-//       localField: 'campaign',
-//       foreignField: '_id',
-//       as: 'campaign',
-//     },
-//   });
-
-//   pipeline.push({ $unwind: '$campaign' });
-
-//   // Lookup influencers
-//   pipeline.push({
-//     $lookup: {
-//       from: 'users', // Collection for influencers
-//       localField: 'influencer',
-//       foreignField: '_id',
-//       as: 'influencer',
-//     },
-//   });
-
-//   pipeline.push({
-//     $unwind: { path: '$influencer', preserveNullAndEmptyArrays: true },
-//   });
-
-//   // Filter by campaignId
-//   if (campaignId && mongoose.Types.ObjectId.isValid(campaignId as string)) {
-//     pipeline.push({
-//       $match: {
-//         'campaign._id': new mongoose.Types.ObjectId(campaignId as string),
-//       },
-//     });
-//   } else if (campaignId) {
-//     throw new Error('Invalid campaignId provided');
-//   }
-
-//   // Filter by user
-//   if (user && mongoose.Types.ObjectId.isValid(user as string)) {
-//     pipeline.push({
-//       $match: {
-//         'campaign.user': new mongoose.Types.ObjectId(user as string),
-//       },
-//     });
-//   } else if (user) {
-//     throw new Error('Invalid user ID provided');
-//   }
-
-//   // Filter by searchTerm
-//   if (searchTerm) {
-//     pipeline.push({
-//       $match: {
-//         $or: [{ status: { $regex: searchTerm, $options: 'i' } }],
-//       },
-//     });
-//   }
-
-//   // Apply additional filters
-//   if (Object.keys(filterData).length > 0) {
-//     const additionalFilters = Object.entries(filterData).reduce(
-//       (acc, [key, value]) => ({ ...acc, [key]: value }),
-//       {}
-//     );
-//     pipeline.push({ $match: additionalFilters });
-//   }
-
-//   // Sorting and pagination
-//   pipeline.push({ $sort: { createdAt: -1 } });
-//   pipeline.push({ $skip: skip });
-//   pipeline.push({ $limit: size });
-
-//   // Project to include only necessary fields
-//   pipeline.push({
-//     $project: {
-//       _id: 1,
-//       status: 1,
-//       createdAt: 1,
-//       updatedAt: 1,
-//       campaign: 1,
-//       influencer: { fullName: 1 }, // Only include fullName from influencer
-//     },
-//   });
-
-//   const result = await Invite.aggregate(pipeline);
-
-//   // Count total documents
-//   const countPipeline = pipeline.slice(0, -2); // Remove $skip and $limit
-//   countPipeline.push({ $count: 'total' });
-//   const countResult = await Invite.aggregate(countPipeline);
-//   const total = countResult[0]?.total || 0;
-
-//   return {
-//     result,
-//     meta: {
-//       page: pages,
-//       limit: size,
-//       total,
-//     },
-//   };
-// };

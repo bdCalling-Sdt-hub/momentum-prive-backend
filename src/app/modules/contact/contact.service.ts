@@ -38,25 +38,16 @@ const createContactToDB = async (payload: Partial<IContact>) => {
       return newContact;
     }
   } catch (error) {
-    throw new Error('Unable to create or update contact.');
+    throw new ApiError(StatusCodes.BAD_REQUEST, 'Failed to create contact');
   }
 };
 
-// const updateContactToDB = async (id: string, payload: Partial<IContact>) => {
-//   const result = await Contact.findByIdAndUpdate(id, payload, {
-//     new: true,
-//     runValidators: true,
-//   });
-
-//   if (!result) {
-//     throw new ApiError(StatusCodes.UNAUTHORIZED, 'Failed to update contact');
-//   }
-
-//   return result;
-// };
-
 const getContactFromDB = async () => {
   const result = await Contact.findOne();
+
+  if (!result) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Contact not found');
+  }
 
   return result;
 };

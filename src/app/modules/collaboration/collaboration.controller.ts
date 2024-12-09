@@ -40,21 +40,6 @@ const getAllCollaborations = catchAsync(async (req: Request, res: Response) => {
   });
 });
 
-// const getAllCollaborationForInfluencer = catchAsync(
-//   async (req: Request, res: Response) => {
-//     const result = await CollaborationService.getAllCollaborationForInfluencer(
-//       req.params.id
-//     );
-
-//     sendResponse(res, {
-//       success: true,
-//       statusCode: StatusCodes.OK,
-//       message: 'Collaboration for influencer retirived  successfully',
-//       data: result,
-//     });
-//   }
-// );
-
 const getAllCollaborationForInfluencer = catchAsync(
   async (req: Request, res: Response) => {
     const { id: influencerId } = req.params;

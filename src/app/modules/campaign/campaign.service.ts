@@ -300,43 +300,6 @@ const deletedCampaignToDB = async (id: string) => {
   return result;
 };
 
-const updatedCampaignStatusToDB = async (
-  id: string,
-  payload: Partial<ICampaign>
-) => {
-  const campaign = await Campaign.findById(id);
-
-  if (!campaign) {
-    throw new Error(`Campaign with ID ${id} not found`);
-  }
-
-  // Check if the status is being set to "Accepted"
-  if (payload.typeStatus === 'Accepted') {
-    const collaborationStatus = await Collaborate.findOneAndUpdate(
-      { campaign: campaign._id },
-      { status: 'Completed' },
-      { new: true }
-    );
-
-    if (!collaborationStatus) {
-      throw new ApiError(StatusCodes.BAD_REQUEST, 'Collaboration not found');
-    }
-  }
-
-  // Update the campaign status (Accepted or Rejected)
-  const result = await Campaign.findByIdAndUpdate(
-    id,
-    {
-      $set: {
-        typeStatus: payload.typeStatus,
-      },
-    },
-    { new: true }
-  );
-
-  return result;
-};
-
 const getCampaignforBrand = async (brandId: string) => {
   // Fetch subscriptions with populated 'packages' including the 'limit' field
   const subs: any = await Subscribation.find({ user: brandId }).populate({
@@ -395,8 +358,6 @@ const getAllCampaignForInfluencer = async (
   if (!gender) {
     throw new Error('Gender information for the influencer is missing.');
   }
-
-  console.log(gender, 'sdsdsds');
 
   const {
     searchTerm = '',
@@ -487,7 +448,6 @@ export const CampaignService = {
   getSingleCmpaign,
   updateCampaignToDB,
   deletedCampaignToDB,
-  updatedCampaignStatusToDB,
   getCampaignforBrand,
   getAllCampaignsForAdmin,
   getAllCampaignForInfluencer,

@@ -85,58 +85,6 @@ const handleWebhook = async (event: any) => {
   }
 };
 
-// const handleWebhook = async (payload: any, signature: string) => {
-//   try {
-//     const webhookSecret = config.webhook_secret;
-
-//     if (!webhookSecret) {
-//       throw new Error('Webhook secret is not configured');
-//     }
-
-//     // Verify the webhook signature
-//     const event = stripe.webhooks.constructEvent(
-//       payload,
-//       signature,
-//       webhookSecret
-//     );
-
-//     // Handle the event
-//     switch (event.type) {
-//       case 'customer.subscription.created':
-//         return await subscriptionServicessss.handleSubscriptionCreated(
-//           event.data.object as Stripe.Subscription
-//         );
-
-//       case 'customer.subscription.updated':
-//         return await subscriptionServicessss.handleSubscriptionUpdated(
-//           event.data.object as Stripe.Subscription
-//         );
-
-//       case 'customer.subscription.deleted':
-//         return await subscriptionServicessss.handleSubscriptionDeleted(
-//           event.data.object as Stripe.Subscription
-//         );
-
-//       case 'invoice.payment_succeeded':
-//         return await subscriptionServicessss.handleInvoicePaid(
-//           event.data.object as Stripe.Invoice
-//         );
-
-//       case 'invoice.payment_failed':
-//         return await subscriptionServicessss.handleInvoicePaymentFailed(
-//           event.data.object as Stripe.Invoice
-//         );
-
-//       default:
-//         console.log(`Unhandled event type ${event.type}`);
-//         return { message: `Unhandled event type ${event.type}` };
-//     }
-//   } catch (err: any) {
-//     console.error('Webhook error:', err);
-//     throw new Error(`Webhook Error: ${err.message}`);
-//   }
-// };
-
 const createCustomerAndSubscription = async (
   // email: string,
   // priceId: string,
@@ -206,33 +154,6 @@ const createCustomerAndSubscription = async (
     user,
     packages,
   });
-
-  // const isPackageExist = await Package.findOne({ _id: packages });
-
-  // const isPackage = isPackageExist?.title;
-
-  // if (createSub) {
-  //   // Find and update the user based on the id
-  //   const updateUserSubs = await User.findByIdAndUpdate(
-  //     user,
-  //     { $set: { subscription: true, title: isPackage } },
-  //     { new: true }
-  //   );
-
-  //   if (!updateUserSubs) {
-  //     throw new ApiError(
-  //       StatusCodes.BAD_REQUEST,
-  //       'Failed to update user subscription.'
-  //     );
-  //   }
-
-  //   if (!createSub) {
-  //     throw new ApiError(
-  //       StatusCodes.BAD_REQUEST,
-  //       'Failed to create subscription.'
-  //     );
-  //   }
-  // }
 
   return {
     allSubscriptationValue,
