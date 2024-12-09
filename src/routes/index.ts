@@ -7,7 +7,6 @@ import { InfluencerRoutes } from '../app/modules/influencer/influencer.route';
 import { CategoryRoutes } from '../app/modules/category/category.route';
 import { CampaignRoutes } from '../app/modules/campaign/campaign.route';
 import { DiscountClubRoutes } from '../app/modules/discountClub/discountClub.route';
-import { RequirementRoutes } from '../app/modules/requirement/requirement.route';
 import { InviteRoutes } from '../app/modules/invite/invite.route';
 import { CollaborationRoutes } from '../app/modules/collaboration/collaboration.route';
 import { FaqRoutes } from '../app/modules/Faq/Faq.route';
@@ -37,7 +36,6 @@ const apiRoutes = [
   { path: '/category', route: CategoryRoutes },
   { path: '/campaign', route: CampaignRoutes },
   { path: '/discount', route: DiscountClubRoutes },
-  { path: '/requirement', route: RequirementRoutes },
   { path: '/invite', route: InviteRoutes },
   { path: '/collaboration', route: CollaborationRoutes },
   { path: '/faq', route: FaqRoutes },

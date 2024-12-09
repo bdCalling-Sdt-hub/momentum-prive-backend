@@ -12,139 +12,91 @@ import { Influencer } from '../influencer/influencer.model';
 const createInviteForIncluencerToDB = async (
   payload: Partial<IShowInterest>
 ) => {
-  // Define start and end of the current month for limiting invites
-  const startOfMonth = dayjs().startOf('month').toDate();
-  const endOfMonth = dayjs().endOf('month').toDate();
+  const { influencer, campaign } = payload;
 
-  // Fetch the campaign to check for collaboration limit and approval status
-  const isCampaignStatus = await Campaign.findOne({ _id: payload.campaign });
-
-  if (!isCampaignStatus) {
+  // Fetch the campaign and related user information
+  const campaignData = await Campaign.findOne({ _id: campaign }).populate(
+    'user',
+    'fullName'
+  );
+  if (!campaignData)
     throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign not found');
-  }
 
-  if (payload.influencer) {
-    const isExistInfluencer = await ShowInterest.findOne({
-      influencer: payload.influencer,
-      campaign: payload.campaign,
-    });
-
-    if (isExistInfluencer) {
-      throw new ApiError(
-        StatusCodes.BAD_REQUEST,
-        'Influencer already showed interest'
-      );
-    }
-  }
-
-  const approveStatus = isCampaignStatus.approvalStatus;
-  const isUsers = isCampaignStatus.user;
-  const collaborationLimit = isCampaignStatus.collaborationLimit ?? 2; // Default to 2 if undefined
-
-  // Check if the campaign has reached its collaboration limit for the month
-  const campaignInviteCount = await ShowInterest.countDocuments({
-    campaign: payload.campaign,
-    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-  });
-
-  // if (campaignInviteCount >= collaborationLimit) {
-  //   throw new ApiError(
-  //     StatusCodes.BAD_REQUEST,
-  //     `Sorry, you cannot send an invite. The campaign has reached its limit of ${collaborationLimit} invites for the month.`
-  //   );
-  // }
-
-  if (!isUsers) {
+  const { approvalStatus, user: campaignUser } = campaignData;
+  if (!campaignUser)
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
       'No user associated with the campaign'
     );
-  }
 
-  const isUser: any = await User.findById(isUsers);
-
-  if (!isUser) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'User not found');
-  }
-
-  if (approveStatus === 'Rejected') {
+  // Validate campaign approval status
+  if (approvalStatus === 'Rejected') {
     throw new ApiError(
       StatusCodes.BAD_REQUEST,
-      'Sorry, your campaign was rejected. You cannot invite new brands.'
+      'Campaign was rejected. New invites cannot be created.'
+    );
+  } else if (approvalStatus !== 'Approved') {
+    throw new ApiError(
+      StatusCodes.BAD_REQUEST,
+      'Campaign is not yet approved. Please wait for approval.'
     );
   }
 
-  if (approveStatus !== 'Approved') {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Campaign not approved yet. Please wait for approval.'
-    );
+  // Check if influencer already showed interest
+  if (influencer) {
+    const existingInterest = await ShowInterest.findOne({
+      influencer,
+      campaign,
+    });
+    if (existingInterest) {
+      throw new ApiError(
+        StatusCodes.BAD_REQUEST,
+        'Influencer already showed interest in this campaign.'
+      );
+    }
   }
 
-  // console.log(isUser);
+  // Fetch related influencer and brand details
+  const [influencerUser, campaignUserDetails] = await Promise.all([
+    User.findById(influencer),
+    User.findById(campaignUser),
+  ]);
 
-  // Check if the influencer has already shown interest
-  const isExistInfluencer = await ShowInterest.findOne({
-    influencer: payload.influencer,
-    campaign: payload.campaign,
-    brand: isUser._id,
-  });
-
-  if (isExistInfluencer) {
-    throw new ApiError(
-      StatusCodes.BAD_REQUEST,
-      'Influencer already showed interest'
-    );
+  if (!influencerUser || !campaignUserDetails) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'User or influencer not found');
   }
 
-  // Create a tracking record and invitation
-  const isTrack = await Track.create({
-    influencer: payload.influencer,
-    campaign: payload.campaign,
-    brand: isUser._id,
-  });
-
-  if (!isTrack) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Track not found');
-  }
-
-  const isInflu = await User.findById(payload.influencer);
-
-  const isInflExist = await Influencer.findById(isInflu?.influencer);
-
-  const images = isInflExist?.image[0];
-
-  const isCampaign = await Campaign.findOne({ _id: payload.campaign }).populate(
-    'user',
-    'fullName'
+  const influencerProfile = await Influencer.findById(
+    influencerUser.influencer
   );
+  const influencerImage = influencerProfile?.image?.[0];
 
-  if (!isCampaign || !isCampaign.user) {
-    throw new ApiError(StatusCodes.NOT_FOUND, 'Campaign or user not found');
-  }
+  // Create tracking record
+  const trackingRecord = await Track.create({
+    influencer,
+    campaign,
+    brand: campaignUserDetails._id,
+  });
 
-  //@ts-ignore
-  const fullName = isCampaign.user.fullName;
+  if (!trackingRecord)
+    throw new ApiError(
+      StatusCodes.NOT_FOUND,
+      'Failed to create tracking record'
+    );
 
+  // Create "show interest" record
   const result = await ShowInterest.create(payload);
 
-  const showInterestCount = await ShowInterest.countDocuments({
-    campaign: payload.campaign,
-    createdAt: { $gte: startOfMonth, $lte: endOfMonth },
-  });
-
-  console.log(images);
-
   // Send notification
-  const data = {
+  const notificationData = {
     text: `Showed interest in your campaign`,
-    receiver: isUsers,
-    image: images,
-    name: isInflu?.fullName,
+    receiver: campaignUser,
+    image: influencerImage,
+    name: influencerUser.fullName,
   };
-  await sendNotifications(data);
+  await sendNotifications(notificationData);
 
-  return { result, showInterestCount };
+  return result;
 };
 
 const getAllShowInterest = async (influencerId: string) => {

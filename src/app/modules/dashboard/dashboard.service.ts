@@ -92,60 +92,7 @@ const getMonthlyEarnings = async () => {
   ]);
   return result;
 };
-// const getMonthlyUserRegistration = async () => {
-//   const totalUsers = await User.countDocuments();
 
-//   const result = await User.aggregate([
-//     // Optionally filter by active status
-//     // { $match: { status: 'active' } },
-//     {
-//       $group: {
-//         _id: {
-//           year: { $year: '$createdAt' },
-//           month: { $month: '$createdAt' },
-//         },
-//         totalRegistrations: { $sum: 1 },
-//       },
-//     },
-//     {
-//       $addFields: {
-//         month: {
-//           $arrayElemAt: [
-//             [
-//               'Jan',
-//               'Feb',
-//               'Mar',
-//               'Apr',
-//               'May',
-//               'Jun',
-//               'Jul',
-//               'Aug',
-//               'Sep',
-//               'Oct',
-//               'Nov',
-//               'Dec',
-//             ],
-//             { $subtract: ['$_id.month', 1] },
-//           ],
-//         },
-//       },
-//     },
-//     {
-//       $project: {
-//         _id: 0,
-//         month: 1,
-//         year: '$_id.year',
-//         totalRegistrations: 1,
-//         totalUsers: totalUsers,
-//       },
-//     },
-//     {
-//       $sort: { year: 1, month: 1 },
-//     },
-//   ]);
-
-//   return result;
-// };
 const getMonthlyUserRegistration = async (year?: number) => {
   const totalUsers = await User.countDocuments();
 
@@ -214,59 +161,6 @@ const getMonthlyUserRegistration = async (year?: number) => {
   const result = await User.aggregate(pipeline);
   return result;
 };
-
-// const getMonthlyUserRegistration = async () => {
-//   const [monthlyRegistrations, totalUsers] = await Promise.all([
-//     User.aggregate([
-//       // Optionally filter by active status
-//       // { $match: { status: 'active' } },
-//       {
-//         $group: {
-//           _id: {
-//             year: { $year: '$createdAt' }, // Group by year
-//             month: { $month: '$createdAt' }, // Group by month
-//           },
-//           totalRegistrations: { $sum: 1 }, // Count of registrations
-//         },
-//       },
-//       {
-//         $project: {
-//           _id: 0, // Exclude default _id
-//           month: {
-//             $arrayElemAt: [
-//               [
-//                 'Jan',
-//                 'Feb',
-//                 'Mar',
-//                 'Apr',
-//                 'May',
-//                 'Jun',
-//                 'Jul',
-//                 'Aug',
-//                 'Sep',
-//                 'Oct',
-//                 'Nov',
-//                 'Dec',
-//               ],
-//               { $subtract: ['$_id.month', 1] }, // Adjust month index
-//             ],
-//           },
-//           year: '$_id.year', // Include the year in the output
-//           totalRegistrations: '$totalRegistrations', // Reference totalRegistrations correctly
-//         },
-//       },
-//       {
-//         $sort: { year: 1, month: 1 }, // Sort by year and month
-//       },
-//     ]),
-//     User.countDocuments(), // Count total users
-//   ]);
-
-//   return {
-//     monthlyRegistrations,
-//     totalUsers,
-//   };
-// };
 
 export const DashboardService = {
   getAllBrandStatistics,

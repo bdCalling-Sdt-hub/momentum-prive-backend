@@ -91,34 +91,7 @@ const submitProveToDB = async (payload: ISubmitProve) => {
   return result;
 };
 
-// const getAllSubmitProve = async (influencerId: string, typeStatus?: string) => {
-//   const influencerTracks = await Track.find({
-//     influencer: new Types.ObjectId(influencerId),
-//   });
-
-//   const trackIds = influencerTracks.map(track => track._id);
-
-//   const result = await SubmitProve.find({ track: { $in: trackIds } }).populate({
-//     path: 'track',
-//     select: 'campaign',
-//     populate: {
-//       path: 'campaign',
-//       populate: {
-//         path: 'user',
-//         select: 'brand',
-//         populate: {
-//           path: 'brand',
-//           select: 'image owner',
-//         },
-//       },
-//     },
-//   });
-
-//   return result;
-// };
-
 const getAllSubmitProve = async (influencerId: string, typeStatus?: string) => {
-  // Retrieve all tracks for the influencer
   const influencerTracks = await Track.find({
     influencer: new Types.ObjectId(influencerId),
   });
@@ -184,16 +157,3 @@ export const SubmitProveService = {
   getAllSubmitProve,
   getAllSubmitProveForBrand,
 };
-
-// .populate({
-//   path: 'campaign',
-//   select: 'user image name',
-//   populate: {
-//     path: 'user',
-//     select: 'brand',
-//     populate: {
-//       path: 'brand',
-//       select: 'image owner',
-//     },
-//   },
-// });

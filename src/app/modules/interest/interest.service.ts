@@ -2,70 +2,28 @@ import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Campaign } from '../campaign/campaign.model';
-import { ShowInterest } from '../showInterest/showInterest.model';
 import { SubmitProve } from '../submitProve/submitProve.model';
-import { Track } from '../track/track.model';
 import { User } from '../user/user.model';
 import { IInterestInfo } from './interest.interface';
 import { InterestInfluencer } from './interest.model';
-import { populate } from 'dotenv';
 import mongoose from 'mongoose';
-import { Influencer } from '../influencer/influencer.model';
 import { Brand } from '../brand/brand.model';
 
-// const getAllInterest = async (campaignId: string) => {
-//   const query = campaignId ? { campaign: campaignId } : {};
-
-//   const count = await InterestInfluencer.countDocuments(query);
-
-//   const result = await InterestInfluencer.find(query)
-//     .populate({
-//       path: 'campaign',
-//       select: 'name',
-//       populate: {
-//         path: 'user',
-//         select: 'fullName',
-//         populate: {
-//           path: 'brand',
-//           select: 'owner',
-//         },
-//       },
-//     })
-//     .populate({
-//       path: 'influencer',
-//       select: 'fullName',
-//       populate: {
-//         path: 'influencer',
-//         select: 'fullName ',
-//       },
-//     });
-
-//   return { result, count };
-// };
 const getAllInterest = async (userId: string, status?: string) => {
   if (!userId) {
     throw new ApiError(StatusCodes.BAD_REQUEST, 'UserId is required');
   }
-
   const baseConditions: Record<string, any> = { campaign: userId };
 
-  // Add status filter if provided
   if (status) {
     baseConditions['status'] = status;
   }
 
-  // Add status filter if provided
-  if (status) {
-    baseConditions['status'] = status;
-  }
-
+  // Fetch the results with necessary population
   const allResults = await InterestInfluencer.find(baseConditions)
     .populate({
       path: 'influencer',
       select: 'fullName',
-      populate: {
-        path: 'influencer',
-      },
     })
     .populate({
       path: 'campaign',
@@ -80,20 +38,12 @@ const getAllInterest = async (userId: string, status?: string) => {
       },
     });
 
-  const filteredResult = allResults.filter(
-    (item: any) => item.campaign && item.campaign._id.toString() === userId
-  );
+  // Return count and results if found
+  if (allResults.length === 0) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
+  }
 
-  // if (filteredResult.length === 0) {
-  //   throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
-  // }
-
-  const count = filteredResult.length;
-  // if (!count) {
-  //   throw new ApiError(StatusCodes.NOT_FOUND, 'No data found');
-  // }
-
-  return { result: filteredResult, count };
+  return { result: allResults, count: allResults.length };
 };
 
 const updatedInterestStautsToDb = async (
@@ -194,18 +144,6 @@ const updatedInterestStautsToDb = async (
           session, // Ensure session is used
         }
       );
-
-      // const updateTrack = await Track.findByIdAndUpdate(
-      //   updatedStatus.track,
-      //   { $set: { status: statusToUpdate } },
-      //   {
-      //     new: true,
-      //     runValidators: true,
-      //     session, // Ensure session is used
-      //   }
-      // );
-
-      // Increment influencerCount if status is Completed
 
       if (updatedStatus.status === 'Completed') {
         await Campaign.findByIdAndUpdate(

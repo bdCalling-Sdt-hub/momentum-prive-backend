@@ -20,12 +20,6 @@ router.post(
   validateRequest(InviteValiationZodSchema.createInviteValiation),
   InviteController.inviteForSpasificInfluencer
 );
-// router.post(
-//   '/send-invite-influencer',
-//   // auth(USER_ROLES.BRAND),
-//   validateRequest(InviteValiationZodSchema.createInviteValiation),
-//   InviteController.createInviteForInfluencerToDB
-// );
 
 router.get(
   '/',
@@ -52,7 +46,7 @@ router.get(
 
 router.patch(
   '/:id',
-  // auth(USER_ROLES.BRAND, USER_ROLES.INFLUENCER),
+
   InviteController.updatedInviteToDB
 );
 

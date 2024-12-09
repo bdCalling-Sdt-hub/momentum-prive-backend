@@ -32,7 +32,7 @@ const createDiscountToDB = async (payload: Partial<IDiscountClub>) => {
     if (isCamps >= Number(isSubs.packages.limit)) {
       throw new ApiError(
         StatusCodes.UNAUTHORIZED,
-        `Discount users can only create up to ${Number(
+        `${isUser?.title} users can only create up to ${Number(
           isSubs.packages.limit
         )} discountClub per month.`
       );

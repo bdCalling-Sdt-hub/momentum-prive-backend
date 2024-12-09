@@ -38,10 +38,4 @@ router.get(
   InfluencerController.getAllInfluencer
 );
 
-router.get(
-  '/get-influencer-brand',
-  auth(USER_ROLES.BRAND),
-  InfluencerController.getAllInfluencerBrand
-);
-
 export const InfluencerRoutes = router;

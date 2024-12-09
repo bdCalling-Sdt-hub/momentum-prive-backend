@@ -7,7 +7,6 @@ import { StatusCodes } from 'http-status-codes';
 const getAllInterest = catchAsync(async (req: Request, res: Response) => {
   const { userId } = req.params;
   const { status } = req.query;
-  console.log(userId);
   const result = await InterestService.getAllInterest(userId, status as string);
 
   sendResponse(res, {

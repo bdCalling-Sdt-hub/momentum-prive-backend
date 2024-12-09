@@ -50,8 +50,8 @@ const getAllInvites = catchAsync(async (req: Request, res: Response) => {
 
 const getAllInvitesForInfluencer = catchAsync(
   async (req: Request, res: Response) => {
-    const { influencerId } = req.params; // Extract userId from URL params
-    const query = { ...req.query, influencerId }; // Merge userId into query object
+    const { influencerId } = req.params;
+    const query = { ...req.query, influencerId };
 
     const result = await InviteService.getAllInvitesForInfluencer(query);
     sendResponse(res, {
@@ -62,24 +62,6 @@ const getAllInvitesForInfluencer = catchAsync(
     });
   }
 );
-
-// const getAllInvitesForBrand = catchAsync(
-//   async (req: Request, res: Response) => {
-//     const { campaignId } = req.params; // Extract brandId from URL params
-//     const query = { ...req.query, campaignId }; // Merge brandId into query object
-
-//     // Fetch invites using the InviteService
-//     const result = await InviteService.getAllInvitesForBrand(query);
-
-//     // Send response back to client
-//     sendResponse(res, {
-//       success: true,
-//       statusCode: StatusCodes.OK,
-//       message: 'Invites retrieved for brand successfully',
-//       data: result,
-//     });
-//   }
-// );
 
 const getAllInvitesForBrand = catchAsync(
   async (req: Request, res: Response) => {
