@@ -1,15 +1,21 @@
 import { StatusCodes } from 'http-status-codes';
 import ApiError from '../../../errors/ApiError';
-import { User } from '../user/user.model';
 import { IBrand } from './brand.interface';
 import { Brand } from './brand.model';
-import { USER_ROLES } from '../../../enums/user';
-import QueryBuilder from '../../builder/QueryBuilder';
-import { brandSearchAbleFields } from './brand.constant';
-import { JwtPayload } from 'jsonwebtoken';
+import unlinkFile from '../../../shared/unlinkFile';
 
 const updateBrandToDB = async (email: string, payload: Partial<IBrand>) => {
   payload.status = 'active';
+
+  const isExistBrnad = await Brand.findOne({ email });
+
+  if (!isExistBrnad) {
+    throw new ApiError(StatusCodes.BAD_REQUEST, "User doesn't exist!");
+  }
+
+  if (payload.image && isExistBrnad.image) {
+    unlinkFile(isExistBrnad.image);
+  }
 
   payload.followersIG = isNaN(Number(payload.followersIG))
     ? 0

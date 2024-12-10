@@ -200,6 +200,7 @@ const updatedCollaborationToDB = async (
   payload: Partial<ICollaboration>
 ) => {
   // Update the collaboration status
+
   const result = await Collaborate.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,

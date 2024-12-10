@@ -10,6 +10,7 @@ import ApiError from '../../../errors/ApiError';
 import { StatusCodes } from 'http-status-codes';
 import { Category } from '../category/category.model';
 import { Subscribation } from '../subscribtion/subscribtion.model';
+import unlinkFile from '../../../shared/unlinkFile';
 
 const createDiscountToDB = async (payload: Partial<IDiscountClub>) => {
   const isUser = await User.findById(payload.user);
@@ -192,6 +193,15 @@ const updateDiscountToDB = async (
   id: string,
   payload: Partial<IDiscountClub>
 ) => {
+  const isExistDiscount = await DiscountClub.findById(id);
+  if (!isExistDiscount) {
+    throw new ApiError(StatusCodes.NOT_FOUND, 'Discount not found');
+  }
+
+  if (payload.image && isExistDiscount.image) {
+    unlinkFile(isExistDiscount.image);
+  }
+
   const result = await DiscountClub.findByIdAndUpdate(id, payload, {
     new: true,
     runValidators: true,

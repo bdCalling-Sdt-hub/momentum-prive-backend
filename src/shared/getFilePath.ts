@@ -15,8 +15,3 @@ export const getFilePaths = (files: any, folderName: IFolderName) => {
   }
   return [];
 };
-
-// export const getFilePaths = (files: any, fieldName: string): string[] => {
-//   if (!files || !files[fieldName]) return [];
-//   return files[fieldName].map((file: any) => `/${fieldName}/${file.filename}`);
-// };
