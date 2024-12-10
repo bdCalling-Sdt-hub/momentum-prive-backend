@@ -14,7 +14,6 @@ import { IBrand } from '../brand/brand.interface';
 import { Brand } from '../brand/brand.model';
 import { IInfluencer } from '../influencer/influencer.interface';
 import { Influencer } from '../influencer/influencer.model';
-import QueryBuilder from '../../builder/QueryBuilder';
 
 const creatInfluencerToDB = async (payload: Partial<IUser & IInfluencer>) => {
   const session = await startSession();

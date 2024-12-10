@@ -40,48 +40,6 @@ app.use(express.static('uploads'));
 //router
 app.use('/api/v1', router);
 
-// cron job
-
-// export const checkExpiredSubscriptions = async () => {
-//   try {
-//     const currentDate = new Date();
-
-//     const subscriptions = await Subscribation.find({}).exec();
-
-//     for (const subscription of subscriptions) {
-//       const currentPeriodEnd = subscription.currentPeriodEnd;
-//       console.log(currentPeriodEnd);
-//       if (currentPeriodEnd) {
-//         try {
-//           const expirationDate = parseCustomDateFormat(currentPeriodEnd);
-
-//           if (
-//             (expirationDate < currentDate ||
-//               expirationDate.toDateString() === currentDate.toDateString()) &&
-//             subscription.status === 'active'
-//           ) {
-//             console.log(subscription, 'dfdfdf');
-//             await Subscribation.updateOne(
-//               { _id: subscription._id },
-//               { status: 'expired' }
-//             );
-//             console.log(`Subscription ${subscription._id} updated to expired.`);
-//           }
-//         } catch (error) {
-//           console.error(
-//             `Error parsing date for subscription ${subscription._id}:`
-//           );
-//         }
-//       }
-//     }
-//   } catch (error) {
-//     throw new ApiError(
-//       StatusCodes.INTERNAL_SERVER_ERROR,
-//       `Error updating subscriptions ${error}`
-//     );
-//   }
-// };
-
 export const checkExpiredSubscriptions = async () => {
   try {
     const currentDate = new Date();
