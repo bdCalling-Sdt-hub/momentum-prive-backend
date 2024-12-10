@@ -9,10 +9,10 @@ import { User } from '../user/user.model';
 import dayjs from 'dayjs';
 
 import { Subscribation } from '../subscribtion/subscribtion.model';
-import { Package } from '../package/package.model';
 import { sendNotifications } from '../../../helpers/notificationHelper';
 import { Influencer } from '../influencer/influencer.model';
 import { buildDateFilter } from '../../../helpers/timeHelper';
+import unlinkFile from '../../../shared/unlinkFile';
 
 const createCampaignToDB = async (payload: Partial<ICampaign>) => {
   const isCategoryOfBrand = await User.findById(payload.user);
@@ -261,6 +261,10 @@ const updateCampaignToDB = async (id: string, payload: Partial<ICampaign>) => {
   const campaign = await Campaign.findById(id);
   if (!campaign) {
     throw new ApiError(StatusCodes.NOT_FOUND, 'campaign not found');
+  }
+
+  if (payload.image && campaign.image) {
+    unlinkFile(campaign.image);
   }
 
   const campUser = await User.findById(campaign.user);
